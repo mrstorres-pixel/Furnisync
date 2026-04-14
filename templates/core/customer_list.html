@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block header %}Customers{% endblock %}
+{% block header_subtitle %}Review who your customers are, how many orders they have, and what balances remain outstanding.{% endblock %}
+{% block content %}
+<section class="overflow-hidden rounded-[1.9rem] border border-white/70 bg-white/88 shadow-panel backdrop-blur">
+    <div class="border-b border-slate-200/80 px-6 py-5">
+        <h3 class="text-lg font-bold text-slate-900">Customer Records</h3>
+        <p class="mt-1 text-sm text-slate-500">A customer-focused view of purchasing activity and account status.</p>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-50/90 text-slate-500">
+            <tr>
+                <th class="px-6 py-4 text-left font-semibold">Customer</th>
+                <th class="px-6 py-4 text-left font-semibold">Contact</th>
+                <th class="px-6 py-4 text-right font-semibold">Orders</th>
+                <th class="px-6 py-4 text-right font-semibold">Total Purchased</th>
+                <th class="px-6 py-4 text-right font-semibold">Outstanding Balance</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+            {% for summary in customer_summaries %}
+                <tr class="hover:bg-brand-50/60">
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-slate-900">{{ summary.customer.full_name }}</div>
+                        <div class="text-xs text-slate-500">{{ summary.customer.installment_plan }}</div>
+                    </td>
+                    <td class="px-6 py-4 text-slate-600">
+                        <div>{{ summary.customer.phone|default:"No phone" }}</div>
+                        <div class="text-xs">{{ summary.customer.email|default:"No email" }}</div>
+                    </td>
+                    <td class="px-6 py-4 text-right text-slate-700">{{ summary.order_count }}</td>
+                    <td class="px-6 py-4 text-right font-semibold text-slate-900">${{ summary.total_purchased }}</td>
+                    <td class="px-6 py-4 text-right font-semibold text-rose-700">${{ summary.outstanding_balance }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="5">No customers found.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

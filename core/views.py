@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from datetime import date
 from functools import wraps
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Count, DecimalField, ExpressionWrapper, F, Q, Sum
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -29,6 +31,7 @@ from .models import (
     Inventory,
     InventoryAdjustment,
     Order,
+    OrderStatus,
     Payment,
     Product,
     Receipt,
@@ -377,7 +380,26 @@ def order_list(request: HttpRequest) -> HttpResponse:
 
 @role_required(UserRole.MANAGER, UserRole.OWNER)
 def product_list(request: HttpRequest) -> HttpResponse:
-    products = Product.objects.all().order_by("name")
+    sold_quantity = Sum(
+        "orderitem__quantity",
+        filter=Q(orderitem__order__status=OrderStatus.COMPLETED),
+    )
+    revenue_total = Sum(
+        ExpressionWrapper(
+            F("orderitem__quantity") * F("orderitem__price"),
+            output_field=DecimalField(max_digits=12, decimal_places=2),
+        ),
+        filter=Q(orderitem__order__status=OrderStatus.COMPLETED),
+    )
+    products = (
+        Product.objects.annotate(
+            sold_quantity=sold_quantity,
+            revenue_total=revenue_total,
+            inventory_stock=Sum("inventories__stock"),
+            inventory_available=Sum("inventories__available"),
+        )
+        .order_by("name")
+    )
     return render(request, "core/product_list.html", {"products": products})
 
 
@@ -406,6 +428,51 @@ def product_edit(request: HttpRequest, product_id: int | None = None) -> HttpRes
 def user_list(request: HttpRequest) -> HttpResponse:
     profiles = UserProfile.objects.select_related("user", "branch").order_by("user__username")
     return render(request, "core/user_list.html", {"profiles": profiles})
+
+
+@role_required(UserRole.MANAGER, UserRole.OWNER)
+def employee_list(request: HttpRequest) -> HttpResponse:
+    profiles = (
+        UserProfile.objects.select_related("user", "branch")
+        .annotate(
+            payment_count=Count("user__collected_payments", distinct=True),
+            reconciliation_count=Count("user__reconciliations", distinct=True),
+            adjustment_count=Count("user__created_inventory_adjustments", distinct=True),
+        )
+        .order_by("role", "user__username")
+    )
+    return render(request, "core/employee_list.html", {"profiles": profiles})
+
+
+@role_required(UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
+def customer_list(request: HttpRequest) -> HttpResponse:
+    active_branch = _get_active_branch(request.user)
+    customers = Customer.objects.all().order_by("full_name").prefetch_related("orders__payments")
+    if active_branch is not None:
+        customers = customers.filter(branch=active_branch)
+    customer_summaries = []
+    for customer in customers:
+        orders = list(customer.orders.all())
+        total_purchased = sum((order.total_amount for order in orders), Decimal("0.00"))
+        outstanding_balance = sum((order.remaining_balance for order in orders), Decimal("0.00"))
+        customer_summaries.append(
+            {
+                "customer": customer,
+                "order_count": len(orders),
+                "total_purchased": total_purchased,
+                "outstanding_balance": outstanding_balance,
+            }
+        )
+    return render(request, "core/customer_list.html", {"customer_summaries": customer_summaries})
+
+
+@role_required(UserRole.MANAGER, UserRole.OWNER)
+def transaction_list(request: HttpRequest) -> HttpResponse:
+    transactions = (
+        Payment.objects.select_related("order__customer", "collector", "payment_receipt")
+        .order_by("-paid_at")
+    )
+    return render(request, "core/transaction_list.html", {"transactions": transactions})
 
 
 @role_required(UserRole.OWNER)

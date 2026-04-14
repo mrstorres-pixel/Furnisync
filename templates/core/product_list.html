@@ -1,39 +1,53 @@
 {% extends "base.html" %}
 {% block header %}Products{% endblock %}
+{% block header_subtitle %}Track available products, stock position, and which items are generating sales.{% endblock %}
 {% block content %}
-<div class="bg-white rounded shadow p-6">
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold">Products</h2>
-        <a href="{% url 'product_create' %}" class="px-3 py-1 bg-emerald-600 text-white rounded text-xs">New Product</a>
+<section class="overflow-hidden rounded-[1.9rem] border border-white/70 bg-white/88 shadow-panel backdrop-blur">
+    <div class="border-b border-slate-200/80 px-6 py-5">
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Product Performance</h3>
+                <p class="mt-1 text-sm text-slate-500">See which products exist in the catalog, how much stock remains, and which items are selling.</p>
+            </div>
+            <a href="{% url 'product_create' %}" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">New Product</a>
+        </div>
     </div>
-    <table class="min-w-full text-xs">
-        <thead>
-        <tr class="border-b">
-            <th class="py-2 text-left">Name</th>
-            <th class="py-2 text-left">SKU</th>
-            <th class="py-2 text-right">Price</th>
-            <th class="py-2 text-left">Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for p in products %}
-            <tr class="border-b last:border-0">
-                <td class="py-2">{{ p.name }}</td>
-                <td class="py-2">{{ p.sku }}</td>
-                <td class="py-2 text-right">{{ p.price }}</td>
-                <td class="py-2">
-                    <a href="{% url 'product_edit' p.id %}" class="text-xs text-blue-600 hover:underline">Edit</a>
-                </td>
-            </tr>
-        {% empty %}
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-50/90 text-slate-500">
             <tr>
-                <td class="py-4 text-center text-slate-500 text-sm" colspan="4">
-                    No products defined.
-                </td>
+                <th class="px-6 py-4 text-left font-semibold">Product</th>
+                <th class="px-6 py-4 text-left font-semibold">SKU</th>
+                <th class="px-6 py-4 text-right font-semibold">Price</th>
+                <th class="px-6 py-4 text-right font-semibold">Stock</th>
+                <th class="px-6 py-4 text-right font-semibold">Available</th>
+                <th class="px-6 py-4 text-right font-semibold">Units Sold</th>
+                <th class="px-6 py-4 text-right font-semibold">Sales Revenue</th>
+                <th class="px-6 py-4 text-left font-semibold">Actions</th>
             </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+            {% for p in products %}
+                <tr class="hover:bg-brand-50/60">
+                    <td class="px-6 py-4 font-medium text-slate-900">{{ p.name }}</td>
+                    <td class="px-6 py-4 text-slate-600">{{ p.sku }}</td>
+                    <td class="px-6 py-4 text-right text-slate-700">${{ p.price }}</td>
+                    <td class="px-6 py-4 text-right text-slate-700">{{ p.inventory_stock|default:0 }}</td>
+                    <td class="px-6 py-4 text-right text-slate-700">{{ p.inventory_available|default:0 }}</td>
+                    <td class="px-6 py-4 text-right font-semibold text-slate-900">{{ p.sold_quantity|default:0 }}</td>
+                    <td class="px-6 py-4 text-right font-semibold text-emerald-700">${{ p.revenue_total|default_if_none:"0.00" }}</td>
+                    <td class="px-6 py-4">
+                        <a href="{% url 'product_edit' p.id %}" class="text-sm font-medium text-brand-700 hover:text-brand-800">Edit</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="8">No products defined.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% endblock %}
 

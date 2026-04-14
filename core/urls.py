@@ -6,6 +6,7 @@ urlpatterns = [
     path("", views.dashboard, name="dashboard"),
     # Customers & orders
     path("customers/new/", views.create_customer, name="create_customer"),
+    path("customers/", views.customer_list, name="customer_list"),
     path("orders/new/", views.create_order, name="create_order"),
     path("orders/", views.order_list, name="order_list"),
     path("inventory/", views.inventory_list, name="inventory_list"),
@@ -30,6 +31,8 @@ urlpatterns = [
     path("products/", views.product_list, name="product_list"),
     path("products/new/", views.product_edit, name="product_create"),
     path("products/<int:product_id>/edit/", views.product_edit, name="product_edit"),
+    path("employees/", views.employee_list, name="employee_list"),
+    path("transactions/", views.transaction_list, name="transaction_list"),
     path("users/", views.user_list, name="user_list"),
     path("users/<int:profile_id>/edit/", views.user_edit, name="user_edit"),
 ]

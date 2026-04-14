@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block header %}Transactions{% endblock %}
+{% block header_subtitle %}Inspect the payment history, linked customers, and staff responsible for each recorded transaction.{% endblock %}
+{% block content %}
+<section class="overflow-hidden rounded-[1.9rem] border border-white/70 bg-white/88 shadow-panel backdrop-blur">
+    <div class="border-b border-slate-200/80 px-6 py-5">
+        <h3 class="text-lg font-bold text-slate-900">Transaction History</h3>
+        <p class="mt-1 text-sm text-slate-500">A payment-by-payment record showing when money was received, from which customer, and by which employee.</p>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-50/90 text-slate-500">
+            <tr>
+                <th class="px-6 py-4 text-left font-semibold">Date</th>
+                <th class="px-6 py-4 text-left font-semibold">Receipt</th>
+                <th class="px-6 py-4 text-left font-semibold">Customer</th>
+                <th class="px-6 py-4 text-left font-semibold">Employee</th>
+                <th class="px-6 py-4 text-right font-semibold">Amount</th>
+                <th class="px-6 py-4 text-right font-semibold">Remaining Balance</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+            {% for tx in transactions %}
+                <tr class="hover:bg-brand-50/60">
+                    <td class="px-6 py-4 text-slate-600">{{ tx.paid_at|date:"Y-m-d H:i" }}</td>
+                    <td class="px-6 py-4 font-medium text-slate-900">
+                        {% if tx.payment_receipt %}{{ tx.payment_receipt.receipt_number }}{% else %}Pending receipt{% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-slate-700">{{ tx.order.customer.full_name }}</td>
+                    <td class="px-6 py-4 text-slate-700">{{ tx.collector.username }}</td>
+                    <td class="px-6 py-4 text-right font-semibold text-emerald-700">${{ tx.amount }}</td>
+                    <td class="px-6 py-4 text-right {% if tx.balance_after_payment > 0 %}font-semibold text-rose-700{% else %}text-slate-400{% endif %}">
+                        ${{ tx.balance_after_payment }}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="6">No transactions have been recorded yet.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
