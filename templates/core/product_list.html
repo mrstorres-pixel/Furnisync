@@ -11,6 +11,21 @@
             </div>
             <a href="{% url 'product_create' %}" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">New Product</a>
         </div>
+        <form method="get" class="mt-4 grid gap-3 xl:grid-cols-[1.5fr_1fr_1fr_auto]">
+            <input type="text" name="q" value="{{ filters.q }}" placeholder="Search product name, SKU, or description" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+            <select name="stock" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                <option value="">All stock states</option>
+                <option value="in" {% if filters.stock == 'in' %}selected{% endif %}>In stock</option>
+                <option value="low" {% if filters.stock == 'low' %}selected{% endif %}>Low stock</option>
+                <option value="out" {% if filters.stock == 'out' %}selected{% endif %}>Out of stock</option>
+            </select>
+            <select name="sales" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                <option value="">All sales states</option>
+                <option value="sold" {% if filters.sales == 'sold' %}selected{% endif %}>Sold products</option>
+                <option value="unsold" {% if filters.sales == 'unsold' %}selected{% endif %}>Unsold products</option>
+            </select>
+            <button class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">Filter</button>
+        </form>
     </div>
     <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
@@ -27,17 +42,19 @@
             </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-            {% for p in products %}
+            {% for summary in product_summaries %}
                 <tr class="hover:bg-brand-50/60">
-                    <td class="px-6 py-4 font-medium text-slate-900">{{ p.name }}</td>
-                    <td class="px-6 py-4 text-slate-600">{{ p.sku }}</td>
-                    <td class="px-6 py-4 text-right text-slate-700">${{ p.price }}</td>
-                    <td class="px-6 py-4 text-right text-slate-700">{{ p.inventory_stock|default:0 }}</td>
-                    <td class="px-6 py-4 text-right text-slate-700">{{ p.inventory_available|default:0 }}</td>
-                    <td class="px-6 py-4 text-right font-semibold text-slate-900">{{ p.sold_quantity|default:0 }}</td>
-                    <td class="px-6 py-4 text-right font-semibold text-emerald-700">${{ p.revenue_total|default_if_none:"0.00" }}</td>
+                    <td class="px-6 py-4 font-medium text-slate-900">
+                        <a href="{% url 'product_detail' summary.product.id %}" class="hover:text-brand-700">{{ summary.product.name }}</a>
+                    </td>
+                    <td class="px-6 py-4 text-slate-600">{{ summary.product.sku }}</td>
+                    <td class="px-6 py-4 text-right text-slate-700">${{ summary.product.price }}</td>
+                    <td class="px-6 py-4 text-right text-slate-700">{{ summary.inventory_stock }}</td>
+                    <td class="px-6 py-4 text-right text-slate-700">{{ summary.inventory_available }}</td>
+                    <td class="px-6 py-4 text-right font-semibold text-slate-900">{{ summary.sold_quantity }}</td>
+                    <td class="px-6 py-4 text-right font-semibold text-emerald-700">${{ summary.revenue_total }}</td>
                     <td class="px-6 py-4">
-                        <a href="{% url 'product_edit' p.id %}" class="text-sm font-medium text-brand-700 hover:text-brand-800">Edit</a>
+                        <a href="{% url 'product_edit' summary.product.id %}" class="text-sm font-medium text-brand-700 hover:text-brand-800">Edit</a>
                     </td>
                 </tr>
             {% empty %}
@@ -50,4 +67,3 @@
     </div>
 </section>
 {% endblock %}
-

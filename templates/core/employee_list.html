@@ -6,6 +6,16 @@
     <div class="border-b border-slate-200/80 px-6 py-5">
         <h3 class="text-lg font-bold text-slate-900">Employee Activity</h3>
         <p class="mt-1 text-sm text-slate-500">A clear view of who works in the system, their role, and what operational actions they perform.</p>
+        <form method="get" class="mt-4 grid gap-3 md:grid-cols-[1.5fr_1fr_auto]">
+            <input type="text" name="q" value="{{ filters.q }}" placeholder="Search employee name or email" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+            <select name="role" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                <option value="">All roles</option>
+                {% for value, label in roles %}
+                    <option value="{{ value }}" {% if filters.role == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">Filter</button>
+        </form>
     </div>
     <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
@@ -22,7 +32,9 @@
             {% for profile in profiles %}
                 <tr class="hover:bg-brand-50/60">
                     <td class="px-6 py-4">
-                        <div class="font-medium text-slate-900">{{ profile.user.username }}</div>
+                        <div class="font-medium text-slate-900">
+                            <a href="{% url 'employee_detail' profile.id %}" class="hover:text-brand-700">{{ profile.user.username }}</a>
+                        </div>
                         <div class="text-xs text-slate-500">{{ profile.user.email|default:"No email recorded" }}</div>
                     </td>
                     <td class="px-6 py-4 text-slate-700">{{ profile.get_role_display }}</td>

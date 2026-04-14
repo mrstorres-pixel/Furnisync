@@ -6,6 +6,15 @@
     <div class="border-b border-slate-200/80 px-6 py-5">
         <h3 class="text-lg font-bold text-slate-900">Customer Records</h3>
         <p class="mt-1 text-sm text-slate-500">A customer-focused view of purchasing activity and account status.</p>
+        <form method="get" class="mt-4 grid gap-3 md:grid-cols-[1.6fr_1fr_auto]">
+            <input type="text" name="q" value="{{ filters.q }}" placeholder="Search customer name, phone, email, or address" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+            <select name="balance" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                <option value="">All balances</option>
+                <option value="with_balance" {% if filters.balance == 'with_balance' %}selected{% endif %}>With balance</option>
+                <option value="paid" {% if filters.balance == 'paid' %}selected{% endif %}>Fully paid</option>
+            </select>
+            <button class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">Filter</button>
+        </form>
     </div>
     <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
@@ -22,7 +31,9 @@
             {% for summary in customer_summaries %}
                 <tr class="hover:bg-brand-50/60">
                     <td class="px-6 py-4">
-                        <div class="font-medium text-slate-900">{{ summary.customer.full_name }}</div>
+                        <div class="font-medium text-slate-900">
+                            <a href="{% url 'customer_detail' summary.customer.id %}" class="hover:text-brand-700">{{ summary.customer.full_name }}</a>
+                        </div>
                         <div class="text-xs text-slate-500">{{ summary.customer.installment_plan }}</div>
                     </td>
                     <td class="px-6 py-4 text-slate-600">

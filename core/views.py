@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Count, DecimalField, ExpressionWrapper, F, Q, Sum
+from django.db.models import Count, Q, Sum, Prefetch
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -31,6 +31,7 @@ from .models import (
     Inventory,
     InventoryAdjustment,
     Order,
+    OrderItem,
     OrderStatus,
     Payment,
     Product,
@@ -53,6 +54,39 @@ def _get_active_branch(user: User):
     if getattr(profile, "branch", None):
         return profile.branch
     return Branch.objects.order_by("id").first()
+
+
+def _build_customer_summary(customer: Customer) -> dict[str, object]:
+    orders = list(customer.orders.all())
+    total_purchased = sum((order.total_amount for order in orders), Decimal("0.00"))
+    outstanding_balance = sum((order.remaining_balance for order in orders), Decimal("0.00"))
+    payments = [payment for order in orders for payment in order.payments.all()]
+    last_transaction_at = max((payment.paid_at for payment in payments), default=None)
+    return {
+        "customer": customer,
+        "order_count": len(orders),
+        "total_purchased": total_purchased,
+        "outstanding_balance": outstanding_balance,
+        "last_transaction_at": last_transaction_at,
+    }
+
+
+def _build_product_summary(product: Product) -> dict[str, object]:
+    inventories = list(getattr(product, "inventories_cache", product.inventories.all()))
+    completed_orderitems = list(getattr(product, "completed_orderitems", []))
+    sold_quantity = sum((item.quantity for item in completed_orderitems), 0)
+    revenue_total = sum((item.subtotal for item in completed_orderitems), Decimal("0.00"))
+    last_sold_at = max((item.order.updated_at for item in completed_orderitems), default=None)
+    inventory_stock = sum((inventory.stock for inventory in inventories), 0)
+    inventory_available = sum((inventory.available for inventory in inventories), 0)
+    return {
+        "product": product,
+        "inventory_stock": inventory_stock,
+        "inventory_available": inventory_available,
+        "sold_quantity": sold_quantity,
+        "revenue_total": revenue_total,
+        "last_sold_at": last_sold_at,
+    }
 
 
 def role_required(*roles: str):
@@ -84,15 +118,54 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     """
     role = getattr(getattr(request.user, "profile", None), "role", None)
     # High-level metrics used for all dashboards
+    top_products = (
+        OrderItem.objects.filter(order__status=OrderStatus.COMPLETED)
+        .values("product__name")
+        .annotate(units_sold=Sum("quantity"), revenue=Sum("subtotal"))
+        .order_by("-units_sold", "-revenue")[:5]
+    )
+    recent_transactions = (
+        Payment.objects.select_related("order__customer", "collector", "payment_receipt")
+        .order_by("-paid_at")[:5]
+    )
+    total_employees = UserProfile.objects.count()
+    total_inventory_units = Inventory.objects.aggregate(total=Sum("stock"))["total"] or 0
+    outstanding_balance_total = sum(
+        (order.remaining_balance for order in Order.objects.prefetch_related("payments", "items")),
+        Decimal("0.00"),
+    )
+
+    customer_candidates = (
+        Customer.objects.prefetch_related(
+            Prefetch(
+                "orders",
+                queryset=Order.objects.prefetch_related("payments", "items").order_by("-created_at"),
+            )
+        )
+        .order_by("full_name")
+    )
+    customer_summaries = [_build_customer_summary(customer) for customer in customer_candidates]
+    customers_with_balance = sorted(
+        [summary for summary in customer_summaries if summary["outstanding_balance"] > Decimal("0.00")],
+        key=lambda summary: summary["outstanding_balance"],
+        reverse=True,
+    )[:5]
+
     context = {
         "role": role,
         "total_customers": Customer.objects.count(),
         "total_orders": Order.objects.count(),
         "total_payments": Payment.objects.count(),
+        "total_employees": total_employees,
+        "total_inventory_units": total_inventory_units,
+        "outstanding_balance_total": outstanding_balance_total,
         "pending_reconciliations": DailyReconciliation.objects.filter(
             status=ReconciliationStatus.PENDING
         ).count(),
         "inventory_low": Inventory.objects.filter(available__lte=5).select_related("product", "branch")[:10],
+        "top_products": top_products,
+        "recent_transactions": recent_transactions,
+        "customers_with_balance": customers_with_balance,
     }
 
     # Extra aggregates for owner/manager dashboards
@@ -380,27 +453,41 @@ def order_list(request: HttpRequest) -> HttpResponse:
 
 @role_required(UserRole.MANAGER, UserRole.OWNER)
 def product_list(request: HttpRequest) -> HttpResponse:
-    sold_quantity = Sum(
-        "orderitem__quantity",
-        filter=Q(orderitem__order__status=OrderStatus.COMPLETED),
-    )
-    revenue_total = Sum(
-        ExpressionWrapper(
-            F("orderitem__quantity") * F("orderitem__price"),
-            output_field=DecimalField(max_digits=12, decimal_places=2),
+    q = request.GET.get("q", "").strip()
+    stock_filter = request.GET.get("stock", "").strip()
+    sales_filter = request.GET.get("sales", "").strip()
+    products = Product.objects.all().order_by("name")
+    if q:
+        products = products.filter(Q(name__icontains=q) | Q(sku__icontains=q) | Q(description__icontains=q))
+    products = products.prefetch_related(
+        Prefetch("inventories", queryset=Inventory.objects.order_by("id"), to_attr="inventories_cache"),
+        Prefetch(
+            "orderitem_set",
+            queryset=OrderItem.objects.filter(order__status=OrderStatus.COMPLETED).select_related("order", "order__customer"),
+            to_attr="completed_orderitems",
         ),
-        filter=Q(orderitem__order__status=OrderStatus.COMPLETED),
     )
-    products = (
-        Product.objects.annotate(
-            sold_quantity=sold_quantity,
-            revenue_total=revenue_total,
-            inventory_stock=Sum("inventories__stock"),
-            inventory_available=Sum("inventories__available"),
-        )
-        .order_by("name")
+    product_summaries = [_build_product_summary(product) for product in products]
+    if stock_filter == "low":
+        product_summaries = [summary for summary in product_summaries if summary["inventory_available"] <= 5]
+    elif stock_filter == "out":
+        product_summaries = [summary for summary in product_summaries if summary["inventory_available"] == 0]
+    elif stock_filter == "in":
+        product_summaries = [summary for summary in product_summaries if summary["inventory_available"] > 0]
+
+    if sales_filter == "sold":
+        product_summaries = [summary for summary in product_summaries if summary["sold_quantity"] > 0]
+    elif sales_filter == "unsold":
+        product_summaries = [summary for summary in product_summaries if summary["sold_quantity"] == 0]
+
+    return render(
+        request,
+        "core/product_list.html",
+        {
+            "product_summaries": product_summaries,
+            "filters": {"q": q, "stock": stock_filter, "sales": sales_filter},
+        },
     )
-    return render(request, "core/product_list.html", {"products": products})
 
 
 @role_required(UserRole.MANAGER, UserRole.OWNER)
@@ -424,6 +511,28 @@ def product_edit(request: HttpRequest, product_id: int | None = None) -> HttpRes
     return render(request, "core/product_form.html", {"form": form, "product": product})
 
 
+@role_required(UserRole.MANAGER, UserRole.OWNER)
+def product_detail(request: HttpRequest, product_id: int) -> HttpResponse:
+    product = get_object_or_404(
+        Product.objects.prefetch_related(
+            Prefetch("inventories", queryset=Inventory.objects.order_by("id"), to_attr="inventories_cache"),
+            Prefetch(
+                "orderitem_set",
+                queryset=OrderItem.objects.filter(order__status=OrderStatus.COMPLETED).select_related("order", "order__customer"),
+                to_attr="completed_orderitems",
+            ),
+        ),
+        pk=product_id,
+    )
+    summary = _build_product_summary(product)
+    recent_sales = sorted(product.completed_orderitems, key=lambda item: item.order.updated_at, reverse=True)[:10]
+    return render(
+        request,
+        "core/product_detail.html",
+        {"product": product, "summary": summary, "recent_sales": recent_sales},
+    )
+
+
 @role_required(UserRole.OWNER)
 def user_list(request: HttpRequest) -> HttpResponse:
     profiles = UserProfile.objects.select_related("user", "branch").order_by("user__username")
@@ -432,6 +541,8 @@ def user_list(request: HttpRequest) -> HttpResponse:
 
 @role_required(UserRole.MANAGER, UserRole.OWNER)
 def employee_list(request: HttpRequest) -> HttpResponse:
+    q = request.GET.get("q", "").strip()
+    role_filter = request.GET.get("role", "").strip()
     profiles = (
         UserProfile.objects.select_related("user", "branch")
         .annotate(
@@ -441,38 +552,115 @@ def employee_list(request: HttpRequest) -> HttpResponse:
         )
         .order_by("role", "user__username")
     )
-    return render(request, "core/employee_list.html", {"profiles": profiles})
+    if q:
+        profiles = profiles.filter(Q(user__username__icontains=q) | Q(user__email__icontains=q))
+    if role_filter:
+        profiles = profiles.filter(role=role_filter)
+    return render(
+        request,
+        "core/employee_list.html",
+        {"profiles": profiles, "filters": {"q": q, "role": role_filter}, "roles": UserRole.choices},
+    )
+
+
+@role_required(UserRole.MANAGER, UserRole.OWNER)
+def employee_detail(request: HttpRequest, profile_id: int) -> HttpResponse:
+    profile = get_object_or_404(UserProfile.objects.select_related("user"), pk=profile_id)
+    payments = profile.user.collected_payments.select_related("order__customer", "payment_receipt").order_by("-paid_at")[:10]
+    reconciliations = profile.user.reconciliations.order_by("-date")[:10]
+    adjustments = profile.user.created_inventory_adjustments.select_related("product").order_by("-created_at")[:10]
+    audit_logs = AuditLog.objects.filter(user=profile.user).order_by("-created_at")[:15]
+    return render(
+        request,
+        "core/employee_detail.html",
+        {
+            "profile": profile,
+            "payments": payments,
+            "reconciliations": reconciliations,
+            "adjustments": adjustments,
+            "audit_logs": audit_logs,
+        },
+    )
 
 
 @role_required(UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
 def customer_list(request: HttpRequest) -> HttpResponse:
     active_branch = _get_active_branch(request.user)
-    customers = Customer.objects.all().order_by("full_name").prefetch_related("orders__payments")
+    q = request.GET.get("q", "").strip()
+    balance_filter = request.GET.get("balance", "").strip()
+    customers = Customer.objects.all().order_by("full_name").prefetch_related("orders__payments", "orders__items")
     if active_branch is not None:
         customers = customers.filter(branch=active_branch)
+    if q:
+        customers = customers.filter(
+            Q(full_name__icontains=q) | Q(phone__icontains=q) | Q(email__icontains=q) | Q(address__icontains=q)
+        )
     customer_summaries = []
     for customer in customers:
-        orders = list(customer.orders.all())
-        total_purchased = sum((order.total_amount for order in orders), Decimal("0.00"))
-        outstanding_balance = sum((order.remaining_balance for order in orders), Decimal("0.00"))
-        customer_summaries.append(
-            {
-                "customer": customer,
-                "order_count": len(orders),
-                "total_purchased": total_purchased,
-                "outstanding_balance": outstanding_balance,
-            }
-        )
-    return render(request, "core/customer_list.html", {"customer_summaries": customer_summaries})
+        customer_summaries.append(_build_customer_summary(customer))
+    if balance_filter == "with_balance":
+        customer_summaries = [summary for summary in customer_summaries if summary["outstanding_balance"] > Decimal("0.00")]
+    elif balance_filter == "paid":
+        customer_summaries = [summary for summary in customer_summaries if summary["outstanding_balance"] <= Decimal("0.00")]
+    return render(
+        request,
+        "core/customer_list.html",
+        {
+            "customer_summaries": customer_summaries,
+            "filters": {"q": q, "balance": balance_filter},
+        },
+    )
+
+
+@role_required(UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
+def customer_detail(request: HttpRequest, customer_id: int) -> HttpResponse:
+    active_branch = _get_active_branch(request.user)
+    customer_qs = Customer.objects.prefetch_related("orders__items__product", "orders__payments")
+    if active_branch is not None:
+        customer_qs = customer_qs.filter(branch=active_branch)
+    customer = get_object_or_404(customer_qs, pk=customer_id)
+    summary = _build_customer_summary(customer)
+    orders = customer.orders.all().order_by("-created_at")
+    payments = Payment.objects.filter(order__customer=customer).select_related("collector", "payment_receipt", "order").order_by("-paid_at")
+    return render(
+        request,
+        "core/customer_detail.html",
+        {"customer": customer, "summary": summary, "orders": orders, "payments": payments},
+    )
 
 
 @role_required(UserRole.MANAGER, UserRole.OWNER)
 def transaction_list(request: HttpRequest) -> HttpResponse:
+    q = request.GET.get("q", "").strip()
+    employee = request.GET.get("employee", "").strip()
+    date_from = request.GET.get("date_from", "").strip()
+    date_to = request.GET.get("date_to", "").strip()
     transactions = (
         Payment.objects.select_related("order__customer", "collector", "payment_receipt")
         .order_by("-paid_at")
     )
-    return render(request, "core/transaction_list.html", {"transactions": transactions})
+    if q:
+        transactions = transactions.filter(
+            Q(order__customer__full_name__icontains=q)
+            | Q(collector__username__icontains=q)
+            | Q(payment_receipt__receipt_number__icontains=q)
+        )
+    if employee:
+        transactions = transactions.filter(collector_id=employee)
+    if date_from:
+        transactions = transactions.filter(paid_at__date__gte=date_from)
+    if date_to:
+        transactions = transactions.filter(paid_at__date__lte=date_to)
+    employees = User.objects.filter(collected_payments__isnull=False).distinct().order_by("username")
+    return render(
+        request,
+        "core/transaction_list.html",
+        {
+            "transactions": transactions,
+            "employees": employees,
+            "filters": {"q": q, "employee": employee, "date_from": date_from, "date_to": date_to},
+        },
+    )
 
 
 @role_required(UserRole.OWNER)
