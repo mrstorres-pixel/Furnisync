@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block header %}New Order{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white rounded shadow p-6">
+    <h2 class="text-lg font-semibold mb-4">Create Order</h2>
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {% for field in form %}
+                <div>
+                    <label class="block text-sm font-medium mb-1">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <p class="text-xs text-red-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="border-t pt-4">
+            <h3 class="text-md font-semibold mb-3">Order Items</h3>
+            <p class="text-sm text-slate-600 mb-3">Add multiple products to this order. Price will auto-fill from product.</p>
+            
+            {{ formset.management_form }}
+            {{ formset.non_form_errors }}
+            
+            <div id="formset-container" class="space-y-3">
+                {% for form in formset %}
+                    <div class="formset-form border rounded p-4 bg-slate-50">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            {% for field in form.visible_fields %}
+                                <div>
+                                    <label class="block text-xs font-medium mb-1 text-slate-700">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% for error in field.errors %}
+                                        <p class="text-xs text-red-600 mt-1">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% for hidden in form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="flex gap-2">
+            <button type="submit" class="bg-emerald-600 text-white px-6 py-2 rounded text-sm hover:bg-emerald-500 font-medium">
+                Create Order
+            </button>
+            <a href="{% url 'order_list' %}" class="bg-slate-600 text-white px-6 py-2 rounded text-sm hover:bg-slate-500 font-medium">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Auto-calculate subtotal when price or quantity changes
+document.addEventListener('DOMContentLoaded', function() {
+    const formsetContainer = document.getElementById('formset-container');
+    
+    formsetContainer.addEventListener('input', function(e) {
+        if (e.target.name.includes('quantity') || e.target.name.includes('price')) {
+            const form = e.target.closest('.formset-form');
+            const quantityInput = form.querySelector('[name*="quantity"]');
+            const priceInput = form.querySelector('[name*="price"]');
+            const subtotalInput = form.querySelector('[name*="subtotal"]');
+            
+            if (quantityInput && priceInput && subtotalInput) {
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                subtotalInput.value = (quantity * price).toFixed(2);
+            }
+        }
+    });
+    
+    // Auto-fill price when product is selected
+    formsetContainer.addEventListener('change', function(e) {
+        if (e.target.name.includes('product')) {
+            const form = e.target.closest('.formset-form');
+            const productSelect = e.target;
+            const priceInput = form.querySelector('[name*="price"]');
+            
+            if (productSelect.value && priceInput) {
+                // In a real implementation, you'd fetch the price via AJAX
+                // For now, this is a placeholder
+                console.log('Product selected:', productSelect.value);
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+

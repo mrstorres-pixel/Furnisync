@@ -1,0 +1,15 @@
+[Unit]
+Description=Gunicorn daemon for Furniture System
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/FURNITURESYSTEM
+EnvironmentFile=/home/ubuntu/FURNITURESYSTEM/.env.server
+ExecStart=/home/ubuntu/FURNITURESYSTEM/.venv/bin/gunicorn furnituresystem.wsgi:application -c /home/ubuntu/FURNITURESYSTEM/gunicorn.conf.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

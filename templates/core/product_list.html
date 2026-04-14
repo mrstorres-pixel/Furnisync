@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block header %}Products{% endblock %}
+{% block content %}
+<div class="bg-white rounded shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Products</h2>
+        <a href="{% url 'product_create' %}" class="px-3 py-1 bg-emerald-600 text-white rounded text-xs">New Product</a>
+    </div>
+    <table class="min-w-full text-xs">
+        <thead>
+        <tr class="border-b">
+            <th class="py-2 text-left">Name</th>
+            <th class="py-2 text-left">SKU</th>
+            <th class="py-2 text-right">Price</th>
+            <th class="py-2 text-left">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for p in products %}
+            <tr class="border-b last:border-0">
+                <td class="py-2">{{ p.name }}</td>
+                <td class="py-2">{{ p.sku }}</td>
+                <td class="py-2 text-right">{{ p.price }}</td>
+                <td class="py-2">
+                    <a href="{% url 'product_edit' p.id %}" class="text-xs text-blue-600 hover:underline">Edit</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td class="py-4 text-center text-slate-500 text-sm" colspan="4">
+                    No products defined.
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

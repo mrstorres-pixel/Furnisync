@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block header %}Orders{% endblock %}
+{% block header_subtitle %}Review order status, customer details, outstanding balances, and line items in one place.{% endblock %}
+{% block content %}
+<section class="overflow-hidden rounded-[1.9rem] border border-white/70 bg-white/88 shadow-panel backdrop-blur">
+    <div class="border-b border-slate-200/80 px-6 py-5">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Orders</h3>
+                <p class="mt-1 text-sm text-slate-500">Use the status filter to narrow the current order list.</p>
+            </div>
+            <form method="get" class="flex flex-col gap-3 text-sm sm:flex-row sm:flex-wrap sm:items-end">
+            <label class="block">
+                <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Status</span>
+                <select name="status" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                    <option value="">All</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="reserved" {% if request.GET.status == 'reserved' %}selected{% endif %}>Reserved</option>
+                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </label>
+            <button class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">Filter</button>
+            </form>
+        </div>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-50/90 text-slate-500">
+            <tr>
+                <th class="px-6 py-4 text-left font-semibold">ID</th>
+                <th class="px-6 py-4 text-left font-semibold">Customer</th>
+                <th class="px-6 py-4 text-left font-semibold">Items</th>
+                <th class="px-6 py-4 text-left font-semibold">Status</th>
+                <th class="px-6 py-4 text-right font-semibold">Total</th>
+                <th class="px-6 py-4 text-right font-semibold">Paid</th>
+                <th class="px-6 py-4 text-right font-semibold">Balance</th>
+                <th class="px-6 py-4 text-left font-semibold">Created</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+        {% for order in orders %}
+            <tr class="hover:bg-brand-50/60">
+                <td class="px-6 py-4 font-semibold text-slate-900">#{{ order.id }}</td>
+                <td class="px-6 py-4 text-slate-700">{{ order.customer.full_name }}</td>
+                <td class="px-6 py-4">
+                    <details class="cursor-pointer">
+                        <summary class="font-medium text-brand-700 hover:text-brand-800">{{ order.items.count }} item(s)</summary>
+                        <ul class="mt-2 ml-4 space-y-1 text-xs text-slate-600">
+                            {% for item in order.items.all %}
+                                <li>{{ item.product.name }} x{{ item.quantity }} = ${{ item.subtotal }}</li>
+                            {% endfor %}
+                        </ul>
+                    </details>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold
+                        {% if order.status == 'completed' %}bg-emerald-100 text-emerald-800
+                        {% elif order.status == 'reserved' %}bg-sky-100 text-sky-800
+                        {% elif order.status == 'cancelled' %}bg-rose-100 text-rose-800
+                        {% else %}bg-amber-100 text-amber-800{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-right font-semibold text-slate-900">${{ order.total_amount }}</td>
+                <td class="px-6 py-4 text-right font-semibold text-emerald-700">${{ order.total_paid }}</td>
+                <td class="px-6 py-4 text-right {% if order.remaining_balance > 0 %}font-semibold text-rose-700{% else %}text-slate-400{% endif %}">
+                    ${{ order.remaining_balance }}
+                </td>
+                <td class="px-6 py-4 text-slate-500">{{ order.created_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="8">No orders found.</td>
+            </tr>
+        {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+

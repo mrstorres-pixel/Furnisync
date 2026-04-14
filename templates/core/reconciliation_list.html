@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block header %}Daily Reconciliations{% endblock %}
+{% block content %}
+<div class="bg-white rounded shadow p-6">
+    <h2 class="text-lg font-semibold mb-4">Daily Reconciliations</h2>
+    <table class="min-w-full text-xs">
+        <thead>
+        <tr class="border-b">
+            <th class="py-2 text-left">Date</th>
+            <th class="py-2 text-left">Branch</th>
+            <th class="py-2 text-left">Collector</th>
+            <th class="py-2 text-right">System Total</th>
+            <th class="py-2 text-right">Cash Counted</th>
+            <th class="py-2 text-right">Discrepancy</th>
+            <th class="py-2 text-left">Status</th>
+            <th class="py-2 text-left">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for r in reconciliations %}
+            <tr class="border-b last:border-0">
+                <td class="py-2">{{ r.date }}</td>
+                <td class="py-2">{{ r.branch.name }}</td>
+                <td class="py-2">{{ r.collector.username }}</td>
+                <td class="py-2 text-right">{{ r.system_total }}</td>
+                <td class="py-2 text-right">{{ r.cash_counted }}</td>
+                <td class="py-2 text-right">{{ r.discrepancy }}</td>
+                <td class="py-2 capitalize">{{ r.get_status_display }}</td>
+                <td class="py-2 space-x-2">
+                    {% if r.status == "pending" %}
+                        <a href="{% url 'handle_reconciliation' r.id 'approve' %}"
+                           class="text-xs text-emerald-600 hover:underline">Approve</a>
+                        <a href="{% url 'handle_reconciliation' r.id 'reject' %}"
+                           class="text-xs text-red-600 hover:underline">Reject</a>
+                    {% else %}
+                        <span class="text-xs text-slate-500">Processed</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td class="py-4 text-center text-slate-500 text-sm" colspan="8">
+                    No reconciliations.
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

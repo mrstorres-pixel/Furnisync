@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block header %}Request Payment Reversal{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white rounded shadow p-6">
+    <h2 class="text-lg font-semibold mb-4">Request Reversal for Payment #{{ payment.id }}</h2>
+    <p class="text-sm text-slate-600 mb-4">
+        Order #{{ payment.order.id }} &mdash; Amount: {{ payment.amount }}
+    </p>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <div>
+                <label class="block text-sm font-medium mb-1">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}
+                    <p class="text-xs text-red-600">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <button class="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-500">
+            Submit Reversal Request
+        </button>
+    </form>
+</div>
+{% endblock %}
+

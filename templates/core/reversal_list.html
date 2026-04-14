@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block header %}Payment Reversal Requests{% endblock %}
+{% block content %}
+<div class="bg-white rounded shadow p-6">
+    <h2 class="text-lg font-semibold mb-4">Payment Reversal Requests</h2>
+    <table class="min-w-full text-xs">
+        <thead>
+        <tr class="border-b">
+            <th class="py-2 text-left">Payment</th>
+            <th class="py-2 text-left">Requested By</th>
+            <th class="py-2 text-left">Status</th>
+            <th class="py-2 text-left">Reason</th>
+            <th class="py-2 text-left">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for r in reversals %}
+            <tr class="border-b last:border-0">
+                <td class="py-2">#{{ r.payment.id }} ({{ r.payment.amount }})</td>
+                <td class="py-2">{{ r.requested_by.username }}</td>
+                <td class="py-2 capitalize">{{ r.get_status_display }}</td>
+                <td class="py-2">{{ r.reason|truncatechars:60 }}</td>
+                <td class="py-2 space-x-2">
+                    {% if r.status == "pending" %}
+                        <a href="{% url 'handle_reversal' r.id 'approve' %}"
+                           class="text-xs text-emerald-600 hover:underline">Approve</a>
+                        <a href="{% url 'handle_reversal' r.id 'reject' %}"
+                           class="text-xs text-red-600 hover:underline">Reject</a>
+                    {% else %}
+                        <span class="text-xs text-slate-500">Processed</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td class="py-4 text-center text-slate-500 text-sm" colspan="5">
+                    No reversal requests.
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

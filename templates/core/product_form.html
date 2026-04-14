@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block header %}Product{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white rounded shadow p-6">
+    <h2 class="text-lg font-semibold mb-4">
+        {% if product %}Edit Product{% else %}New Product{% endif %}
+    </h2>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <div>
+                <label class="block text-sm font-medium mb-1">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}
+                    <p class="text-xs text-red-600">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <button class="bg-emerald-600 text-white px-4 py-2 rounded text-sm hover:bg-emerald-500">
+            Save Product
+        </button>
+    </form>
+</div>
+{% endblock %}
+

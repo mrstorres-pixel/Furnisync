@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block header %}Users & Roles{% endblock %}
+{% block content %}
+<div class="bg-white rounded shadow p-6">
+    <h2 class="text-lg font-semibold mb-4">Users & Roles</h2>
+    <table class="min-w-full text-xs">
+        <thead>
+        <tr class="border-b">
+            <th class="py-2 text-left">Username</th>
+            <th class="py-2 text-left">Email</th>
+            <th class="py-2 text-left">Role</th>
+            <th class="py-2 text-left">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for p in profiles %}
+            <tr class="border-b last:border-0">
+                <td class="py-2">{{ p.user.username }}</td>
+                <td class="py-2">{{ p.user.email }}</td>
+                <td class="py-2">{{ p.get_role_display }}</td>
+                <td class="py-2">
+                    <a href="{% url 'user_edit' p.id %}" class="text-xs text-blue-600 hover:underline">Edit</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td class="py-4 text-center text-slate-500 text-sm" colspan="4">
+                    No users found.
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

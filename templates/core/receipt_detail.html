@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Receipt {{ receipt.receipt_number }}{% endblock %}
+{% block header %}Receipt Details{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white rounded shadow p-6">
+    <div class="text-center mb-6 border-b pb-4">
+        <h1 class="text-2xl font-bold text-slate-800">Furniture System</h1>
+        <p class="text-sm text-slate-600">{{ receipt.branch.name }}</p>
+        <p class="text-sm text-slate-600">{{ receipt.branch.address }}</p>
+    </div>
+
+    <div class="mb-6">
+        <h2 class="text-xl font-semibold mb-4">Receipt #{{ receipt.receipt_number }}</h2>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <p class="text-slate-600">Date:</p>
+                <p class="font-medium">{{ receipt.created_at|date:"F d, Y g:i A" }}</p>
+            </div>
+            <div>
+                <p class="text-slate-600">Collector:</p>
+                <p class="font-medium">{{ receipt.collector.username }}</p>
+            </div>
+            <div>
+                <p class="text-slate-600">Customer:</p>
+                <p class="font-medium">{{ receipt.order.customer.full_name }}</p>
+            </div>
+            <div>
+                <p class="text-slate-600">Order #:</p>
+                <p class="font-medium">{{ receipt.order.id }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-6 border-t border-b py-4">
+        <h3 class="font-semibold mb-3">Order Items:</h3>
+        <table class="w-full text-sm">
+            <thead class="bg-slate-100">
+                <tr>
+                    <th class="text-left p-2">Product</th>
+                    <th class="text-right p-2">Qty</th>
+                    <th class="text-right p-2">Price</th>
+                    <th class="text-right p-2">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in receipt.order.items.all %}
+                <tr class="border-b">
+                    <td class="p-2">{{ item.product.name }}</td>
+                    <td class="text-right p-2">{{ item.quantity }}</td>
+                    <td class="text-right p-2">${{ item.price }}</td>
+                    <td class="text-right p-2">${{ item.subtotal }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mb-6 space-y-2">
+        <div class="flex justify-between text-sm">
+            <span class="text-slate-600">Order Total:</span>
+            <span class="font-medium">${{ receipt.order.total_amount }}</span>
+        </div>
+        <div class="flex justify-between text-sm">
+            <span class="text-slate-600">Total Paid (Before):</span>
+            <span class="font-medium">${{ receipt.order.total_paid|add:"-"|add:receipt.total_paid }}</span>
+        </div>
+        <div class="flex justify-between text-lg font-bold border-t pt-2">
+            <span>Payment Amount:</span>
+            <span class="text-green-600">${{ receipt.total_paid }}</span>
+        </div>
+        <div class="flex justify-between text-lg font-bold border-t pt-2">
+            <span>Remaining Balance:</span>
+            <span class="text-red-600">${{ receipt.remaining_balance }}</span>
+        </div>
+    </div>
+
+    {% if receipt.payment.receipt %}
+    <div class="mb-6">
+        <p class="text-sm text-slate-600 mb-2">Receipt Photo:</p>
+        <img src="{{ receipt.payment.receipt.url }}" alt="Receipt Photo" class="max-w-full h-auto border rounded">
+    </div>
+    {% endif %}
+
+    <div class="text-center text-xs text-slate-500 mt-6 pt-4 border-t">
+        <p>Thank you for your business!</p>
+        <p>Payment ID: {{ receipt.payment.id }} | Receipt generated: {{ receipt.created_at|date:"Y-m-d H:i:s" }}</p>
+    </div>
+
+    <div class="mt-6 flex gap-2 justify-center no-print">
+        <button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            Print Receipt
+        </button>
+        <a href="{% url 'dashboard' %}" class="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700">
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    aside, header {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
