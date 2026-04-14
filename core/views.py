@@ -117,6 +117,14 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     Simple role-based dashboard.
     """
     role = getattr(getattr(request.user, "profile", None), "role", None)
+    active_branch = _get_active_branch(request.user)
+    today = timezone.now().date()
+
+    orders_qs = Order.objects.prefetch_related("payments", "items", "customer")
+    payments_qs = Payment.objects.select_related("order__customer", "collector", "payment_receipt")
+    inventory_qs = Inventory.objects.select_related("product", "branch")
+    customers_qs = Customer.objects.all()
+
     # High-level metrics used for all dashboards
     top_products = (
         OrderItem.objects.filter(order__status=OrderStatus.COMPLETED)
@@ -125,18 +133,18 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         .order_by("-units_sold", "-revenue")[:5]
     )
     recent_transactions = (
-        Payment.objects.select_related("order__customer", "collector", "payment_receipt")
+        payments_qs
         .order_by("-paid_at")[:5]
     )
     total_employees = UserProfile.objects.count()
-    total_inventory_units = Inventory.objects.aggregate(total=Sum("stock"))["total"] or 0
+    total_inventory_units = inventory_qs.aggregate(total=Sum("stock"))["total"] or 0
     outstanding_balance_total = sum(
-        (order.remaining_balance for order in Order.objects.prefetch_related("payments", "items")),
+        (order.remaining_balance for order in orders_qs),
         Decimal("0.00"),
     )
 
     customer_candidates = (
-        Customer.objects.prefetch_related(
+        customers_qs.prefetch_related(
             Prefetch(
                 "orders",
                 queryset=Order.objects.prefetch_related("payments", "items").order_by("-created_at"),
@@ -151,18 +159,60 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         reverse=True,
     )[:5]
 
+    order_status_counts = {
+        "pending": orders_qs.filter(status=OrderStatus.PENDING).count(),
+        "reserved": orders_qs.filter(status=OrderStatus.RESERVED).count(),
+        "completed": orders_qs.filter(status=OrderStatus.COMPLETED).count(),
+        "cancelled": orders_qs.filter(status=OrderStatus.CANCELLED).count(),
+    }
+    payments_today = payments_qs.filter(paid_at__date=today)
+    payments_today_total = payments_today.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+    low_stock_count = inventory_qs.filter(available__lte=5).count()
+
+    role_focus = {
+        UserRole.COLLECTOR: {
+            "title": "Collections and cash handling",
+            "summary": "Prioritize accurate payment logging, receipt capture, and end-of-day reconciliation.",
+        },
+        UserRole.SECRETARY: {
+            "title": "Customer intake and order encoding",
+            "summary": "Keep customer records complete and make sure every order is captured clearly and correctly.",
+        },
+        UserRole.MANAGER: {
+            "title": "Operational control and stock visibility",
+            "summary": "Watch branch activity, resolve stock issues, and keep transaction flow and reporting consistent.",
+        },
+        UserRole.OWNER: {
+            "title": "Business oversight and reporting",
+            "summary": "Monitor branch health, collection performance, inventory pressure, and staff activity in one place.",
+        },
+    }.get(
+        role,
+        {
+            "title": "Branch overview",
+            "summary": "Use this dashboard to monitor the current state of branch operations and recent activity.",
+        },
+    )
+
     context = {
         "role": role,
+        "role_focus": role_focus,
+        "active_branch": active_branch,
         "total_customers": Customer.objects.count(),
-        "total_orders": Order.objects.count(),
-        "total_payments": Payment.objects.count(),
+        "total_orders": orders_qs.count(),
+        "total_payments": payments_qs.count(),
         "total_employees": total_employees,
         "total_inventory_units": total_inventory_units,
         "outstanding_balance_total": outstanding_balance_total,
+        "payments_today_total": payments_today_total,
+        "payments_today_count": payments_today.count(),
+        "order_status_counts": order_status_counts,
+        "low_stock_count": low_stock_count,
+        "customers_with_balance_count": len(customers_with_balance),
         "pending_reconciliations": DailyReconciliation.objects.filter(
             status=ReconciliationStatus.PENDING
         ).count(),
-        "inventory_low": Inventory.objects.filter(available__lte=5).select_related("product", "branch")[:10],
+        "inventory_low": inventory_qs.filter(available__lte=5)[:10],
         "top_products": top_products,
         "recent_transactions": recent_transactions,
         "customers_with_balance": customers_with_balance,
@@ -177,11 +227,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         context["recent_payments"] = recent_payments
 
     if role == UserRole.OWNER:
-        today = timezone.now().date()
-        context["today_payment_total"] = sum(
-            (float(p.amount) for p in Payment.objects.filter(paid_at__date=today)),
-            0.0,
-        )
+        context["today_payment_total"] = float(payments_today_total)
 
     template_map = {
         UserRole.COLLECTOR: "core/dashboard_collector.html",
@@ -433,7 +479,17 @@ def inventory_list(request: HttpRequest) -> HttpResponse:
     if active_branch is not None:
         qs = qs.filter(branch=active_branch)
     qs = qs.order_by("branch__name", "product__name")
-    return render(request, "core/inventory_list.html", {"inventories": qs})
+    inventories = list(qs)
+    context = {
+        "inventories": inventories,
+        "inventory_summary": {
+            "product_lines": len(inventories),
+            "total_stock": sum((inventory.stock for inventory in inventories), 0),
+            "total_reserved": sum((inventory.reserved for inventory in inventories), 0),
+            "low_stock_count": sum((1 for inventory in inventories if inventory.available <= 5), 0),
+        },
+    }
+    return render(request, "core/inventory_list.html", context)
 
 
 @role_required(UserRole.COLLECTOR, UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
@@ -448,7 +504,19 @@ def order_list(request: HttpRequest) -> HttpResponse:
         qs = qs.filter(status=status)
 
     qs = qs.order_by("-created_at")
-    return render(request, "core/order_list.html", {"orders": qs})
+    orders = list(qs)
+    context = {
+        "orders": orders,
+        "selected_status": status or "",
+        "order_summary": {
+            "count": len(orders),
+            "pending": sum((1 for order in orders if order.status == OrderStatus.PENDING), 0),
+            "reserved": sum((1 for order in orders if order.status == OrderStatus.RESERVED), 0),
+            "completed": sum((1 for order in orders if order.status == OrderStatus.COMPLETED), 0),
+            "outstanding_total": sum((order.remaining_balance for order in orders), Decimal("0.00")),
+        },
+    }
+    return render(request, "core/order_list.html", context)
 
 
 @role_required(UserRole.MANAGER, UserRole.OWNER)
