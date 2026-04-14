@@ -1,76 +1,113 @@
 {% extends "base.html" %}
 {% block header %}New Order{% endblock %}
+{% block header_subtitle %}Build the order clearly: choose the customer, define the status, and add the products being sold.{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto bg-white rounded shadow p-6">
-    <h2 class="text-lg font-semibold mb-4">Create Order</h2>
-    <form method="post" class="space-y-6">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {% for field in form %}
-                <div>
-                    <label class="block text-sm font-medium mb-1">{{ field.label }}</label>
-                    {{ field }}
-                    {% for error in field.errors %}
-                        <p class="text-xs text-red-600">{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endfor %}
+<section class="mx-auto max-w-6xl space-y-6">
+    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="grid gap-4 md:grid-cols-3">
+            <div class="rounded-xl bg-slate-50 px-5 py-5">
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Step 1</p>
+                <h3 class="mt-2 text-lg font-bold text-slate-900">Select Customer</h3>
+                <p class="mt-2 text-sm text-slate-500">Choose the customer record that this order belongs to.</p>
+            </div>
+            <div class="rounded-xl bg-slate-50 px-5 py-5">
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Step 2</p>
+                <h3 class="mt-2 text-lg font-bold text-slate-900">Set Order Status</h3>
+                <p class="mt-2 text-sm text-slate-500">Use the correct workflow state so inventory and reporting stay accurate.</p>
+            </div>
+            <div class="rounded-xl bg-slate-50 px-5 py-5">
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Step 3</p>
+                <h3 class="mt-2 text-lg font-bold text-slate-900">Add Products</h3>
+                <p class="mt-2 text-sm text-slate-500">Enter the furniture items being sold and confirm each line subtotal.</p>
+            </div>
         </div>
+    </div>
 
-        <div class="border-t pt-4">
-            <h3 class="text-md font-semibold mb-3">Order Items</h3>
-            <p class="text-sm text-slate-600 mb-3">Add multiple products to this order. Price will auto-fill from product.</p>
-            
-            {{ formset.management_form }}
-            {{ formset.non_form_errors }}
-            
-            <div id="formset-container" class="space-y-3">
-                {% for form in formset %}
-                    <div class="formset-form border rounded p-4 bg-slate-50">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                            {% for field in form.visible_fields %}
-                                <div>
-                                    <label class="block text-xs font-medium mb-1 text-slate-700">{{ field.label }}</label>
-                                    {{ field }}
-                                    {% for error in field.errors %}
-                                        <p class="text-xs text-red-600 mt-1">{{ error }}</p>
-                                    {% endfor %}
-                                </div>
-                            {% endfor %}
-                        </div>
-                        {% for hidden in form.hidden_fields %}
-                            {{ hidden }}
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200/80 px-8 py-6">
+            <h3 class="text-xl font-bold text-slate-900">Create Order</h3>
+            <p class="mt-1 text-sm text-slate-500">This screen is designed to help you capture the order accurately without missing line-item details.</p>
+        </div>
+        <form method="post" class="space-y-8 px-8 py-8">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="grid gap-4 md:grid-cols-2">
+                {% for field in form %}
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
                         {% endfor %}
                     </div>
                 {% endfor %}
             </div>
-        </div>
 
-        <div class="flex gap-2">
-            <button type="submit" class="bg-emerald-600 text-white px-6 py-2 rounded text-sm hover:bg-emerald-500 font-medium">
-                Create Order
-            </button>
-            <a href="{% url 'order_list' %}" class="bg-slate-600 text-white px-6 py-2 rounded text-sm hover:bg-slate-500 font-medium">
-                Cancel
-            </a>
-        </div>
-    </form>
-</div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h4 class="text-lg font-bold text-slate-900">Order Items</h4>
+                        <p class="mt-1 text-sm text-slate-500">Add products, quantities, and confirm each subtotal before saving the order.</p>
+                    </div>
+                </div>
+
+                {{ formset.management_form }}
+                {{ formset.non_form_errors }}
+
+                <div id="formset-container" class="mt-5 space-y-4">
+                    {% for form in formset %}
+                        <div class="formset-form rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <div class="mb-4 flex items-center justify-between">
+                                <p class="text-sm font-semibold text-slate-900">Line Item {{ forloop.counter }}</p>
+                                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Product Sale</p>
+                            </div>
+                            <div class="grid gap-4 md:grid-cols-4">
+                                {% for field in form.visible_fields %}
+                                    <div>
+                                        <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{{ field.label }}</label>
+                                        {{ field }}
+                                        {% for error in field.errors %}
+                                            <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% for hidden in form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row">
+                <button type="submit" class="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
+                    Create Order
+                </button>
+                <a href="{% url 'order_list' %}" class="rounded-xl border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    Back to Orders
+                </a>
+            </div>
+        </form>
+    </section>
+</section>
 
 <script>
-// Auto-calculate subtotal when price or quantity changes
 document.addEventListener('DOMContentLoaded', function() {
     const formsetContainer = document.getElementById('formset-container');
-    
+
     formsetContainer.addEventListener('input', function(e) {
         if (e.target.name.includes('quantity') || e.target.name.includes('price')) {
             const form = e.target.closest('.formset-form');
             const quantityInput = form.querySelector('[name*="quantity"]');
             const priceInput = form.querySelector('[name*="price"]');
             const subtotalInput = form.querySelector('[name*="subtotal"]');
-            
+
             if (quantityInput && priceInput && subtotalInput) {
                 const quantity = parseFloat(quantityInput.value) || 0;
                 const price = parseFloat(priceInput.value) || 0;
@@ -78,22 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    
-    // Auto-fill price when product is selected
-    formsetContainer.addEventListener('change', function(e) {
-        if (e.target.name.includes('product')) {
-            const form = e.target.closest('.formset-form');
-            const productSelect = e.target;
-            const priceInput = form.querySelector('[name*="price"]');
-            
-            if (productSelect.value && priceInput) {
-                // In a real implementation, you'd fetch the price via AJAX
-                // For now, this is a placeholder
-                console.log('Product selected:', productSelect.value);
-            }
-        }
-    });
 });
 </script>
 {% endblock %}
-

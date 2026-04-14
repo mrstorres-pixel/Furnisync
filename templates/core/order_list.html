@@ -2,7 +2,7 @@
 {% block header %}Orders{% endblock %}
 {% block header_subtitle %}Review order status, customer details, outstanding balances, and line items in one place.{% endblock %}
 {% block content %}
-<section class="overflow-hidden rounded-[1.9rem] border border-white/70 bg-white/88 shadow-panel backdrop-blur">
+<section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
     <div class="border-b border-slate-200/80 px-6 py-5">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -20,13 +20,13 @@
                     <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
                 </select>
             </label>
-            <button class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">Filter</button>
+            <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">Filter</button>
             </form>
         </div>
     </div>
     <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
-            <thead class="bg-slate-50/90 text-slate-500">
+            <thead class="bg-slate-50 text-slate-500">
             <tr>
                 <th class="px-6 py-4 text-left font-semibold">ID</th>
                 <th class="px-6 py-4 text-left font-semibold">Customer</th>
@@ -40,7 +40,7 @@
             </thead>
             <tbody class="divide-y divide-slate-100">
         {% for order in orders %}
-            <tr class="hover:bg-brand-50/60">
+            <tr class="hover:bg-slate-50">
                 <td class="px-6 py-4 font-semibold text-slate-900">#{{ order.id }}</td>
                 <td class="px-6 py-4 text-slate-700">{{ order.customer.full_name }}</td>
                 <td class="px-6 py-4">

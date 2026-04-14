@@ -2,14 +2,14 @@
 {% block header %}Products{% endblock %}
 {% block header_subtitle %}Track available products, stock position, and which items are generating sales.{% endblock %}
 {% block content %}
-<section class="overflow-hidden rounded-[1.9rem] border border-white/70 bg-white/88 shadow-panel backdrop-blur">
+<section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
     <div class="border-b border-slate-200/80 px-6 py-5">
         <div class="flex items-center justify-between gap-4">
             <div>
                 <h3 class="text-lg font-bold text-slate-900">Product Performance</h3>
                 <p class="mt-1 text-sm text-slate-500">See which products exist in the catalog, how much stock remains, and which items are selling.</p>
             </div>
-            <a href="{% url 'product_create' %}" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">New Product</a>
+            <a href="{% url 'product_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">New Product</a>
         </div>
         <form method="get" class="mt-4 grid gap-3 xl:grid-cols-[1.5fr_1fr_1fr_auto]">
             <input type="text" name="q" value="{{ filters.q }}" placeholder="Search product name, SKU, or description" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
@@ -24,12 +24,12 @@
                 <option value="sold" {% if filters.sales == 'sold' %}selected{% endif %}>Sold products</option>
                 <option value="unsold" {% if filters.sales == 'unsold' %}selected{% endif %}>Unsold products</option>
             </select>
-            <button class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700">Filter</button>
+            <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">Filter</button>
         </form>
     </div>
     <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
-            <thead class="bg-slate-50/90 text-slate-500">
+            <thead class="bg-slate-50 text-slate-500">
             <tr>
                 <th class="px-6 py-4 text-left font-semibold">Product</th>
                 <th class="px-6 py-4 text-left font-semibold">SKU</th>
@@ -43,7 +43,7 @@
             </thead>
             <tbody class="divide-y divide-slate-100">
             {% for summary in product_summaries %}
-                <tr class="hover:bg-brand-50/60">
+                <tr class="hover:bg-slate-50">
                     <td class="px-6 py-4 font-medium text-slate-900">
                         <a href="{% url 'product_detail' summary.product.id %}" class="hover:text-brand-700">{{ summary.product.name }}</a>
                     </td>

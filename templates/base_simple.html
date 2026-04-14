@@ -11,20 +11,20 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: "#f8f7f1",
-                            100: "#efebdf",
-                            200: "#dfd5be",
-                            300: "#c7b189",
-                            400: "#ad8d58",
-                            500: "#8e6d3b",
-                            600: "#72552d",
-                            700: "#594224",
-                            800: "#3e2f1c",
-                            900: "#241b12"
+                            50: "#f4f7fb",
+                            100: "#e7eef6",
+                            200: "#cad8e8",
+                            300: "#a8bdd5",
+                            400: "#7f9dbd",
+                            500: "#5d7fa3",
+                            600: "#456584",
+                            700: "#304b64",
+                            800: "#1e3347",
+                            900: "#112433"
                         }
                     },
                     fontFamily: {
-                        sans: ["Manrope", "ui-sans-serif", "system-ui", "sans-serif"]
+                        sans: ["Public Sans", "ui-sans-serif", "system-ui", "sans-serif"]
                     }
                 }
             }
@@ -32,22 +32,21 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(199,177,137,0.18),_transparent_28%),linear-gradient(180deg,_#f8f7f1_0%,_#f4f1ea_100%)] font-sans text-slate-800">
-    <div class="relative isolate flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
-        <div class="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-brand-300/20 blur-3xl"></div>
-        <div class="relative w-full max-w-md space-y-5">
+<body class="min-h-screen bg-slate-100 font-sans text-slate-800">
+    <div class="flex min-h-screen items-center justify-center px-4 py-10">
+        <div class="w-full max-w-md space-y-5">
             {% if messages %}
                 <div class="space-y-3">
                     {% for message in messages %}
-                        <div class="rounded-2xl border px-4 py-4 text-sm shadow-sm
+                        <div class="rounded-xl border px-4 py-4 text-sm shadow-sm
                             {% if message.tags == 'success' %}
                                 border-emerald-200 bg-emerald-50 text-emerald-800
                             {% elif message.tags == 'error' %}
                                 border-rose-200 bg-rose-50 text-rose-800
                             {% else %}
-                                border-slate-200 bg-white/90 text-slate-700
+                                border-slate-200 bg-white text-slate-700
                             {% endif %}
                         ">
                             {{ message }}

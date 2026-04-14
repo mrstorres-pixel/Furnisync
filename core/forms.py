@@ -19,14 +19,14 @@ def apply_tailwind_classes(form: forms.Form) -> None:
     can render fields directly while still looking presentation-ready.
     """
     base_classes = (
-        "w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm "
+        "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm "
         "text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white "
         "focus:ring-4 focus:ring-brand-200/40"
     )
     checkbox_classes = "h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-300"
     file_classes = (
-        "block w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 "
-        "px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 "
+        "block w-full rounded-xl border border-dashed border-slate-300 bg-white "
+        "px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 "
         "file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
     )
 

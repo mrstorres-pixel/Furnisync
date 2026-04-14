@@ -1,27 +1,58 @@
 {% extends "base.html" %}
 {% block header %}New Customer{% endblock %}
+{% block header_subtitle %}Create a customer record with the contact information and payment arrangement your team will use later.{% endblock %}
 {% block content %}
-<div class="max-w-xl mx-auto bg-white rounded shadow p-6">
-    <h2 class="text-lg font-semibold mb-4">Create Customer</h2>
-    <form method="post" class="space-y-4">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        {% for field in form %}
-            <div>
-                <label class="block text-sm font-medium mb-1">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}
-                    <p class="text-xs text-slate-500">{{ field.help_text }}</p>
-                {% endif %}
-                {% for error in field.errors %}
-                    <p class="text-xs text-red-600">{{ error }}</p>
-                {% endfor %}
+<section class="mx-auto max-w-4xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div class="grid gap-0 lg:grid-cols-[0.85fr_1.15fr]">
+        <div class="bg-slate-950 px-8 py-8 text-white">
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-300">Customer Intake</p>
+            <h3 class="mt-3 text-2xl font-extrabold tracking-tight">Add Customer Record</h3>
+            <p class="mt-3 text-sm leading-6 text-slate-200">Capture the essential customer details once so the same record can be used for orders, payments, and account follow-up.</p>
+            <div class="mt-6 space-y-4">
+                <div class="rounded-xl border border-white/10 bg-white/10 p-5">
+                    <p class="text-sm font-semibold">What this supports</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-200">A clean customer profile improves transaction history, balance tracking, and order visibility later in the workflow.</p>
+                </div>
+                <div class="rounded-xl border border-white/10 bg-white/10 p-5">
+                    <p class="text-sm font-semibold">Recommended input</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-200">Use a complete name, reliable contact number, and the actual installment arrangement discussed with the customer.</p>
+                </div>
             </div>
-        {% endfor %}
-        <button class="bg-emerald-600 text-white px-4 py-2 rounded text-sm hover:bg-emerald-500">
-            Save Customer
-        </button>
-    </form>
-</div>
+        </div>
+        <div class="px-8 py-8">
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-slate-900">Customer information</h3>
+                <p class="mt-1 text-sm text-slate-500">Fill in the details below to create a new customer profile.</p>
+            </div>
+            <form method="post" class="space-y-5">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+                {% for field in form %}
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <div class="flex flex-col gap-3 pt-2 sm:flex-row">
+                    <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
+                        Save Customer
+                    </button>
+                    <a href="{% url 'customer_list' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                        View Customers
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
 {% endblock %}
-
