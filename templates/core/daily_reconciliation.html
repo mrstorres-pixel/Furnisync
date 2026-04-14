@@ -1,48 +1,72 @@
 {% extends "base.html" %}
 {% block header %}Daily Reconciliation{% endblock %}
-{% block header_subtitle %}Compare recorded system totals with actual counted cash to keep transaction accountability clear.{% endblock %}
+{% block header_subtitle %}Compare recorded system totals with counted cash so discrepancies can be reviewed and approved transparently.{% endblock %}
 {% block content %}
-<section class="mx-auto max-w-4xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-    <div class="grid gap-0 lg:grid-cols-[0.85fr_1.15fr]">
-        <div class="bg-slate-950 px-8 py-8 text-white">
-            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-300">Cash Control</p>
-            <h3 class="mt-3 text-2xl font-extrabold tracking-tight">Daily Reconciliation</h3>
-            <p class="mt-3 text-sm leading-6 text-slate-200">This record helps management compare system transactions against the actual physical cash counted at the end of the day.</p>
-        </div>
-        <div class="px-8 py-8">
-            <div class="mb-6">
+<section class="mx-auto max-w-6xl space-y-6">
+    <div class="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <aside class="space-y-6">
+            <section class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Cash Control</p>
+                <h3 class="mt-3 text-2xl font-bold tracking-tight">Daily Reconciliation</h3>
+                <p class="mt-3 text-sm leading-6 text-slate-300">This record helps management compare system transactions against actual physical cash counted at the end of the day.</p>
+                <div class="mt-5 space-y-4">
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-sm font-semibold text-white">Enter the system total</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">Use the amount reflected by the system for the day being reconciled.</p>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-sm font-semibold text-white">Count the actual cash</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">Input the exact physical amount collected so discrepancies are visible immediately.</p>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-sm font-semibold text-white">Submit for review</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">Managers or owners can approve or reject the entry as part of the branch audit process.</p>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-200 px-8 py-6">
                 <h3 class="text-xl font-bold text-slate-900">Reconciliation Entry</h3>
                 <p class="mt-1 text-sm text-slate-500">Enter the system total and the actual cash counted so discrepancies can be reviewed properly.</p>
             </div>
-            <form method="post" class="space-y-5">
-                {% csrf_token %}
-                {% if form.non_field_errors %}
-                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                        {{ form.non_field_errors }}
+            <div class="grid gap-6 px-8 py-8 lg:grid-cols-[1fr_260px]">
+                <form method="post" class="space-y-5">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    {% for field in form %}
+                        <div>
+                            <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div class="flex flex-col gap-3 pt-2 sm:flex-row">
+                        <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
+                            Submit Reconciliation
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                            Back to Dashboard
+                        </a>
                     </div>
-                {% endif %}
-                {% for field in form %}
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.help_text %}
-                            <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
-                        {% endif %}
-                        {% for error in field.errors %}
-                            <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
-                <div class="flex flex-col gap-3 pt-2 sm:flex-row">
-                    <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
-                        Submit Reconciliation
-                    </button>
-                    <a href="{% url 'dashboard' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                        Back to Dashboard
-                    </a>
+                </form>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Review Note</p>
+                    <p class="mt-3 text-sm leading-6 text-slate-600">Any difference between system total and counted cash becomes part of the review record, so accurate encoding matters here.</p>
                 </div>
-            </form>
-        </div>
+            </div>
+        </section>
     </div>
 </section>
 {% endblock %}

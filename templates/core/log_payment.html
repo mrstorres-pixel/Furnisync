@@ -1,46 +1,90 @@
 {% extends "base.html" %}
 {% block header %}Log Payment{% endblock %}
-{% block header_subtitle %}Record a payment with its receipt image and maintain an accurate transaction trail.{% endblock %}
+{% block header_subtitle %}Record a customer payment, attach receipt evidence, and keep the transaction trail accurate and auditable.{% endblock %}
 {% block content %}
-<section class="mx-auto max-w-3xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-    <div class="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
-        <div class="bg-slate-950 px-8 py-8 text-white">
-            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-300">Collections</p>
-            <h3 class="mt-3 text-2xl font-extrabold tracking-tight">Payment Capture</h3>
-            <p class="mt-3 text-sm leading-6 text-slate-200">Use this form to register a new payment, attach receipt evidence, and preserve branch-level accountability.</p>
-            <div class="mt-6 rounded-xl border border-white/10 bg-white/10 p-5">
-                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">Reminder</p>
-                <p class="mt-2 text-sm leading-6 text-slate-200">Payments are immutable after creation, so make sure the order, amount, and receipt image are correct before saving.</p>
+<section class="mx-auto max-w-6xl space-y-6">
+    <div class="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <aside class="space-y-6">
+            <section class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Collections Control</p>
+                <h3 class="mt-3 text-2xl font-bold tracking-tight">Payment Capture</h3>
+                <p class="mt-3 text-sm leading-6 text-slate-300">Use this form to register a new payment, attach receipt evidence, and preserve branch-level accountability.</p>
+                <div class="mt-5 space-y-4">
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-sm font-semibold text-white">Check the order first</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">Confirm that the customer and order you are collecting from match the actual payment being received.</p>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-sm font-semibold text-white">Use the exact amount paid</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">This payment becomes part of the permanent transaction trail and affects the remaining balance immediately.</p>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-sm font-semibold text-white">Attach the receipt image</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">The uploaded image serves as supporting proof for auditability and printed receipt verification.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">Important</p>
+                <p class="mt-3 text-sm leading-6 text-amber-900">Payments are immutable after creation. Double-check the order, amount, date, and uploaded receipt before saving.</p>
+            </section>
+        </aside>
+
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-200 px-8 py-6">
+                <h3 class="text-xl font-bold text-slate-900">New Payment Entry</h3>
+                <p class="mt-1 text-sm text-slate-500">Complete all required fields to create a receipted payment record.</p>
             </div>
-        </div>
-        <div class="px-8 py-8">
-            <h3 class="text-xl font-bold text-slate-900">New payment entry</h3>
-            <p class="mt-1 text-sm text-slate-500">Complete all required fields to create a receipted payment record.</p>
-            <form method="post" enctype="multipart/form-data" class="mt-6 space-y-5">
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-            <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {{ form.non_field_errors }}
+            <div class="grid gap-6 px-8 py-8 lg:grid-cols-[1fr_280px]">
+                <form method="post" enctype="multipart/form-data" class="space-y-5">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    {% for field in form %}
+                        <div>
+                            <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div class="flex flex-col gap-3 pt-2 sm:flex-row">
+                        <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
+                            Save Payment
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                            Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">What Happens Next</p>
+                    <ol class="mt-4 space-y-4 text-sm text-slate-600">
+                        <li>
+                            <span class="font-semibold text-slate-900">1.</span>
+                            The payment is saved under the selected order and collector account.
+                        </li>
+                        <li>
+                            <span class="font-semibold text-slate-900">2.</span>
+                            A receipt record is generated automatically for the transaction.
+                        </li>
+                        <li>
+                            <span class="font-semibold text-slate-900">3.</span>
+                            The customer's remaining balance is updated for future follow-up.
+                        </li>
+                    </ol>
+                </div>
             </div>
-        {% endif %}
-        {% for field in form %}
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}
-                    <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
-                {% endif %}
-                {% for error in field.errors %}
-                    <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
-                {% endfor %}
-            </div>
-        {% endfor %}
-                <button class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
-                    Save Payment
-                </button>
-            </form>
-        </div>
+        </section>
     </div>
 </section>
 {% endblock %}
-

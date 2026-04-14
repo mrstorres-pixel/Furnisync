@@ -333,8 +333,17 @@ def daily_reconciliation(request: HttpRequest) -> HttpResponse:
 
 @role_required(UserRole.MANAGER, UserRole.OWNER)
 def reconciliation_list(request: HttpRequest) -> HttpResponse:
-    reconciliations = DailyReconciliation.objects.select_related("branch", "collector").order_by("-date")
-    return render(request, "core/reconciliation_list.html", {"reconciliations": reconciliations})
+    reconciliations = list(DailyReconciliation.objects.select_related("branch", "collector").order_by("-date"))
+    context = {
+        "reconciliations": reconciliations,
+        "reconciliation_summary": {
+            "count": len(reconciliations),
+            "pending": sum((1 for reconciliation in reconciliations if reconciliation.status == ReconciliationStatus.PENDING), 0),
+            "approved": sum((1 for reconciliation in reconciliations if reconciliation.status == ReconciliationStatus.APPROVED), 0),
+            "total_discrepancy": sum((reconciliation.discrepancy for reconciliation in reconciliations), Decimal("0.00")),
+        },
+    }
+    return render(request, "core/reconciliation_list.html", context)
 
 
 @role_required(UserRole.MANAGER, UserRole.OWNER)
@@ -603,8 +612,20 @@ def product_detail(request: HttpRequest, product_id: int) -> HttpResponse:
 
 @role_required(UserRole.OWNER)
 def user_list(request: HttpRequest) -> HttpResponse:
-    profiles = UserProfile.objects.select_related("user", "branch").order_by("user__username")
-    return render(request, "core/user_list.html", {"profiles": profiles})
+    profiles = list(UserProfile.objects.select_related("user", "branch").order_by("user__username"))
+    return render(
+        request,
+        "core/user_list.html",
+        {
+            "profiles": profiles,
+            "user_summary": {
+                "count": len(profiles),
+                "owners": sum((1 for profile in profiles if profile.role == UserRole.OWNER), 0),
+                "managers": sum((1 for profile in profiles if profile.role == UserRole.MANAGER), 0),
+                "collectors": sum((1 for profile in profiles if profile.role == UserRole.COLLECTOR), 0),
+            },
+        },
+    )
 
 
 @role_required(UserRole.MANAGER, UserRole.OWNER)
@@ -624,19 +645,32 @@ def employee_list(request: HttpRequest) -> HttpResponse:
         profiles = profiles.filter(Q(user__username__icontains=q) | Q(user__email__icontains=q))
     if role_filter:
         profiles = profiles.filter(role=role_filter)
+    profiles = list(profiles)
     return render(
         request,
         "core/employee_list.html",
-        {"profiles": profiles, "filters": {"q": q, "role": role_filter}, "roles": UserRole.choices},
+        {
+            "profiles": profiles,
+            "filters": {"q": q, "role": role_filter},
+            "roles": UserRole.choices,
+            "employee_summary": {
+                "count": len(profiles),
+                "collector_count": sum((1 for profile in profiles if profile.role == UserRole.COLLECTOR), 0),
+                "manager_count": sum((1 for profile in profiles if profile.role == UserRole.MANAGER), 0),
+                "payment_count": sum((profile.payment_count for profile in profiles), 0),
+            },
+        },
     )
 
 
 @role_required(UserRole.MANAGER, UserRole.OWNER)
 def employee_detail(request: HttpRequest, profile_id: int) -> HttpResponse:
     profile = get_object_or_404(UserProfile.objects.select_related("user"), pk=profile_id)
-    payments = profile.user.collected_payments.select_related("order__customer", "payment_receipt").order_by("-paid_at")[:10]
-    reconciliations = profile.user.reconciliations.order_by("-date")[:10]
-    adjustments = profile.user.created_inventory_adjustments.select_related("product").order_by("-created_at")[:10]
+    payments = list(
+        profile.user.collected_payments.select_related("order__customer", "payment_receipt").order_by("-paid_at")[:10]
+    )
+    reconciliations = list(profile.user.reconciliations.order_by("-date")[:10])
+    adjustments = list(profile.user.created_inventory_adjustments.select_related("product").order_by("-created_at")[:10])
     audit_logs = AuditLog.objects.filter(user=profile.user).order_by("-created_at")[:15]
     return render(
         request,
@@ -647,6 +681,7 @@ def employee_detail(request: HttpRequest, profile_id: int) -> HttpResponse:
             "reconciliations": reconciliations,
             "adjustments": adjustments,
             "audit_logs": audit_logs,
+            "payment_total": sum((payment.amount for payment in payments), Decimal("0.00")),
         },
     )
 
@@ -676,6 +711,12 @@ def customer_list(request: HttpRequest) -> HttpResponse:
         {
             "customer_summaries": customer_summaries,
             "filters": {"q": q, "balance": balance_filter},
+            "customer_summary": {
+                "count": len(customer_summaries),
+                "with_balance": sum((1 for summary in customer_summaries if summary["outstanding_balance"] > Decimal("0.00")), 0),
+                "total_purchased": sum((summary["total_purchased"] for summary in customer_summaries), Decimal("0.00")),
+                "outstanding_total": sum((summary["outstanding_balance"] for summary in customer_summaries), Decimal("0.00")),
+            },
         },
     )
 
@@ -693,7 +734,14 @@ def customer_detail(request: HttpRequest, customer_id: int) -> HttpResponse:
     return render(
         request,
         "core/customer_detail.html",
-        {"customer": customer, "summary": summary, "orders": orders, "payments": payments},
+        {
+            "customer": customer,
+            "summary": summary,
+            "orders": orders,
+            "payments": payments,
+            "latest_order": orders.first(),
+            "latest_payment": payments.first(),
+        },
     )
 
 
@@ -720,6 +768,7 @@ def transaction_list(request: HttpRequest) -> HttpResponse:
     if date_to:
         transactions = transactions.filter(paid_at__date__lte=date_to)
     employees = User.objects.filter(collected_payments__isnull=False).distinct().order_by("username")
+    transactions = list(transactions)
     return render(
         request,
         "core/transaction_list.html",
@@ -727,6 +776,12 @@ def transaction_list(request: HttpRequest) -> HttpResponse:
             "transactions": transactions,
             "employees": employees,
             "filters": {"q": q, "employee": employee, "date_from": date_from, "date_to": date_to},
+            "transaction_summary": {
+                "count": len(transactions),
+                "total_amount": sum((transaction.amount for transaction in transactions), Decimal("0.00")),
+                "outstanding_total": sum((transaction.balance_after_payment for transaction in transactions), Decimal("0.00")),
+                "receipt_count": sum((1 for transaction in transactions if getattr(transaction, "payment_receipt", None)), 0),
+            },
         },
     )
 

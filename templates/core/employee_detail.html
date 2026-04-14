@@ -1,38 +1,42 @@
 {% extends "base.html" %}
 {% block header %}Employee Detail{% endblock %}
-{% block header_subtitle %}Drill into one employee’s role, transaction activity, and system actions.{% endblock %}
+{% block header_subtitle %}Drill into one employee's role, transaction activity, reconciliation involvement, and audit trail.{% endblock %}
 {% block content %}
-<section class="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Employee Profile</p>
-        <h3 class="mt-3 text-2xl font-extrabold text-slate-900">{{ profile.user.username }}</h3>
+<section class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Employee Profile</p>
+        <h3 class="mt-3 text-2xl font-bold tracking-tight text-slate-950">{{ profile.user.username }}</h3>
         <p class="mt-2 text-sm text-slate-500">{{ profile.user.email|default:"No email recorded" }}</p>
-        <div class="mt-6 space-y-4 text-sm">
-            <div class="rounded-2xl bg-slate-50 px-4 py-4">
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
                 <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Role</div>
                 <div class="mt-2 font-semibold text-slate-900">{{ profile.get_role_display }}</div>
             </div>
-            <div class="rounded-2xl bg-slate-50 px-4 py-4">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
                 <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Branch</div>
                 <div class="mt-2 font-semibold text-slate-900">{{ profile.branch.name|default:"Operating branch" }}</div>
             </div>
         </div>
     </div>
 
-    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 class="text-lg font-bold text-slate-900">Recent Activity</h3>
-        <div class="mt-4 grid gap-4 md:grid-cols-3">
-            <div class="rounded-2xl bg-slate-50 px-4 py-5 text-center">
-                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Payments</div>
-                <div class="mt-2 text-3xl font-extrabold text-slate-900">{{ payments|length }}</div>
+    <div class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Activity Summary</p>
+        <div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
+            <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Payments</div>
+                <div class="mt-2 text-3xl font-bold text-white">{{ payments|length }}</div>
             </div>
-            <div class="rounded-2xl bg-slate-50 px-4 py-5 text-center">
-                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Reconciliations</div>
-                <div class="mt-2 text-3xl font-extrabold text-slate-900">{{ reconciliations|length }}</div>
+            <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Payment Value</div>
+                <div class="mt-2 text-3xl font-bold text-emerald-300">${{ payment_total }}</div>
             </div>
-            <div class="rounded-2xl bg-slate-50 px-4 py-5 text-center">
-                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Adjustments</div>
-                <div class="mt-2 text-3xl font-extrabold text-slate-900">{{ adjustments|length }}</div>
+            <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Reconciliations</div>
+                <div class="mt-2 text-3xl font-bold text-white">{{ reconciliations|length }}</div>
+            </div>
+            <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Adjustments</div>
+                <div class="mt-2 text-3xl font-bold text-white">{{ adjustments|length }}</div>
             </div>
         </div>
     </div>
@@ -42,6 +46,7 @@
     <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200/80 px-6 py-5">
             <h3 class="text-lg font-bold text-slate-900">Logged Payments</h3>
+            <p class="mt-1 text-sm text-slate-500">Most recent customer collections handled by this employee.</p>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
@@ -70,6 +75,7 @@
     <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200/80 px-6 py-5">
             <h3 class="text-lg font-bold text-slate-900">Audit Trail</h3>
+            <p class="mt-1 text-sm text-slate-500">Recent system actions tied to this employee account.</p>
         </div>
         <div class="divide-y divide-slate-100">
             {% for log in audit_logs %}
@@ -83,4 +89,60 @@
         </div>
     </div>
 </section>
+
+{% if reconciliations or adjustments %}
+<section class="grid gap-6 xl:grid-cols-2">
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200/80 px-6 py-5">
+            <h3 class="text-lg font-bold text-slate-900">Recent Reconciliations</h3>
+        </div>
+        <div class="divide-y divide-slate-100">
+            {% for reconciliation in reconciliations %}
+                <div class="px-6 py-4">
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <div class="font-medium text-slate-900">{{ reconciliation.date|date:"Y-m-d" }}</div>
+                            <div class="mt-1 text-xs text-slate-500">{{ reconciliation.get_status_display }}</div>
+                        </div>
+                        <div class="text-right text-sm">
+                            <div class="font-semibold text-slate-900">${{ reconciliation.system_total }}</div>
+                            <div class="text-xs {% if reconciliation.discrepancy != 0 %}text-rose-700{% else %}text-slate-400{% endif %}">
+                                Discrepancy: ${{ reconciliation.discrepancy }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="px-6 py-8 text-center text-sm text-slate-500">No reconciliations recorded.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200/80 px-6 py-5">
+            <h3 class="text-lg font-bold text-slate-900">Recent Inventory Adjustments</h3>
+        </div>
+        <div class="divide-y divide-slate-100">
+            {% for adjustment in adjustments %}
+                <div class="px-6 py-4">
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <div class="font-medium text-slate-900">{{ adjustment.product.name }}</div>
+                            <div class="mt-1 text-xs text-slate-500">{{ adjustment.created_at|date:"Y-m-d H:i" }}</div>
+                        </div>
+                        <div class="text-right text-sm">
+                            <div class="font-semibold {% if adjustment.quantity < 0 %}text-rose-700{% else %}text-emerald-700{% endif %}">
+                                {{ adjustment.quantity }}
+                            </div>
+                            <div class="text-xs text-slate-500">{{ adjustment.reason|truncatechars:40 }}</div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="px-6 py-8 text-center text-sm text-slate-500">No inventory adjustments recorded.</div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
 {% endblock %}

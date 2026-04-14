@@ -1,84 +1,73 @@
 {% extends "base.html" %}
 {% block title %}Receipt {{ receipt.receipt_number }}{% endblock %}
 {% block header %}Receipt Details{% endblock %}
-{% block header_subtitle %}Review the official payment record, included order items, and the remaining customer balance after this transaction.{% endblock %}
+{% block header_subtitle %}Review the official payment record, included order items, and remaining balance after this transaction.{% endblock %}
 {% block content %}
-<section class="mx-auto max-w-5xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-    <div class="border-b border-slate-200/80 bg-slate-950 px-8 py-8 text-white">
-        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-300">Official Receipt</p>
-        <div class="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+<section class="mx-auto max-w-6xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-200 bg-slate-950 px-8 py-8 text-white">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-                <h1 class="text-3xl font-extrabold tracking-tight">Receipt #{{ receipt.receipt_number }}</h1>
-                <p class="mt-2 text-sm text-slate-200">{{ receipt.branch.name }}{% if receipt.branch.address %} · {{ receipt.branch.address }}{% endif %}</p>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Official Receipt</p>
+                <h1 class="mt-3 text-3xl font-bold tracking-tight">Receipt #{{ receipt.receipt_number }}</h1>
+                <p class="mt-2 text-sm text-slate-300">{{ receipt.branch.name }}{% if receipt.branch.address %} · {{ receipt.branch.address }}{% endif %}</p>
             </div>
-            <div class="rounded-xl border border-white/10 bg-white/10 px-5 py-4 text-sm">
-                <div class="text-slate-300">Issued</div>
-                <div class="mt-1 font-semibold">{{ receipt.created_at|date:"F d, Y g:i A" }}</div>
+            <div class="rounded-xl border border-white/10 bg-white/5 px-5 py-4 text-sm">
+                <div class="text-slate-400">Issued</div>
+                <div class="mt-1 font-semibold text-white">{{ receipt.created_at|date:"F d, Y g:i A" }}</div>
             </div>
         </div>
     </div>
 
     <div class="space-y-6 px-8 py-8">
         <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div class="rounded-xl bg-slate-50 px-5 py-5">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-5">
                 <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Customer</div>
                 <div class="mt-2 font-semibold text-slate-900">{{ receipt.order.customer.full_name }}</div>
             </div>
-            <div class="rounded-xl bg-slate-50 px-5 py-5">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-5">
                 <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Collector</div>
                 <div class="mt-2 font-semibold text-slate-900">{{ receipt.collector.username }}</div>
             </div>
-            <div class="rounded-xl bg-slate-50 px-5 py-5">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-5">
                 <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Order</div>
                 <div class="mt-2 font-semibold text-slate-900">#{{ receipt.order.id }}</div>
             </div>
-            <div class="rounded-xl bg-slate-50 px-5 py-5">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-5 py-5">
                 <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Payment ID</div>
                 <div class="mt-2 font-semibold text-slate-900">#{{ receipt.payment.id }}</div>
             </div>
         </section>
 
-        <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-            <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
-                <h3 class="text-lg font-bold text-slate-900">Order Items</h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-slate-50/70 text-slate-500">
-                        <tr>
-                            <th class="px-6 py-4 text-left font-semibold">Product</th>
-                            <th class="px-6 py-4 text-right font-semibold">Qty</th>
-                            <th class="px-6 py-4 text-right font-semibold">Price</th>
-                            <th class="px-6 py-4 text-right font-semibold">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        {% for item in receipt.order.items.all %}
-                            <tr>
-                                <td class="px-6 py-4 font-medium text-slate-900">{{ item.product.name }}</td>
-                                <td class="px-6 py-4 text-right text-slate-700">{{ item.quantity }}</td>
-                                <td class="px-6 py-4 text-right text-slate-700">${{ item.price }}</td>
-                                <td class="px-6 py-4 text-right font-semibold text-slate-900">${{ item.subtotal }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-            {% if receipt.payment.receipt %}
-                <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                    <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
-                        <h3 class="text-lg font-bold text-slate-900">Uploaded Receipt Photo</h3>
-                    </div>
-                    <div class="p-6">
-                        <img src="{{ receipt.payment.receipt.url }}" alt="Receipt Photo" class="max-w-full rounded-2xl border border-slate-200">
-                    </div>
+        <section class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
+                    <h3 class="text-lg font-bold text-slate-900">Order Items</h3>
                 </div>
-            {% endif %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-500">
+                            <tr>
+                                <th class="px-6 py-4 text-left font-semibold">Product</th>
+                                <th class="px-6 py-4 text-right font-semibold">Qty</th>
+                                <th class="px-6 py-4 text-right font-semibold">Price</th>
+                                <th class="px-6 py-4 text-right font-semibold">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for item in receipt.order.items.all %}
+                                <tr>
+                                    <td class="px-6 py-4 font-medium text-slate-900">{{ item.product.name }}</td>
+                                    <td class="px-6 py-4 text-right text-slate-700">{{ item.quantity }}</td>
+                                    <td class="px-6 py-4 text-right text-slate-700">${{ item.price }}</td>
+                                    <td class="px-6 py-4 text-right font-semibold text-slate-900">${{ item.subtotal }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
-            <div class="rounded-xl border border-slate-200 bg-slate-50 px-6 py-6">
+            <section class="rounded-xl border border-slate-200 bg-slate-50 px-6 py-6">
                 <h3 class="text-lg font-bold text-slate-900">Payment Summary</h3>
                 <div class="mt-5 space-y-3 text-sm">
                     <div class="flex items-center justify-between">
@@ -91,15 +80,28 @@
                     </div>
                     <div class="flex items-center justify-between border-t border-slate-200 pt-3">
                         <span class="font-semibold text-slate-700">Payment Amount</span>
-                        <span class="text-lg font-extrabold text-emerald-700">${{ receipt.total_paid }}</span>
+                        <span class="text-lg font-bold text-emerald-700">${{ receipt.total_paid }}</span>
                     </div>
                     <div class="flex items-center justify-between border-t border-slate-200 pt-3">
                         <span class="font-semibold text-slate-700">Remaining Balance</span>
-                        <span class="text-lg font-extrabold text-rose-700">${{ receipt.remaining_balance }}</span>
+                        <span class="text-lg font-bold {% if receipt.remaining_balance > 0 %}text-rose-700{% else %}text-emerald-700{% endif %}">
+                            ${{ receipt.remaining_balance }}
+                        </span>
                     </div>
                 </div>
-            </div>
+            </section>
         </section>
+
+        {% if receipt.payment.receipt %}
+            <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
+                    <h3 class="text-lg font-bold text-slate-900">Uploaded Receipt Photo</h3>
+                </div>
+                <div class="p-6">
+                    <img src="{{ receipt.payment.receipt.url }}" alt="Receipt Photo" class="max-w-full rounded-xl border border-slate-200">
+                </div>
+            </section>
+        {% endif %}
 
         <div class="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-center no-print">
             <button onclick="window.print()" class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">

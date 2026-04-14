@@ -1,50 +1,58 @@
 {% extends "base.html" %}
 {% block header %}Product Detail{% endblock %}
-{% block header_subtitle %}Inspect stock position, sales movement, and recent completed sales for a single product.{% endblock %}
+{% block header_subtitle %}Inspect stock position, sales movement, and recent completed sales for a single product record.{% endblock %}
 {% block content %}
-<section class="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Product Profile</p>
-        <h3 class="mt-3 text-2xl font-extrabold text-slate-900">{{ product.name }}</h3>
-        <p class="mt-2 text-sm text-slate-500">{{ product.description|default:"No product description provided." }}</p>
-        <div class="mt-6 space-y-4 text-sm">
-            <div class="rounded-2xl bg-slate-50 px-4 py-4">
+<section class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Product Profile</p>
+        <h3 class="mt-3 text-2xl font-bold tracking-tight text-slate-950">{{ product.name }}</h3>
+        <p class="mt-2 text-sm leading-6 text-slate-500">{{ product.description|default:"No product description provided." }}</p>
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
                 <div class="text-xs uppercase tracking-[0.2em] text-slate-500">SKU</div>
                 <div class="mt-2 font-semibold text-slate-900">{{ product.sku }}</div>
             </div>
-            <div class="rounded-2xl bg-slate-50 px-4 py-4">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
                 <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Price</div>
                 <div class="mt-2 font-semibold text-slate-900">${{ product.price }}</div>
             </div>
         </div>
     </div>
 
-    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 class="text-lg font-bold text-slate-900">Sales Summary</h3>
-        <div class="mt-4 grid gap-4 md:grid-cols-2">
-            <div class="rounded-2xl bg-slate-50 px-4 py-5 text-center">
-                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Stock</div>
-                <div class="mt-2 text-3xl font-extrabold text-slate-900">{{ summary.inventory_stock }}</div>
+    <div class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Performance Snapshot</p>
+        <div class="mt-5 grid gap-4 sm:grid-cols-2">
+            <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Stock</div>
+                <div class="mt-2 text-3xl font-bold text-white">{{ summary.inventory_stock }}</div>
             </div>
-            <div class="rounded-2xl bg-slate-50 px-4 py-5 text-center">
-                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Available</div>
-                <div class="mt-2 text-3xl font-extrabold text-slate-900">{{ summary.inventory_available }}</div>
+            <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Available</div>
+                <div class="mt-2 text-3xl font-bold {% if summary.inventory_available <= 5 %}text-amber-300{% else %}text-white{% endif %}">{{ summary.inventory_available }}</div>
             </div>
-            <div class="rounded-2xl bg-slate-50 px-4 py-5 text-center">
-                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Units Sold</div>
-                <div class="mt-2 text-3xl font-extrabold text-slate-900">{{ summary.sold_quantity }}</div>
+            <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Units Sold</div>
+                <div class="mt-2 text-3xl font-bold text-white">{{ summary.sold_quantity }}</div>
             </div>
-            <div class="rounded-2xl bg-slate-50 px-4 py-5 text-center">
-                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Revenue</div>
-                <div class="mt-2 text-3xl font-extrabold text-emerald-700">${{ summary.revenue_total }}</div>
+            <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Revenue</div>
+                <div class="mt-2 text-3xl font-bold text-emerald-300">${{ summary.revenue_total }}</div>
             </div>
         </div>
     </div>
 </section>
 
 <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-    <div class="border-b border-slate-200/80 px-6 py-5">
-        <h3 class="text-lg font-bold text-slate-900">Recent Completed Sales</h3>
+    <div class="border-b border-slate-200 px-6 py-5">
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Recent Completed Sales</h3>
+                <p class="mt-1 text-sm text-slate-500">Latest successful sales involving this product, including customer and quantity movement.</p>
+            </div>
+            <a href="{% url 'product_edit' product.id %}" class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                Edit Product
+            </a>
+        </div>
     </div>
     <div class="overflow-x-auto">
         <table class="min-w-full text-sm">

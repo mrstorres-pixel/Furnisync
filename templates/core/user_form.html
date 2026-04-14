@@ -1,27 +1,52 @@
 {% extends "base.html" %}
 {% block header %}Edit User Role{% endblock %}
+{% block header_subtitle %}Update a user's branch responsibility level while keeping the single-branch access model clear and consistent.{% endblock %}
 {% block content %}
-<div class="max-w-xl mx-auto bg-white rounded shadow p-6">
-    <h2 class="text-lg font-semibold mb-4">
-        Edit Profile: {{ profile.user.username }}
-    </h2>
-    <p class="mb-4 text-sm text-slate-500">Roles are managed here. The system operates under a single branch configuration.</p>
-    <form method="post" class="space-y-4">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        {% for field in form %}
-            <div>
-                <label class="block text-sm font-medium mb-1">{{ field.label }}</label>
-                {{ field }}
-                {% for error in field.errors %}
-                    <p class="text-xs text-red-600">{{ error }}</p>
-                {% endfor %}
-            </div>
-        {% endfor %}
-        <button class="bg-emerald-600 text-white px-4 py-2 rounded text-sm hover:bg-emerald-500">
-            Save Changes
-        </button>
-    </form>
-</div>
-{% endblock %}
+<section class="mx-auto max-w-5xl space-y-6">
+    <div class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <aside class="space-y-6">
+            <section class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Access Control</p>
+                <h3 class="mt-3 text-2xl font-bold tracking-tight">{{ profile.user.username }}</h3>
+                <p class="mt-2 text-sm text-slate-300">{{ profile.user.email|default:"No email recorded" }}</p>
+                <div class="mt-5 rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-sm font-semibold text-white">Current branch model</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-300">This project is configured for one operating branch, so role changes affect access level rather than branch switching.</p>
+                </div>
+            </section>
+        </aside>
 
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-200 px-8 py-6">
+                <h3 class="text-xl font-bold text-slate-900">Role Assignment</h3>
+                <p class="mt-1 text-sm text-slate-500">Adjust the user's role to match their actual responsibility inside the branch workflow.</p>
+            </div>
+            <form method="post" class="space-y-5 px-8 py-8">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+                {% for field in form %}
+                    <div>
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <div class="flex flex-col gap-3 pt-2 sm:flex-row">
+                    <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
+                        Save Changes
+                    </button>
+                    <a href="{% url 'user_list' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                        Back to Users
+                    </a>
+                </div>
+            </form>
+        </section>
+    </div>
+</section>
+{% endblock %}

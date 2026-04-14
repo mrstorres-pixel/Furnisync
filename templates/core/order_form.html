@@ -1,105 +1,181 @@
 {% extends "base.html" %}
 {% block header %}New Order{% endblock %}
-{% block header_subtitle %}Build the order clearly: choose the customer, define the status, and add the products being sold.{% endblock %}
+{% block header_subtitle %}Create a complete branch sale by choosing the customer, setting the order status, and encoding the product lines clearly.{% endblock %}
 {% block content %}
-<section class="mx-auto max-w-6xl space-y-6">
-    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div class="grid gap-4 md:grid-cols-3">
-            <div class="rounded-xl bg-slate-50 px-5 py-5">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Step 1</p>
-                <h3 class="mt-2 text-lg font-bold text-slate-900">Select Customer</h3>
-                <p class="mt-2 text-sm text-slate-500">Choose the customer record that this order belongs to.</p>
+<section class="mx-auto max-w-7xl space-y-6">
+    <div class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-200 px-8 py-6">
+                <h3 class="text-xl font-bold text-slate-900">Order Builder</h3>
+                <p class="mt-1 text-sm text-slate-500">Capture the transaction accurately so inventory, customer balances, and reporting all stay aligned.</p>
             </div>
-            <div class="rounded-xl bg-slate-50 px-5 py-5">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Step 2</p>
-                <h3 class="mt-2 text-lg font-bold text-slate-900">Set Order Status</h3>
-                <p class="mt-2 text-sm text-slate-500">Use the correct workflow state so inventory and reporting stay accurate.</p>
-            </div>
-            <div class="rounded-xl bg-slate-50 px-5 py-5">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Step 3</p>
-                <h3 class="mt-2 text-lg font-bold text-slate-900">Add Products</h3>
-                <p class="mt-2 text-sm text-slate-500">Enter the furniture items being sold and confirm each line subtotal.</p>
-            </div>
-        </div>
-    </div>
-
-    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div class="border-b border-slate-200/80 px-8 py-6">
-            <h3 class="text-xl font-bold text-slate-900">Create Order</h3>
-            <p class="mt-1 text-sm text-slate-500">This screen is designed to help you capture the order accurately without missing line-item details.</p>
-        </div>
-        <form method="post" class="space-y-8 px-8 py-8">
-            {% csrf_token %}
-            {% if form.non_field_errors %}
-                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                    {{ form.non_field_errors }}
-                </div>
-            {% endif %}
-
-            <div class="grid gap-4 md:grid-cols-2">
-                {% for field in form %}
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
-                        {{ field }}
-                        {% for error in field.errors %}
-                            <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
-                        {% endfor %}
+            <form method="post" class="space-y-8 px-8 py-8">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        {{ form.non_field_errors }}
                     </div>
-                {% endfor %}
-            </div>
+                {% endif %}
 
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-6">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h4 class="text-lg font-bold text-slate-900">Order Items</h4>
-                        <p class="mt-1 text-sm text-slate-500">Add products, quantities, and confirm each subtotal before saving the order.</p>
+                <section class="space-y-4">
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Order Details</p>
+                            <h4 class="mt-2 text-lg font-bold text-slate-900">Customer and Status</h4>
+                        </div>
                     </div>
-                </div>
-
-                {{ formset.management_form }}
-                {{ formset.non_form_errors }}
-
-                <div id="formset-container" class="mt-5 space-y-4">
-                    {% for form in formset %}
-                        <div class="formset-form rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                            <div class="mb-4 flex items-center justify-between">
-                                <p class="text-sm font-semibold text-slate-900">Line Item {{ forloop.counter }}</p>
-                                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Product Sale</p>
-                            </div>
-                            <div class="grid gap-4 md:grid-cols-4">
-                                {% for field in form.visible_fields %}
-                                    <div>
-                                        <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{{ field.label }}</label>
-                                        {{ field }}
-                                        {% for error in field.errors %}
-                                            <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
-                                        {% endfor %}
-                                    </div>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        {% for field in form %}
+                            <div>
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                                {{ field }}
+                                {% for error in field.errors %}
+                                    <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
                                 {% endfor %}
                             </div>
-                            {% for hidden in form.hidden_fields %}
-                                {{ hidden }}
-                            {% endfor %}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
+                        {% endfor %}
+                    </div>
+                </section>
 
-            <div class="flex flex-col gap-3 sm:flex-row">
-                <button type="submit" class="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
-                    Create Order
-                </button>
-                <a href="{% url 'order_list' %}" class="rounded-xl border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                    Back to Orders
-                </a>
-            </div>
-        </form>
-    </section>
+                <section class="rounded-xl border border-slate-200 bg-slate-50 p-6">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Line Items</p>
+                            <h4 class="mt-2 text-lg font-bold text-slate-900">Products Being Sold</h4>
+                            <p class="mt-1 text-sm text-slate-500">Each line should reflect the exact item, quantity, selling price, and computed subtotal.</p>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-right">
+                            <p class="text-[11px] uppercase tracking-[0.2em] text-slate-500">Running Total</p>
+                            <p id="order-grand-total" class="mt-1 text-xl font-bold text-slate-900">$0.00</p>
+                        </div>
+                    </div>
+
+                    {{ formset.management_form }}
+                    {{ formset.non_form_errors }}
+
+                    <div id="formset-container" class="mt-5 space-y-4">
+                        {% for form in formset %}
+                            <div class="formset-form rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                                <div class="mb-4 flex items-center justify-between">
+                                    <p class="text-sm font-semibold text-slate-900">Line Item {{ forloop.counter }}</p>
+                                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Product Sale</p>
+                                </div>
+                                <div class="grid gap-4 md:grid-cols-4">
+                                    {% for field in form.visible_fields %}
+                                        <div>
+                                            <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{{ field.label }}</label>
+                                            {{ field }}
+                                            {% for error in field.errors %}
+                                                <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% for hidden in form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <div class="flex flex-col gap-3 sm:flex-row">
+                    <button type="submit" class="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
+                        Create Order
+                    </button>
+                    <a href="{% url 'order_list' %}" class="rounded-xl border border-slate-200 bg-white px-6 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                        Back to Orders
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <aside class="space-y-6">
+            <section class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Encoding Guide</p>
+                <div class="mt-5 space-y-4">
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-sm font-semibold text-white">1. Choose the right customer</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">Use an existing customer record so payment history and balances remain connected to the right person.</p>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-sm font-semibold text-white">2. Set the correct status</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">The order status affects stock reservation, reporting accuracy, and what the collections team sees later.</p>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-sm font-semibold text-white">3. Verify each line item</p>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">Confirm the product, quantity, and selling price before saving to avoid inventory and billing issues.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Live Summary</p>
+                <div class="mt-4 space-y-4 text-sm">
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-slate-500">Customer selected</span>
+                        <span id="order-customer-summary" class="font-semibold text-slate-900">Not selected</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-slate-500">Order status</span>
+                        <span id="order-status-summary" class="font-semibold text-slate-900">Not selected</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-4">
+                        <span class="text-slate-500">Encoded line items</span>
+                        <span id="order-line-count" class="font-semibold text-slate-900">0</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 border-t border-slate-200 pt-4">
+                        <span class="font-semibold text-slate-700">Projected order total</span>
+                        <span id="order-total-summary" class="text-lg font-bold text-emerald-700">$0.00</span>
+                    </div>
+                </div>
+            </section>
+        </aside>
+    </div>
 </section>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const formsetContainer = document.getElementById('formset-container');
+    const customerField = document.getElementById('id_customer');
+    const statusField = document.getElementById('id_status');
+    const customerSummary = document.getElementById('order-customer-summary');
+    const statusSummary = document.getElementById('order-status-summary');
+    const lineCountSummary = document.getElementById('order-line-count');
+    const totalSummary = document.getElementById('order-total-summary');
+    const grandTotal = document.getElementById('order-grand-total');
+
+    function updateTopLevelSummary() {
+        if (customerField) {
+            customerSummary.textContent = customerField.options[customerField.selectedIndex]?.text || 'Not selected';
+        }
+        if (statusField) {
+            statusSummary.textContent = statusField.options[statusField.selectedIndex]?.text || 'Not selected';
+        }
+    }
+
+    function updateTotals() {
+        const forms = Array.from(formsetContainer.querySelectorAll('.formset-form'));
+        let total = 0;
+        let activeLines = 0;
+
+        forms.forEach(function(form) {
+            const productField = form.querySelector('[name*="product"]');
+            const subtotalField = form.querySelector('[name*="subtotal"]');
+            const subtotal = parseFloat(subtotalField?.value) || 0;
+            const hasProduct = productField && productField.value;
+
+            if (hasProduct || subtotal > 0) {
+                activeLines += 1;
+            }
+            total += subtotal;
+        });
+
+        const formatted = '$' + total.toFixed(2);
+        lineCountSummary.textContent = activeLines.toString();
+        totalSummary.textContent = formatted;
+        grandTotal.textContent = formatted;
+    }
 
     formsetContainer.addEventListener('input', function(e) {
         if (e.target.name.includes('quantity') || e.target.name.includes('price')) {
@@ -114,7 +190,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 subtotalInput.value = (quantity * price).toFixed(2);
             }
         }
+        updateTotals();
     });
+
+    formsetContainer.addEventListener('change', updateTotals);
+    customerField?.addEventListener('change', updateTopLevelSummary);
+    statusField?.addEventListener('change', updateTopLevelSummary);
+
+    updateTopLevelSummary();
+    updateTotals();
 });
 </script>
 {% endblock %}
