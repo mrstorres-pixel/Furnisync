@@ -78,6 +78,19 @@ def _get_collectible_orders_for_user(user: User):
     return [order for order in qs if order.status in active_statuses and order.remaining_balance > Decimal("0.00")]
 
 
+def _serialize_order_items(order: Order) -> list[dict[str, object]]:
+    return [
+        {
+            "product": item.product.name,
+            "sku": item.product.sku,
+            "quantity": item.quantity,
+            "price": str(item.price),
+            "subtotal": str(item.subtotal),
+        }
+        for item in order.items.select_related("product").all()
+    ]
+
+
 def _build_customer_summary(customer: Customer) -> dict[str, object]:
     orders = list(customer.orders.all())
     total_purchased = sum((order.total_amount for order in orders), Decimal("0.00"))
@@ -587,7 +600,14 @@ def create_order(request: HttpRequest) -> HttpResponse:
                     action="Create Order",
                     instance=order,
                     old_values=None,
-                    new_values={"customer_id": order.customer_id, "branch_id": order.branch_id},
+                    new_values={
+                        "customer_id": order.customer_id,
+                        "customer_name": order.customer.full_name,
+                        "branch_id": order.branch_id,
+                        "status": order.status,
+                        "total_amount": str(order.total_amount),
+                        "line_items": _serialize_order_items(order),
+                    },
                 )
             messages.success(request, "Order created.")
             return redirect("dashboard")
@@ -807,6 +827,77 @@ def employee_detail(request: HttpRequest, profile_id: int) -> HttpResponse:
             "audit_logs": audit_logs,
             "payment_total": sum((payment.amount for payment in payments), Decimal("0.00")),
         },
+    )
+
+
+@role_required(UserRole.MANAGER, UserRole.OWNER)
+def audit_log_list(request: HttpRequest) -> HttpResponse:
+    q = request.GET.get("q", "").strip()
+    model_filter = request.GET.get("model", "").strip()
+    action_filter = request.GET.get("action", "").strip()
+    actor_filter = request.GET.get("actor", "").strip()
+    date_from = request.GET.get("date_from", "").strip()
+    date_to = request.GET.get("date_to", "").strip()
+
+    logs = AuditLog.objects.select_related("user").order_by("-created_at")
+    if q:
+        logs = logs.filter(
+            Q(action__icontains=q)
+            | Q(model_name__icontains=q)
+            | Q(object_id__icontains=q)
+            | Q(user__username__icontains=q)
+        )
+    if model_filter:
+        logs = logs.filter(model_name=model_filter)
+    if action_filter:
+        logs = logs.filter(action=action_filter)
+    if actor_filter == "system":
+        logs = logs.filter(user__isnull=True)
+    elif actor_filter:
+        logs = logs.filter(user_id=actor_filter)
+    if date_from:
+        logs = logs.filter(created_at__date__gte=date_from)
+    if date_to:
+        logs = logs.filter(created_at__date__lte=date_to)
+
+    logs = list(logs[:250])
+    context = {
+        "logs": logs,
+        "filters": {
+            "q": q,
+            "model": model_filter,
+            "action": action_filter,
+            "actor": actor_filter,
+            "date_from": date_from,
+            "date_to": date_to,
+        },
+        "audit_summary": {
+            "count": len(logs),
+            "system_events": sum((1 for log in logs if log.user_id is None), 0),
+            "payment_events": sum((1 for log in logs if log.model_name == "Payment"), 0),
+            "order_events": sum((1 for log in logs if log.model_name == "Order"), 0),
+            "today_events": sum((1 for log in logs if log.created_at.date() == timezone.now().date()), 0),
+        },
+        "model_options": AuditLog.objects.order_by("model_name").values_list("model_name", flat=True).distinct(),
+        "action_options": AuditLog.objects.order_by("action").values_list("action", flat=True).distinct(),
+        "actors": User.objects.filter(auditlog__isnull=False).distinct().order_by("username"),
+    }
+    return render(request, "core/audit_log_list.html", context)
+
+
+@role_required(UserRole.MANAGER, UserRole.OWNER)
+def audit_log_detail(request: HttpRequest, log_id: int) -> HttpResponse:
+    log = get_object_or_404(AuditLog.objects.select_related("user"), pk=log_id)
+    related_logs = list(
+        AuditLog.objects.select_related("user")
+        .filter(model_name=log.model_name, object_id=log.object_id)
+        .exclude(pk=log.pk)
+        .order_by("-created_at")[:10]
+    )
+    return render(
+        request,
+        "core/audit_log_detail.html",
+        {"log": log, "related_logs": related_logs},
     )
 
 

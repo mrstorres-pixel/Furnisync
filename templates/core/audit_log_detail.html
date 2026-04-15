@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Audit Event{% endblock %}
+{% block header %}Audit Event Detail{% endblock %}
+{% block header_subtitle %}Inspect the exact actor, record, timestamps, and before-versus-after values for one audit event.{% endblock %}
+{% block content %}
+<section class="mx-auto max-w-6xl space-y-6">
+    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Action</div>
+            <div class="mt-3 text-xl font-extrabold text-slate-900">{{ log.action }}</div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Model</div>
+            <div class="mt-3 text-xl font-extrabold text-slate-900">{{ log.model_name }}</div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Object</div>
+            <div class="mt-3 text-xl font-extrabold text-slate-900">#{{ log.object_id }}</div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Actor</div>
+            <div class="mt-3 text-xl font-extrabold text-slate-900">{% if log.user %}{{ log.user.username }}{% else %}System / Public{% endif %}</div>
+        </div>
+    </section>
+
+    <section class="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+        <aside class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Event Metadata</p>
+            <div class="mt-5 space-y-4 text-sm">
+                <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-slate-400">Recorded at</p>
+                    <p class="mt-2 font-semibold text-white">{{ log.created_at|date:"F d, Y g:i A" }}</p>
+                </div>
+                <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-slate-400">Audit actor</p>
+                    <p class="mt-2 font-semibold text-white">{% if log.user %}{{ log.user.username }}{% else %}System / Public confirmation{% endif %}</p>
+                </div>
+                <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p class="text-slate-400">Tracked record</p>
+                    <p class="mt-2 font-semibold text-white">{{ log.model_name }} #{{ log.object_id }}</p>
+                </div>
+            </div>
+        </aside>
+
+        <section class="space-y-6">
+            <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-200 px-6 py-5">
+                    <h3 class="text-lg font-bold text-slate-900">New Values / Event Payload</h3>
+                    <p class="mt-1 text-sm text-slate-500">This shows the structured data captured for the event at the moment it was recorded.</p>
+                </div>
+                <div class="p-6">
+                    <pre class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-6 text-slate-700">{% if log.new_values %}{{ log.new_values }}{% else %}No new values recorded.{% endif %}</pre>
+                </div>
+            </section>
+
+            <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="border-b border-slate-200 px-6 py-5">
+                    <h3 class="text-lg font-bold text-slate-900">Previous Values</h3>
+                    <p class="mt-1 text-sm text-slate-500">If the event changed an existing record, the prior captured values appear here.</p>
+                </div>
+                <div class="p-6">
+                    <pre class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-6 text-slate-700">{% if log.old_values %}{{ log.old_values }}{% else %}No previous values recorded.{% endif %}</pre>
+                </div>
+            </section>
+        </section>
+    </section>
+
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-6 py-5">
+            <h3 class="text-lg font-bold text-slate-900">Related Events For This Record</h3>
+            <p class="mt-1 text-sm text-slate-500">Use this to follow the timeline of the same record across multiple actions.</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-slate-500">
+                    <tr>
+                        <th class="px-6 py-4 text-left font-semibold">When</th>
+                        <th class="px-6 py-4 text-left font-semibold">Actor</th>
+                        <th class="px-6 py-4 text-left font-semibold">Action</th>
+                        <th class="px-6 py-4 text-right font-semibold">Open</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for related in related_logs %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4 text-slate-600">{{ related.created_at|date:"Y-m-d H:i" }}</td>
+                            <td class="px-6 py-4 text-slate-700">{% if related.user %}{{ related.user.username }}{% else %}System / Public{% endif %}</td>
+                            <td class="px-6 py-4 font-medium text-slate-900">{{ related.action }}</td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="{% url 'audit_log_detail' related.id %}" class="inline-flex rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="4">No other audit events were found for this record.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+{% endblock %}
