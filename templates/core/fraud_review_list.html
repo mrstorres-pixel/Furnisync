@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Fraud Review{% endblock %}
+{% block header %}Fraud Review{% endblock %}
+{% block header_subtitle %}Review payments that are still awaiting customer confirmation, contain mismatched amounts, or were flagged as suspicious by the system.{% endblock %}
+{% block content %}
+<section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Visible Payments</div>
+        <div class="mt-3 text-3xl font-extrabold text-slate-900">{{ review_summary.count }}</div>
+        <p class="mt-2 text-sm text-slate-500">Payments currently shown based on the active verification and risk filters.</p>
+    </div>
+    <div class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+        <div class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">Pending Customer</div>
+        <div class="mt-3 text-3xl font-extrabold text-amber-900">{{ review_summary.pending_customer }}</div>
+        <p class="mt-2 text-sm text-amber-800">Payments waiting for the customer to independently confirm the amount and upload proof.</p>
+    </div>
+    <div class="rounded-xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
+        <div class="text-xs font-semibold uppercase tracking-[0.24em] text-rose-700">Review Required</div>
+        <div class="mt-3 text-3xl font-extrabold text-rose-900">{{ review_summary.review_required }}</div>
+        <p class="mt-2 text-sm text-rose-800">Payments where the customer-reported details do not match the collector-side entry.</p>
+    </div>
+    <div class="rounded-xl border border-sky-200 bg-sky-50 p-5 shadow-sm">
+        <div class="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Suspicious Flags</div>
+        <div class="mt-3 text-3xl font-extrabold text-sky-900">{{ review_summary.suspicious }}</div>
+        <p class="mt-2 text-sm text-sky-800">Payments flagged for same-device or same-IP confirmation risk and similar integrity concerns.</p>
+    </div>
+    <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm md:col-span-2 xl:col-span-4">
+        <div class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Matched Confirmations</div>
+        <div class="mt-3 text-3xl font-extrabold text-emerald-900">{{ review_summary.matched }}</div>
+        <p class="mt-2 text-sm text-emerald-800">Payments where the customer independently confirmed the same amount and the system found no mismatch.</p>
+    </div>
+</section>
+
+<section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-200/80 px-6 py-5">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Anti-Fraud Review Queue</h3>
+                <p class="mt-1 text-sm text-slate-500">Compare collector-submitted records against customer-side confirmation evidence before you accept a payment as trustworthy.</p>
+            </div>
+            <form method="get" class="grid gap-3 md:grid-cols-3">
+                <select name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                    <option value="">All verification states</option>
+                    {% for value, label in verification_statuses %}
+                        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <select name="risk" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                    <option value="">All risk levels</option>
+                    <option value="suspicious" {% if filters.risk == "suspicious" %}selected{% endif %}>Suspicious only</option>
+                    <option value="clean" {% if filters.risk == "clean" %}selected{% endif %}>Clean only</option>
+                </select>
+                <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">Apply Filter</button>
+            </form>
+        </div>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-50 text-slate-500">
+                <tr>
+                    <th class="px-6 py-4 text-left font-semibold">Payment</th>
+                    <th class="px-6 py-4 text-left font-semibold">Customer</th>
+                    <th class="px-6 py-4 text-left font-semibold">Collector</th>
+                    <th class="px-6 py-4 text-right font-semibold">Collector Amount</th>
+                    <th class="px-6 py-4 text-right font-semibold">Customer Amount</th>
+                    <th class="px-6 py-4 text-left font-semibold">Verification</th>
+                    <th class="px-6 py-4 text-left font-semibold">Risk Notes</th>
+                    <th class="px-6 py-4 text-right font-semibold">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for payment in payments %}
+                    <tr class="align-top hover:bg-slate-50">
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-slate-900">
+                                {% if payment.payment_receipt %}
+                                    {{ payment.payment_receipt.receipt_number }}
+                                {% else %}
+                                    Payment #{{ payment.id }}
+                                {% endif %}
+                            </div>
+                            <div class="mt-1 text-xs text-slate-500">{{ payment.paid_at|date:"Y-m-d H:i" }}</div>
+                            <div class="mt-2 text-xs text-slate-500">Order #{{ payment.order.id }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-slate-900">{{ payment.order.customer.full_name }}</div>
+                            {% if payment.customer_confirmation_name %}
+                                <div class="mt-2 text-xs text-slate-500">Confirmed by {{ payment.customer_confirmation_name }}</div>
+                            {% endif %}
+                            {% if payment.customer_confirmed_at %}
+                                <div class="mt-1 text-xs text-slate-500">{{ payment.customer_confirmed_at|date:"Y-m-d H:i" }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-slate-700">{{ payment.collector.username }}</td>
+                        <td class="px-6 py-4 text-right font-semibold text-slate-900">${{ payment.amount }}</td>
+                        <td class="px-6 py-4 text-right">
+                            {% if payment.customer_reported_amount %}
+                                <span class="font-semibold {% if payment.customer_reported_amount != payment.amount %}text-rose-700{% else %}text-emerald-700{% endif %}">
+                                    ${{ payment.customer_reported_amount }}
+                                </span>
+                            {% else %}
+                                <span class="text-slate-400">No customer entry yet</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="rounded-full px-3 py-1 text-xs font-semibold
+                                {% if payment.verification_status == 'matched' %}bg-emerald-100 text-emerald-800
+                                {% elif payment.verification_status == 'review_required' %}bg-rose-100 text-rose-800
+                                {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                {{ payment.get_verification_status_display }}
+                            </span>
+                            {% if payment.customer_reported_amount and payment.customer_reported_amount != payment.amount %}
+                                <div class="mt-2 text-xs font-medium text-rose-700">Amount mismatch detected</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if payment.suspicious_confirmation %}
+                                <div class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+                                    <p class="font-semibold">Suspicious confirmation</p>
+                                    <p class="mt-1">{{ payment.suspicious_reason }}</p>
+                                </div>
+                            {% elif payment.verification_status == 'pending_customer' %}
+                                <div class="text-xs text-slate-500">Customer has not submitted independent confirmation yet.</div>
+                            {% else %}
+                                <div class="text-xs text-slate-500">No suspicious device or amount signal was detected.</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            {% if payment.payment_receipt %}
+                                <a href="{% url 'view_receipt' payment.payment_receipt.id %}" class="inline-flex rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                                    Open Receipt
+                                </a>
+                            {% else %}
+                                <span class="text-xs text-slate-400">Receipt unavailable</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td class="px-6 py-10 text-center text-sm text-slate-500" colspan="8">No payments matched the current anti-fraud review filters.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

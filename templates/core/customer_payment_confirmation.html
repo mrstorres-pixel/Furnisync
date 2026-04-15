@@ -28,6 +28,9 @@
                 <div>
                     <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
                     {{ field }}
+                    {% if field.name == 'reported_amount' %}
+                        <p class="mt-2 text-xs text-slate-500">This amount is prefilled from the collector's entry. Change it only if the collector-recorded amount is incorrect. Any mismatch will be flagged for management review.</p>
+                    {% endif %}
                     {% for error in field.errors %}
                         <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
                     {% endfor %}

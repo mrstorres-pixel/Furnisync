@@ -853,6 +853,47 @@ def transaction_list(request: HttpRequest) -> HttpResponse:
     )
 
 
+@role_required(UserRole.MANAGER, UserRole.OWNER)
+def fraud_review_list(request: HttpRequest) -> HttpResponse:
+    status_filter = request.GET.get("status", "").strip()
+    risk_filter = request.GET.get("risk", "").strip()
+
+    payments = Payment.objects.select_related(
+        "order__customer", "collector", "payment_receipt"
+    ).order_by("-created_at")
+
+    if status_filter:
+        payments = payments.filter(verification_status=status_filter)
+    if risk_filter == "suspicious":
+        payments = payments.filter(suspicious_confirmation=True)
+    elif risk_filter == "clean":
+        payments = payments.filter(suspicious_confirmation=False)
+
+    payments = list(payments)
+    context = {
+        "payments": payments,
+        "filters": {"status": status_filter, "risk": risk_filter},
+        "review_summary": {
+            "count": len(payments),
+            "pending_customer": sum(
+                (1 for payment in payments if payment.verification_status == Payment.VerificationStatus.PENDING_CUSTOMER),
+                0,
+            ),
+            "review_required": sum(
+                (1 for payment in payments if payment.verification_status == Payment.VerificationStatus.REVIEW_REQUIRED),
+                0,
+            ),
+            "suspicious": sum((1 for payment in payments if payment.suspicious_confirmation), 0),
+            "matched": sum(
+                (1 for payment in payments if payment.verification_status == Payment.VerificationStatus.MATCHED),
+                0,
+            ),
+        },
+        "verification_statuses": Payment.VerificationStatus.choices,
+    }
+    return render(request, "core/fraud_review_list.html", context)
+
+
 @role_required(UserRole.OWNER)
 def user_edit(request: HttpRequest, profile_id: int) -> HttpResponse:
     profile = get_object_or_404(UserProfile, pk=profile_id)
