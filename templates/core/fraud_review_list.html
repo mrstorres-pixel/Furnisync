@@ -43,14 +43,14 @@
                 <h3 class="text-lg font-bold text-slate-900">Anti-Fraud Review Queue</h3>
                 <p class="mt-1 text-sm text-slate-500">Compare collector-submitted records against customer-side confirmation evidence before you accept a payment as trustworthy.</p>
             </div>
-            <form method="get" class="grid gap-3 md:grid-cols-3">
-                <select name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+            <form id="fraud-filter-form" method="get" class="grid gap-3 md:grid-cols-3">
+                <select id="fraud-filter-status" name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                     <option value="">All verification states</option>
                     {% for value, label in verification_statuses %}
                         <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
-                <select name="risk" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                <select id="fraud-filter-risk" name="risk" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                     <option value="">All risk levels</option>
                     <option value="suspicious" {% if filters.risk == "suspicious" %}selected{% endif %}>Suspicious only</option>
                     <option value="clean" {% if filters.risk == "clean" %}selected{% endif %}>Clean only</option>
@@ -169,5 +169,24 @@
         </table>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('fraud-filter-form');
+    const statusField = document.getElementById('fraud-filter-status');
+    const riskField = document.getElementById('fraud-filter-risk');
+    if (!form || !statusField || !riskField) {
+        return;
+    }
+
+    [statusField, riskField].forEach(function(field) {
+        field.addEventListener('change', function() {
+            form.requestSubmit();
+        });
+    });
+});
+</script>
 {% endblock %}
 

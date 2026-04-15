@@ -38,10 +38,10 @@
                         Create Order
                     </a>
                 {% endif %}
-                <form method="get" class="flex flex-col gap-3 text-sm sm:flex-row sm:flex-wrap sm:items-end">
+                <form id="order-filter-form" method="get" class="flex flex-col gap-3 text-sm sm:flex-row sm:flex-wrap sm:items-end">
                     <label class="block">
                         <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Status</span>
-                        <select name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                        <select id="order-filter-status" name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                             <option value="">All statuses</option>
                             <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
                             <option value="reserved" {% if selected_status == 'reserved' %}selected{% endif %}>Reserved</option>
@@ -122,5 +122,20 @@
         </table>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('order-filter-form');
+    const statusField = document.getElementById('order-filter-status');
+    if (!form || !statusField) {
+        return;
+    }
+    statusField.addEventListener('change', function() {
+        form.requestSubmit();
+    });
+});
+</script>
 {% endblock %}
 

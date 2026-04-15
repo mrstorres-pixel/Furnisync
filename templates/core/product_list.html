@@ -11,15 +11,15 @@
             </div>
             <a href="{% url 'product_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">New Product</a>
         </div>
-        <form method="get" class="mt-4 grid gap-3 xl:grid-cols-[1.5fr_1fr_1fr_auto]">
-            <input type="text" name="q" value="{{ filters.q }}" placeholder="Search product name, SKU, or description" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
-            <select name="stock" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+        <form id="product-filter-form" method="get" class="mt-4 grid gap-3 xl:grid-cols-[1.5fr_1fr_1fr_auto]">
+            <input id="product-filter-query" type="text" name="q" value="{{ filters.q }}" placeholder="Search product name, SKU, or description" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+            <select id="product-filter-stock" name="stock" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                 <option value="">All stock states</option>
                 <option value="in" {% if filters.stock == 'in' %}selected{% endif %}>In stock</option>
                 <option value="low" {% if filters.stock == 'low' %}selected{% endif %}>Low stock</option>
                 <option value="out" {% if filters.stock == 'out' %}selected{% endif %}>Out of stock</option>
             </select>
-            <select name="sales" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+            <select id="product-filter-sales" name="sales" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                 <option value="">All sales states</option>
                 <option value="sold" {% if filters.sales == 'sold' %}selected{% endif %}>Sold products</option>
                 <option value="unsold" {% if filters.sales == 'unsold' %}selected{% endif %}>Unsold products</option>
@@ -66,5 +66,33 @@
         </table>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('product-filter-form');
+    const queryInput = document.getElementById('product-filter-query');
+    const stockSelect = document.getElementById('product-filter-stock');
+    const salesSelect = document.getElementById('product-filter-sales');
+    if (!form || !queryInput || !stockSelect || !salesSelect) {
+        return;
+    }
+
+    let submitTimer = null;
+    function submitFilters() {
+        form.requestSubmit();
+    }
+
+    queryInput.addEventListener('input', function() {
+        window.clearTimeout(submitTimer);
+        submitTimer = window.setTimeout(submitFilters, 350);
+    });
+
+    [stockSelect, salesSelect].forEach(function(field) {
+        field.addEventListener('change', submitFilters);
+    });
+});
+</script>
 {% endblock %}
 
