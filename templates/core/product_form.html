@@ -1,35 +1,19 @@
 {% extends "base.html" %}
 {% block header %}Product{% endblock %}
-{% block header_subtitle %}Maintain a clean product catalog so inventory, pricing, and sales tracking stay reliable and presentation-ready.{% endblock %}
+{% block header_subtitle %}Product form.{% endblock %}
 {% block content %}
 <section class="mx-auto max-w-6xl space-y-6">
     <div class="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <aside class="space-y-6">
             <section class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Catalog Management</p>
-                <h3 class="mt-3 text-2xl font-bold tracking-tight">{% if product %}Edit Product{% else %}Add New Product{% endif %}</h3>
-                <p class="mt-3 text-sm leading-6 text-slate-300">A complete and accurate product record improves inventory visibility, pricing consistency, and sales reporting.</p>
-                <div class="mt-5 space-y-4">
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm font-semibold text-white">Use a clear product name</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">This is what employees will search and what appears across sales and inventory screens.</p>
-                    </div>
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm font-semibold text-white">Keep SKU unique</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">The SKU helps distinguish similar items and keeps inventory records dependable.</p>
-                    </div>
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm font-semibold text-white">Set the selling price carefully</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">Order totals, receipts, and performance reporting will use this value as the pricing basis.</p>
-                    </div>
-                </div>
+                <h3 class="text-2xl font-bold tracking-tight">{% if product %}Edit Product{% else %}New Product{% endif %}</h3>
             </section>
         </aside>
 
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-8 py-6">
                 <h3 class="text-xl font-bold text-slate-900">Product Information</h3>
-                <p class="mt-1 text-sm text-slate-500">Fill out the details below to save this furniture item in the catalog.</p>
+                <p class="mt-1 text-sm text-slate-500">Product details.</p>
             </div>
             <form method="post" class="space-y-5 px-8 py-8">
                 {% csrf_token %}

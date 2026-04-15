@@ -1,14 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Customer Confirmation QR{% endblock %}
 {% block header %}Customer Confirmation QR{% endblock %}
-{% block header_subtitle %}Show this screen to the customer so they can scan the QR code using their own phone and complete independent payment confirmation.{% endblock %}
+{% block header_subtitle %}Customer confirmation QR.{% endblock %}
 {% block content %}
 <section class="mx-auto max-w-5xl space-y-6">
     <section class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <aside class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Face-To-Face Handoff</p>
-            <h3 class="mt-3 text-2xl font-bold tracking-tight">Ask the customer to scan this code</h3>
-            <p class="mt-3 text-sm leading-6 text-slate-300">This screen is meant to be shown during in-person collection. The customer should use their own device to open the confirmation page, upload their own receipt, and provide their own signature.</p>
+            <h3 class="text-2xl font-bold tracking-tight">Customer</h3>
             <div class="mt-5 space-y-4">
                 <div class="rounded-xl border border-white/10 bg-white/5 p-4">
                     <p class="text-sm font-semibold text-white">Customer</p>
@@ -18,16 +16,11 @@
                     <p class="text-sm font-semibold text-white">Amount collected</p>
                     <p class="mt-2 text-sm text-slate-300">&#8369;{{ payment.amount }}</p>
                 </div>
-                <div class="rounded-xl border border-amber-400/20 bg-amber-400/10 p-4">
-                    <p class="text-sm font-semibold text-amber-200">Fraud-control reminder</p>
-                    <p class="mt-2 text-sm leading-6 text-amber-100">The customer should scan using their own phone. Same-device, same-IP, or unusually fast confirmation may still be flagged for management review.</p>
-                </div>
             </div>
         </aside>
 
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-8 py-6 text-center">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Customer Confirmation</p>
                 <h3 class="mt-2 text-2xl font-bold text-slate-900">Scan To Confirm Payment</h3>
                 <p class="mt-2 text-sm text-slate-500">Use the customer’s phone to scan the code below and complete confirmation.</p>
             </div>

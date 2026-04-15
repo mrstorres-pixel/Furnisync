@@ -1,36 +1,20 @@
 {% extends "base.html" %}
 {% block header %}Edit User Account{% endblock %}
-{% block header_subtitle %}Manage account identity, access level, and password for a branch user from one owner-facing screen.{% endblock %}
+{% block header_subtitle %}User account.{% endblock %}
 {% block content %}
 <section class="mx-auto max-w-6xl space-y-6">
     <div class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <aside class="space-y-6">
             <section class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Account Control</p>
-                <h3 class="mt-3 text-2xl font-bold tracking-tight">{{ profile.user.username }}</h3>
+                <h3 class="text-2xl font-bold tracking-tight">{{ profile.user.username }}</h3>
                 <p class="mt-2 text-sm text-slate-300">{{ profile.user.email|default:"No email recorded" }}</p>
-                <div class="mt-5 space-y-4">
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm font-semibold text-white">Role</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">{{ profile.get_role_display }}</p>
-                    </div>
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm font-semibold text-white">Branch model</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">This project uses a single operating branch, so changing the role affects permissions and workflow visibility.</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">Important</p>
-                <p class="mt-3 text-sm leading-6 text-amber-900">If you set a new password here, the user will need to use that new password the next time they sign in.</p>
             </section>
         </aside>
 
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-8 py-6">
                 <h3 class="text-xl font-bold text-slate-900">User Account Settings</h3>
-                <p class="mt-1 text-sm text-slate-500">Update identity details, role assignment, and password from a single control panel.</p>
+                <p class="mt-1 text-sm text-slate-500">Account settings.</p>
             </div>
             <form method="post" class="space-y-8 px-8 py-8">
                 {% csrf_token %}

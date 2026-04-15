@@ -1,40 +1,19 @@
 {% extends "base.html" %}
 {% block header %}Log Payment{% endblock %}
-{% block header_subtitle %}Record a customer payment, attach receipt evidence, and keep the transaction trail accurate and auditable.{% endblock %}
+{% block header_subtitle %}New payment.{% endblock %}
 {% block content %}
 <section class="mx-auto max-w-6xl space-y-6">
     <div class="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <aside class="space-y-6">
             <section class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Collections Control</p>
-                <h3 class="mt-3 text-2xl font-bold tracking-tight">Payment Capture</h3>
-                <p class="mt-3 text-sm leading-6 text-slate-300">Use this form to register a new payment, attach receipt evidence, and preserve branch-level accountability.</p>
-                <div class="mt-5 space-y-4">
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm font-semibold text-white">Check the order first</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">Confirm that the customer and order you are collecting from match the actual payment being received.</p>
-                    </div>
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm font-semibold text-white">Use the exact amount paid</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">This payment becomes part of the permanent transaction trail and affects the remaining balance immediately.</p>
-                    </div>
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm font-semibold text-white">Attach the receipt image</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">The uploaded image serves as supporting proof for auditability and printed receipt verification.</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">Important</p>
-                <p class="mt-3 text-sm leading-6 text-amber-900">Payments are immutable after creation. Double-check the order, amount, date, and uploaded receipt before saving.</p>
+                <h3 class="text-2xl font-bold tracking-tight">Payment</h3>
             </section>
         </aside>
 
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-8 py-6">
                 <h3 class="text-xl font-bold text-slate-900">New Payment Entry</h3>
-                <p class="mt-1 text-sm text-slate-500">Complete all required fields to create a receipted payment record.</p>
+                <p class="mt-1 text-sm text-slate-500">Entry form.</p>
             </div>
             <div class="grid gap-6 px-8 py-8 lg:grid-cols-[1fr_280px]">
                 <form method="post" enctype="multipart/form-data" class="space-y-5">
@@ -67,21 +46,7 @@
                 </form>
 
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">What Happens Next</p>
-                    <ol class="mt-4 space-y-4 text-sm text-slate-600">
-                        <li>
-                            <span class="font-semibold text-slate-900">1.</span>
-                            The payment is saved under the selected order and collector account.
-                        </li>
-                        <li>
-                            <span class="font-semibold text-slate-900">2.</span>
-                            A receipt record is generated automatically for the transaction.
-                        </li>
-                        <li>
-                            <span class="font-semibold text-slate-900">3.</span>
-                            The customer's remaining balance is updated for future follow-up.
-                        </li>
-                    </ol>
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Review</p>
                 </div>
             </div>
         </section>
