@@ -7,10 +7,12 @@ from typing import Any
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import UploadedFile
+from django.forms import BaseInlineFormSet
 
 from .models import (
     Customer,
     DailyReconciliation,
+    Inventory,
     InventoryAdjustment,
     Order,
     OrderChangeRequest,
@@ -27,8 +29,15 @@ User = get_user_model()
 
 
 class ProductPriceSelect(forms.Select):
-    def __init__(self, *args, price_map: dict[str, str] | None = None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        price_map: dict[str, str] | None = None,
+        availability_map: dict[str, str] | None = None,
+        **kwargs,
+    ):
         self.price_map = price_map or {}
+        self.availability_map = availability_map or {}
         super().__init__(*args, **kwargs)
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
@@ -36,6 +45,8 @@ class ProductPriceSelect(forms.Select):
         option_value = "" if value is None else str(value)
         if option_value in self.price_map:
             option["attrs"]["data-price"] = self.price_map[option_value]
+        if option_value in self.availability_map:
+            option["attrs"]["data-available"] = self.availability_map[option_value]
         return option
 
 
@@ -106,9 +117,19 @@ class OrderItemForm(forms.ModelForm):
             )
         product_queryset = self.fields["product"].queryset
         price_map = {str(product.pk): str(product.price) for product in product_queryset}
+        availability_map = {}
+        if self.current_branch is not None:
+            availability_map = {
+                str(row["product_id"]): str(row["available"])
+                for row in Inventory.objects.filter(
+                    branch=self.current_branch,
+                    product__in=product_queryset,
+                ).values("product_id", "available")
+            }
         self.fields["product"].widget = ProductPriceSelect(
             choices=self.fields["product"].choices,
             price_map=price_map,
+            availability_map=availability_map,
         )
         apply_tailwind_classes(self)
         self.fields["product"].empty_label = "Select a product"
@@ -163,9 +184,61 @@ class OrderItemForm(forms.ModelForm):
         return cleaned_data
 
 
+class BaseOrderItemFormSet(BaseInlineFormSet):
+    def __init__(self, *args, current_branch=None, order_status: str | None = None, **kwargs):
+        self.current_branch = current_branch
+        self.order_status = order_status
+        super().__init__(*args, **kwargs)
+
+    def get_form_kwargs(self, index):
+        kwargs = super().get_form_kwargs(index)
+        kwargs["current_branch"] = self.current_branch
+        return kwargs
+
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+
+        requested_quantities: dict[int, int] = {}
+        for form in self.forms:
+            if not hasattr(form, "cleaned_data"):
+                continue
+            if form.cleaned_data.get("DELETE"):
+                continue
+            product = form.cleaned_data.get("product")
+            quantity = form.cleaned_data.get("quantity")
+            if not product or not quantity:
+                continue
+            requested_quantities[product.id] = requested_quantities.get(product.id, 0) + quantity
+
+        if not requested_quantities or self.current_branch is None:
+            return
+
+        inventory_map = {
+            inventory.product_id: inventory.available
+            for inventory in Inventory.objects.filter(
+                branch=self.current_branch,
+                product_id__in=requested_quantities.keys(),
+            )
+        }
+
+        for product_id, requested_qty in requested_quantities.items():
+            available_qty = inventory_map.get(product_id, 0)
+            if requested_qty > available_qty:
+                product = Product.objects.filter(pk=product_id).first()
+                product_name = product.name if product else f"Product #{product_id}"
+                if self.order_status == OrderStatus.RESERVED:
+                    raise forms.ValidationError(
+                        f"{product_name}: requested quantity {requested_qty} exceeds available stock of {available_qty}. "
+                        "Reduce the quantity or save the order as Pending."
+                    )
+
+
 OrderItemFormSet = forms.inlineformset_factory(
     Order, 
     OrderItem, 
+    formset=BaseOrderItemFormSet,
     form=OrderItemForm, 
     extra=1, 
     can_delete=True,

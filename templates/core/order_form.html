@@ -52,7 +52,11 @@
                     </div>
 
                     {{ formset.management_form }}
-                    {{ formset.non_form_errors }}
+                    {% if formset.non_form_errors %}
+                        <div class="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                            {{ formset.non_form_errors }}
+                        </div>
+                    {% endif %}
 
                     <div id="formset-container" class="mt-5 space-y-5">
                         {% for form in formset %}
@@ -266,18 +270,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const selectedOption = productField?.options[productField.selectedIndex];
         const productLabel = selectedOption?.text && selectedOption.value ? selectedOption.text : 'Choose a product to begin this item.';
+        const available = parseFloat(selectedOption?.dataset.available || '') || 0;
         const quantity = parseFloat(quantityInput?.value) || 0;
         const price = parseFloat(priceInput?.value) || 0;
         const subtotal = parseFloat(subtotalInput?.value) || 0;
 
         if (productSummary) {
-            productSummary.textContent = productLabel;
+            productSummary.textContent = selectedOption?.value ? productLabel + ' · Available: ' + available : productLabel;
         }
         if (itemStatus) {
             if (!productField?.value) {
                 itemStatus.textContent = 'Select a product and quantity to complete this item.';
             } else if (quantity <= 0) {
                 itemStatus.textContent = 'Add the quantity for this product.';
+            } else if (quantity > available) {
+                itemStatus.textContent = 'Requested quantity exceeds available stock of ' + available + '.';
             } else {
                 itemStatus.textContent = 'Ready: ' + quantity + ' unit(s) at ' + formatPeso(price) + ' each.';
             }
