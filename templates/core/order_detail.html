@@ -130,7 +130,8 @@
     </section>
 </section>
 
-<section class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+<section class="grid gap-6 {% if show_audit_details %}xl:grid-cols-[1fr_1fr]{% endif %}">
+    {% if show_audit_details %}
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-6 py-5">
             <h3 class="text-lg font-bold text-slate-900">Audit Log</h3>
@@ -154,6 +155,7 @@
             {% endfor %}
         </div>
     </section>
+    {% endif %}
 
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-6 py-5">

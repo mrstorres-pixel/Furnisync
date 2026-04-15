@@ -439,7 +439,7 @@ def confirm_payment_by_customer(request: HttpRequest, token: str) -> HttpRespons
     )
 
 
-@role_required(UserRole.COLLECTOR, UserRole.SECRETARY)
+@role_required(UserRole.COLLECTOR)
 def daily_reconciliation(request: HttpRequest) -> HttpResponse:
     """
     Collector or Secretary records a daily cash reconciliation for their branch.
@@ -677,15 +677,19 @@ def order_detail(request: HttpRequest, order_id: int) -> HttpResponse:
     if role == UserRole.COLLECTOR and order.assigned_collector_id not in {None, request.user.id}:
         messages.error(request, "You can only access orders assigned to you.")
         return redirect("order_list")
-    order_audit_logs = list(
-        AuditLog.objects.filter(model_name="Order", object_id=str(order.id)).select_related("user").order_by("-created_at")
-    )
+    show_audit_details = role in {UserRole.MANAGER, UserRole.OWNER}
+    order_audit_logs = []
+    if show_audit_details:
+        order_audit_logs = list(
+            AuditLog.objects.filter(model_name="Order", object_id=str(order.id)).select_related("user").order_by("-created_at")
+        )
     payments = list(order.payments.all().order_by("-paid_at"))
     change_requests = list(order.change_requests.all().order_by("-created_at"))
     context = {
         "order": order,
         "payments": payments,
         "change_requests": change_requests,
+        "show_audit_details": show_audit_details,
         "order_audit_logs": order_audit_logs,
         "change_request_form": OrderChangeRequestForm(current_branch=order.branch),
     }

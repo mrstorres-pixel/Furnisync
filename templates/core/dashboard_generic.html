@@ -46,12 +46,22 @@
             </div>
             <div class="grid grid-cols-2 gap-3 text-sm">
                 <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <p class="text-slate-400">Pending reconciliations</p>
-                    <p class="mt-2 text-2xl font-bold text-white">{{ pending_reconciliations }}</p>
+                    {% if role == 'manager' or role == 'owner' %}
+                        <p class="text-slate-400">Pending reconciliations</p>
+                        <p class="mt-2 text-2xl font-bold text-white">{{ pending_reconciliations }}</p>
+                    {% else %}
+                        <p class="text-slate-400">Reserved orders</p>
+                        <p class="mt-2 text-2xl font-bold text-white">{{ order_status_counts.reserved }}</p>
+                    {% endif %}
                 </div>
                 <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                    <p class="text-slate-400">Reserved orders</p>
-                    <p class="mt-2 text-2xl font-bold text-white">{{ order_status_counts.reserved }}</p>
+                    {% if role == 'manager' or role == 'owner' %}
+                        <p class="text-slate-400">Reserved orders</p>
+                        <p class="mt-2 text-2xl font-bold text-white">{{ order_status_counts.reserved }}</p>
+                    {% else %}
+                        <p class="text-slate-400">Low-stock items</p>
+                        <p class="mt-2 text-2xl font-bold text-white">{{ low_stock_count }}</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
