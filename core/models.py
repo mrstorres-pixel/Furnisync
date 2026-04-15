@@ -237,7 +237,7 @@ class Payment(models.Model):
         # Enforce immutability - payments cannot be edited after creation
         if self.pk:
             orig = Payment.objects.get(pk=self.pk)
-            immutable_fields = ["order_id", "branch_id", "collector_id", "amount", "paid_at", "receipt"]
+            immutable_fields = ["order_id", "branch_id", "collector_id", "amount", "paid_at"]
             for field in immutable_fields:
                 if getattr(orig, field) != getattr(self, field):
                     raise ValueError("Payments are immutable and cannot be edited after creation.")
