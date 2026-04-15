@@ -97,11 +97,11 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 text-slate-700">{{ payment.collector.username }}</td>
-                        <td class="px-6 py-4 text-right font-semibold text-slate-900">${{ payment.amount }}</td>
+                        <td class="px-6 py-4 text-right font-semibold text-slate-900">&#8369;{{ payment.amount }}</td>
                         <td class="px-6 py-4 text-right">
                             {% if payment.customer_reported_amount %}
                                 <span class="font-semibold {% if payment.customer_reported_amount != payment.amount %}text-rose-700{% else %}text-emerald-700{% endif %}">
-                                    ${{ payment.customer_reported_amount }}
+                                    &#8369;{{ payment.customer_reported_amount }}
                                 </span>
                             {% else %}
                                 <span class="text-slate-400">No customer entry yet</span>
@@ -170,3 +170,4 @@
     </div>
 </section>
 {% endblock %}
+

@@ -21,7 +21,7 @@
             </div>
             <div class="rounded-xl border border-white/10 bg-white/5 p-4">
                 <p class="text-slate-400">Outstanding Balance</p>
-                <p class="mt-2 font-semibold {% if order.remaining_balance > 0 %}text-amber-300{% else %}text-emerald-300{% endif %}">${{ order.remaining_balance }}</p>
+                <p class="mt-2 font-semibold {% if order.remaining_balance > 0 %}text-amber-300{% else %}text-emerald-300{% endif %}">&#8369;{{ order.remaining_balance }}</p>
             </div>
         </div>
     </aside>
@@ -56,3 +56,4 @@
     </section>
 </section>
 {% endblock %}
+

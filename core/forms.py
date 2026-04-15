@@ -106,9 +106,18 @@ class OrderItemForm(forms.ModelForm):
         self.fields['subtotal'].required = False
         self.fields['subtotal'].widget.attrs['readonly'] = True
         self.fields['subtotal'].widget.attrs['tabindex'] = '-1'
+        self.fields['subtotal'].widget.attrs['class'] = (
+            f"{self.fields['subtotal'].widget.attrs.get('class', '')} bg-slate-100 font-semibold text-slate-900"
+        ).strip()
+        self.fields['quantity'].widget.attrs['min'] = '1'
+        self.fields['quantity'].widget.attrs['placeholder'] = 'Qty'
+        self.fields['price'].widget.attrs['placeholder'] = '0.00'
 
         if self.user_role == UserRole.SECRETARY:
             self.fields['price'].widget.attrs['readonly'] = True
+            self.fields['price'].widget.attrs['class'] = (
+                f"{self.fields['price'].widget.attrs.get('class', '')} bg-slate-100"
+            ).strip()
             self.fields['price'].help_text = "Selling price is locked to the product catalog for secretary accounts."
 
     class Meta:

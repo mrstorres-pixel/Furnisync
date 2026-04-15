@@ -59,7 +59,7 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [OrderItemInline]
     
     def get_total_amount(self, obj):
-        return f"${obj.total_amount}"
+        return f"PHP {obj.total_amount}"
     get_total_amount.short_description = "Total Amount"
 
 

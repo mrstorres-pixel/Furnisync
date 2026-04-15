@@ -48,11 +48,11 @@
                         <a href="{% url 'product_detail' summary.product.id %}" class="hover:text-brand-700">{{ summary.product.name }}</a>
                     </td>
                     <td class="px-6 py-4 text-slate-600">{{ summary.product.sku }}</td>
-                    <td class="px-6 py-4 text-right text-slate-700">${{ summary.product.price }}</td>
+                    <td class="px-6 py-4 text-right text-slate-700">&#8369;{{ summary.product.price }}</td>
                     <td class="px-6 py-4 text-right text-slate-700">{{ summary.inventory_stock }}</td>
                     <td class="px-6 py-4 text-right text-slate-700">{{ summary.inventory_available }}</td>
                     <td class="px-6 py-4 text-right font-semibold text-slate-900">{{ summary.sold_quantity }}</td>
-                    <td class="px-6 py-4 text-right font-semibold text-emerald-700">${{ summary.revenue_total }}</td>
+                    <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ summary.revenue_total }}</td>
                     <td class="px-6 py-4">
                         <a href="{% url 'product_edit' summary.product.id %}" class="text-sm font-medium text-brand-700 hover:text-brand-800">Edit</a>
                     </td>
@@ -67,3 +67,4 @@
     </div>
 </section>
 {% endblock %}
+

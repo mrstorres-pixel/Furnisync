@@ -20,7 +20,7 @@
             <p class="font-semibold text-slate-900">Payment details</p>
             <p class="mt-2 text-slate-600">Customer: {{ payment.order.customer.full_name }}</p>
             <p class="mt-1 text-slate-600">Order: #{{ payment.order.id }}</p>
-            <p class="mt-1 text-slate-600">Amount: <span class="font-semibold text-slate-900">${{ payment.amount }}</span></p>
+            <p class="mt-1 text-slate-600">Amount: <span class="font-semibold text-slate-900">&#8369;{{ payment.amount }}</span></p>
             <p class="mt-1 text-slate-600">Verification status:
                 <span class="font-semibold {% if payment.verification_status == 'matched' %}text-emerald-700{% elif payment.verification_status == 'review_required' %}text-rose-700{% else %}text-amber-700{% endif %}">
                     {{ payment.get_verification_status_display }}
@@ -43,3 +43,4 @@
     </div>
 </section>
 {% endblock %}
+

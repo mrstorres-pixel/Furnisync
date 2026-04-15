@@ -14,7 +14,7 @@
             </div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
                 <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Price</div>
-                <div class="mt-2 font-semibold text-slate-900">${{ product.price }}</div>
+                <div class="mt-2 font-semibold text-slate-900">&#8369;{{ product.price }}</div>
             </div>
         </div>
     </div>
@@ -36,7 +36,7 @@
             </div>
             <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
                 <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Revenue</div>
-                <div class="mt-2 text-3xl font-bold text-emerald-300">${{ summary.revenue_total }}</div>
+                <div class="mt-2 text-3xl font-bold text-emerald-300">&#8369;{{ summary.revenue_total }}</div>
             </div>
         </div>
     </div>
@@ -70,7 +70,7 @@
                     <td class="px-6 py-4 text-slate-600">{{ item.order.updated_at|date:"Y-m-d H:i" }}</td>
                     <td class="px-6 py-4 font-medium text-slate-900">{{ item.order.customer.full_name }}</td>
                     <td class="px-6 py-4 text-right text-slate-700">{{ item.quantity }}</td>
-                    <td class="px-6 py-4 text-right font-semibold text-emerald-700">${{ item.subtotal }}</td>
+                    <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ item.subtotal }}</td>
                 </tr>
             {% empty %}
                 <tr><td class="px-6 py-8 text-center text-sm text-slate-500" colspan="4">No completed sales for this product yet.</td></tr>
@@ -80,3 +80,4 @@
     </div>
 </section>
 {% endblock %}
+

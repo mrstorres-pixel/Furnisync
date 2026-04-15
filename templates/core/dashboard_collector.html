@@ -36,7 +36,7 @@
             </div>
             <div class="rounded-xl border border-white/10 bg-white/5 p-4">
                 <p class="text-sm text-slate-400">Cash collected by you</p>
-                <p class="mt-2 text-3xl font-bold text-emerald-300">${{ collector_payments_today_total }}</p>
+                <p class="mt-2 text-3xl font-bold text-emerald-300">&#8369;{{ collector_payments_today_total }}</p>
             </div>
             <div class="rounded-xl border border-white/10 bg-white/5 p-4">
                 <p class="text-sm text-slate-400">Accounts still to collect</p>
@@ -46,7 +46,7 @@
                 <p class="text-sm text-slate-400">Latest cash turnover</p>
                 {% if last_reconciliation %}
                     <p class="mt-2 text-lg font-bold text-white">{{ last_reconciliation.date|date:"Y-m-d" }}</p>
-                    <p class="mt-2 text-sm text-slate-300">Counted cash: ${{ last_reconciliation.cash_counted }}</p>
+                    <p class="mt-2 text-sm text-slate-300">Counted cash: &#8369;{{ last_reconciliation.cash_counted }}</p>
                     <p class="mt-1 text-sm text-slate-300">Status: {{ last_reconciliation.get_status_display }}</p>
                 {% else %}
                     <p class="mt-2 text-sm text-slate-300">No turnover report submitted yet.</p>
@@ -87,7 +87,7 @@
                                     {{ order.get_status_display }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-right font-semibold text-rose-700">${{ order.remaining_balance }}</td>
+                            <td class="px-6 py-4 text-right font-semibold text-rose-700">&#8369;{{ order.remaining_balance }}</td>
                         </tr>
                     {% empty %}
                         <tr>
@@ -123,7 +123,7 @@
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-medium text-slate-900">{{ payment.order.customer.full_name }}</td>
                             <td class="px-6 py-4 text-slate-600">{{ payment.paid_at|date:"Y-m-d H:i" }}</td>
-                            <td class="px-6 py-4 text-right font-semibold text-emerald-700">${{ payment.amount }}</td>
+                            <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ payment.amount }}</td>
                         </tr>
                     {% empty %}
                         <tr>
@@ -136,3 +136,4 @@
     </section>
 </section>
 {% endblock %}
+

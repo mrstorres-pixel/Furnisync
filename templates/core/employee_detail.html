@@ -28,7 +28,7 @@
             </div>
             <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
                 <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Payment Value</div>
-                <div class="mt-2 text-3xl font-bold text-emerald-300">${{ payment_total }}</div>
+                <div class="mt-2 text-3xl font-bold text-emerald-300">&#8369;{{ payment_total }}</div>
             </div>
             <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
                 <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Reconciliations</div>
@@ -62,7 +62,7 @@
                     <tr class="hover:bg-slate-50">
                         <td class="px-6 py-4 text-slate-600">{{ payment.paid_at|date:"Y-m-d H:i" }}</td>
                         <td class="px-6 py-4 font-medium text-slate-900">{{ payment.order.customer.full_name }}</td>
-                        <td class="px-6 py-4 text-right font-semibold text-emerald-700">${{ payment.amount }}</td>
+                        <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ payment.amount }}</td>
                     </tr>
                 {% empty %}
                     <tr><td class="px-6 py-8 text-center text-sm text-slate-500" colspan="3">No payments recorded.</td></tr>
@@ -105,9 +105,9 @@
                             <div class="mt-1 text-xs text-slate-500">{{ reconciliation.get_status_display }}</div>
                         </div>
                         <div class="text-right text-sm">
-                            <div class="font-semibold text-slate-900">${{ reconciliation.system_total }}</div>
+                            <div class="font-semibold text-slate-900">&#8369;{{ reconciliation.system_total }}</div>
                             <div class="text-xs {% if reconciliation.discrepancy != 0 %}text-rose-700{% else %}text-slate-400{% endif %}">
-                                Discrepancy: ${{ reconciliation.discrepancy }}
+                                Discrepancy: &#8369;{{ reconciliation.discrepancy }}
                             </div>
                         </div>
                     </div>
@@ -146,3 +146,4 @@
 </section>
 {% endif %}
 {% endblock %}
+

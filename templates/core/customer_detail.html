@@ -33,11 +33,11 @@
             </div>
             <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
                 <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Purchased</div>
-                <div class="mt-2 text-3xl font-bold text-white">${{ summary.total_purchased }}</div>
+                <div class="mt-2 text-3xl font-bold text-white">&#8369;{{ summary.total_purchased }}</div>
             </div>
             <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-4">
                 <div class="text-xs uppercase tracking-[0.2em] text-slate-400">Outstanding</div>
-                <div class="mt-2 text-3xl font-bold {% if summary.outstanding_balance > 0 %}text-amber-300{% else %}text-emerald-300{% endif %}">${{ summary.outstanding_balance }}</div>
+                <div class="mt-2 text-3xl font-bold {% if summary.outstanding_balance > 0 %}text-amber-300{% else %}text-emerald-300{% endif %}">&#8369;{{ summary.outstanding_balance }}</div>
             </div>
         </div>
         <div class="mt-5 rounded-xl border border-white/10 bg-white/5 p-4 text-sm">
@@ -72,8 +72,8 @@
                             <div class="mt-1 text-xs text-slate-500">{{ order.created_at|date:"Y-m-d H:i" }} · {{ order.get_status_display }}</div>
                         </div>
                         <div class="text-right text-sm">
-                            <div class="font-semibold text-slate-900">${{ order.total_amount }}</div>
-                            <div class="{% if order.remaining_balance > 0 %}text-rose-700{% else %}text-slate-400{% endif %} text-xs">Balance: ${{ order.remaining_balance }}</div>
+                            <div class="font-semibold text-slate-900">&#8369;{{ order.total_amount }}</div>
+                            <div class="{% if order.remaining_balance > 0 %}text-rose-700{% else %}text-slate-400{% endif %} text-xs">Balance: &#8369;{{ order.remaining_balance }}</div>
                         </div>
                     </div>
                 </div>
@@ -97,9 +97,9 @@
                             <div class="mt-1 text-xs text-slate-500">{{ payment.paid_at|date:"Y-m-d H:i" }} · {{ payment.collector.username }}</div>
                         </div>
                         <div class="text-right text-sm">
-                            <div class="font-semibold text-emerald-700">${{ payment.amount }}</div>
+                            <div class="font-semibold text-emerald-700">&#8369;{{ payment.amount }}</div>
                             <div class="text-xs {% if payment.balance_after_payment > 0 %}text-rose-700{% else %}text-slate-400{% endif %}">
-                                Remaining: ${{ payment.balance_after_payment }}
+                                Remaining: &#8369;{{ payment.balance_after_payment }}
                             </div>
                         </div>
                     </div>
@@ -111,3 +111,4 @@
     </div>
 </section>
 {% endblock %}
+

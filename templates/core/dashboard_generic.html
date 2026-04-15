@@ -21,7 +21,7 @@
                     </div>
                     <div class="flex items-center justify-between gap-4">
                         <span class="text-slate-500">Payment value</span>
-                        <span class="font-semibold text-emerald-700">${{ payments_today_total }}</span>
+                        <span class="font-semibold text-emerald-700">&#8369;{{ payments_today_total }}</span>
                     </div>
                     <div class="flex items-center justify-between gap-4">
                         <span class="text-slate-500">Pending orders</span>
@@ -41,7 +41,7 @@
         <div class="mt-4 space-y-4">
             <div class="rounded-xl border border-white/10 bg-white/5 p-4">
                 <p class="text-sm font-medium text-slate-200">Outstanding customer balances</p>
-                <p class="mt-2 text-3xl font-bold">${{ outstanding_balance_total }}</p>
+                <p class="mt-2 text-3xl font-bold">&#8369;{{ outstanding_balance_total }}</p>
                 <p class="mt-2 text-sm text-slate-400">{{ customers_with_balance_count }} customer account{{ customers_with_balance_count|pluralize }} still need follow-up.</p>
             </div>
             <div class="grid grid-cols-2 gap-3 text-sm">
@@ -211,7 +211,7 @@
                     <tr class="hover:bg-slate-50">
                         <td class="px-6 py-4 font-medium text-slate-900">{{ tx.order.customer.full_name }}</td>
                         <td class="px-6 py-4 text-slate-700">{{ tx.collector.username }}</td>
-                        <td class="px-6 py-4 text-right font-semibold text-emerald-700">${{ tx.amount }}</td>
+                        <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ tx.amount }}</td>
                     </tr>
                 {% empty %}
                     <tr>
@@ -249,7 +249,7 @@
                     <tr class="hover:bg-slate-50">
                         <td class="px-6 py-4 font-medium text-slate-900">{{ product.product__name }}</td>
                         <td class="px-6 py-4 text-right text-slate-700">{{ product.units_sold }}</td>
-                        <td class="px-6 py-4 text-right font-semibold text-emerald-700">${{ product.revenue }}</td>
+                        <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ product.revenue }}</td>
                     </tr>
                 {% empty %}
                     <tr>
@@ -285,7 +285,7 @@
                     <tr class="hover:bg-slate-50">
                         <td class="px-6 py-4 font-medium text-slate-900">{{ summary.customer.full_name }}</td>
                         <td class="px-6 py-4 text-right text-slate-700">{{ summary.order_count }}</td>
-                        <td class="px-6 py-4 text-right font-semibold text-rose-700">${{ summary.outstanding_balance }}</td>
+                        <td class="px-6 py-4 text-right font-semibold text-rose-700">&#8369;{{ summary.outstanding_balance }}</td>
                     </tr>
                 {% empty %}
                     <tr>
@@ -332,3 +332,4 @@
     </section>
 {% endif %}
 {% endblock %}
+

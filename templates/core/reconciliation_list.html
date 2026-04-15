@@ -20,7 +20,7 @@
     </div>
     <div class="rounded-xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-rose-700">Total Discrepancy</div>
-        <div class="mt-3 text-3xl font-extrabold text-rose-900">${{ reconciliation_summary.total_discrepancy }}</div>
+        <div class="mt-3 text-3xl font-extrabold text-rose-900">&#8369;{{ reconciliation_summary.total_discrepancy }}</div>
         <p class="mt-2 text-sm text-rose-800">Combined discrepancy across the listed reconciliation records.</p>
     </div>
 </section>
@@ -50,10 +50,10 @@
                         <td class="px-6 py-4 text-slate-700">{{ r.date }}</td>
                         <td class="px-6 py-4 text-slate-700">{{ r.branch.name }}</td>
                         <td class="px-6 py-4 font-medium text-slate-900">{{ r.collector.username }}</td>
-                        <td class="px-6 py-4 text-right text-slate-700">${{ r.system_total }}</td>
-                        <td class="px-6 py-4 text-right text-slate-700">${{ r.cash_counted }}</td>
+                        <td class="px-6 py-4 text-right text-slate-700">&#8369;{{ r.system_total }}</td>
+                        <td class="px-6 py-4 text-right text-slate-700">&#8369;{{ r.cash_counted }}</td>
                         <td class="px-6 py-4 text-right {% if r.discrepancy != 0 %}font-semibold text-rose-700{% else %}text-slate-500{% endif %}">
-                            ${{ r.discrepancy }}
+                            &#8369;{{ r.discrepancy }}
                         </td>
                         <td class="px-6 py-4">
                             <span class="rounded-full px-3 py-1 text-xs font-semibold
@@ -84,3 +84,4 @@
     </div>
 </section>
 {% endblock %}
+

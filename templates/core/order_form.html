@@ -37,29 +37,39 @@
                     </div>
                 </section>
 
-                <section class="rounded-xl border border-slate-200 bg-slate-50 p-6">
+                <section class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-brand-50/40 p-6">
                     <div class="flex items-start justify-between gap-4">
                         <div>
                             <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Line Items</p>
                             <h4 class="mt-2 text-lg font-bold text-slate-900">Products Being Sold</h4>
-                            <p class="mt-1 text-sm text-slate-500">Each line should reflect the exact item, quantity, selling price, and computed subtotal.</p>
+                            <p class="mt-1 text-sm text-slate-500">Start with one item, then add more only when the sale actually includes them. Each row should read like a clean proof of what the customer is buying.</p>
                         </div>
-                        <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-right">
+                        <div class="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-right shadow-sm">
                             <p class="text-[11px] uppercase tracking-[0.2em] text-slate-500">Running Total</p>
-                            <p id="order-grand-total" class="mt-1 text-xl font-bold text-slate-900">$0.00</p>
+                            <p id="order-grand-total" class="mt-1 text-xl font-bold text-slate-900">&#8369;0.00</p>
+                            <p class="mt-1 text-xs text-slate-500">Auto-calculated from all visible line items.</p>
                         </div>
                     </div>
 
                     {{ formset.management_form }}
                     {{ formset.non_form_errors }}
 
-                    <div id="formset-container" class="mt-5 space-y-4">
+                    <div id="formset-container" class="mt-5 space-y-5">
                         {% for form in formset %}
-                            <div class="formset-form rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                                <div class="mb-4 flex items-center justify-between">
-                                    <p class="text-sm font-semibold text-slate-900">Line Item {{ forloop.counter }}</p>
+                            <div class="formset-form rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+                                <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                    <div>
+                                        <div class="flex items-center gap-3">
+                                            <p class="line-item-title text-sm font-semibold text-slate-900">Line Item {{ forloop.counter }}</p>
+                                            <span class="rounded-full bg-brand-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">Product Sale</span>
+                                        </div>
+                                        <p class="line-item-product mt-2 text-sm text-slate-500">Choose a product to begin this item.</p>
+                                    </div>
                                     <div class="flex items-center gap-3">
-                                        <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Product Sale</p>
+                                        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-right">
+                                            <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Line Total</p>
+                                            <p class="line-item-total mt-1 text-lg font-bold text-emerald-800">&#8369;0.00</p>
+                                        </div>
                                         {% if not forloop.first %}
                                             <button type="button" class="remove-line-item rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50">
                                                 Remove
@@ -67,9 +77,9 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="grid gap-4 md:grid-cols-4">
+                                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                     {% for field in form.visible_fields %}
-                                        <div>
+                                        <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" data-field-name="{{ field.name }}">
                                             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{{ field.label }}</label>
                                             {{ field }}
                                             {% if field.help_text %}
@@ -81,31 +91,53 @@
                                         </div>
                                     {% endfor %}
                                 </div>
+                                <div class="mt-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Encoding Check</p>
+                                        <p class="line-item-status mt-1 text-sm text-slate-600">Select a product and quantity to complete this item.</p>
+                                    </div>
+                                    <div class="text-sm text-slate-600">
+                                        Quantity x Price =
+                                        <span class="line-item-total-inline font-semibold text-slate-900">&#8369;0.00</span>
+                                    </div>
+                                </div>
                                 {% for hidden in form.hidden_fields %}
                                     {{ hidden }}
                                 {% endfor %}
                             </div>
                         {% endfor %}
                     </div>
-                    <div class="mt-4">
-                        <button id="add-line-item" type="button" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="text-sm text-slate-500">
+                            Add a new row only when the customer is buying another separate product.
+                        </div>
+                        <button id="add-line-item" type="button" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50">
                             Add Another Item
                         </button>
                     </div>
                     <template id="empty-form-template">
-                        <div class="formset-form rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                            <div class="mb-4 flex items-center justify-between">
-                                <p class="line-item-title text-sm font-semibold text-slate-900">Line Item</p>
+                        <div class="formset-form rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+                            <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                <div>
+                                    <div class="flex items-center gap-3">
+                                        <p class="line-item-title text-sm font-semibold text-slate-900">Line Item</p>
+                                        <span class="rounded-full bg-brand-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">Product Sale</span>
+                                    </div>
+                                    <p class="line-item-product mt-2 text-sm text-slate-500">Choose a product to begin this item.</p>
+                                </div>
                                 <div class="flex items-center gap-3">
-                                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Product Sale</p>
+                                    <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-right">
+                                        <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700">Line Total</p>
+                                        <p class="line-item-total mt-1 text-lg font-bold text-emerald-800">&#8369;0.00</p>
+                                    </div>
                                     <button type="button" class="remove-line-item rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50">
                                         Remove
                                     </button>
                                 </div>
                             </div>
-                            <div class="grid gap-4 md:grid-cols-4">
+                            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 {% for field in formset.empty_form.visible_fields %}
-                                    <div>
+                                    <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" data-field-name="{{ field.name }}">
                                         <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{{ field.label }}</label>
                                         {{ field }}
                                         {% if field.help_text %}
@@ -113,6 +145,16 @@
                                         {% endif %}
                                     </div>
                                 {% endfor %}
+                            </div>
+                            <div class="mt-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Encoding Check</p>
+                                    <p class="line-item-status mt-1 text-sm text-slate-600">Select a product and quantity to complete this item.</p>
+                                </div>
+                                <div class="text-sm text-slate-600">
+                                    Quantity x Price =
+                                    <span class="line-item-total-inline font-semibold text-slate-900">&#8369;0.00</span>
+                                </div>
                             </div>
                             {% for hidden in formset.empty_form.hidden_fields %}
                                 {{ hidden }}
@@ -164,11 +206,26 @@
                     </div>
                     <div class="flex items-center justify-between gap-4">
                         <span class="text-slate-500">Encoded line items</span>
-                        <span id="order-line-count" class="font-semibold text-slate-900">0</span>
+                        <span id="order-line-count" class="font-semibold text-slate-900">1</span>
                     </div>
                     <div class="flex items-center justify-between gap-4 border-t border-slate-200 pt-4">
                         <span class="font-semibold text-slate-700">Projected order total</span>
-                        <span id="order-total-summary" class="text-lg font-bold text-emerald-700">$0.00</span>
+                        <span id="order-total-summary" class="text-lg font-bold text-emerald-700">&#8369;0.00</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-xl border border-brand-200 bg-brand-50/70 p-6 shadow-sm">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-brand-700">Quality Check</p>
+                <div class="mt-4 space-y-3 text-sm text-slate-700">
+                    <div class="rounded-xl border border-white/70 bg-white/80 px-4 py-3">
+                        Confirm the selected customer is the same person who will carry the balance and payment history.
+                    </div>
+                    <div class="rounded-xl border border-white/70 bg-white/80 px-4 py-3">
+                        Make sure every product row has the correct quantity before you save. This directly affects inventory and reporting.
+                    </div>
+                    <div class="rounded-xl border border-white/70 bg-white/80 px-4 py-3">
+                        If the sale is simple, keep it simple. One item should stay one item.
                     </div>
                 </div>
             </section>
@@ -189,6 +246,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const lineCountSummary = document.getElementById('order-line-count');
     const totalSummary = document.getElementById('order-total-summary');
     const grandTotal = document.getElementById('order-grand-total');
+    const pesoFormatter = new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+        minimumFractionDigits: 2,
+    });
+
+    function formatPeso(value) {
+        return pesoFormatter.format(Number(value) || 0);
+    }
 
     function updateTopLevelSummary() {
         if (customerField) {
@@ -202,24 +268,53 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateTotals() {
         const forms = Array.from(formsetContainer.querySelectorAll('.formset-form'));
         let total = 0;
-        let activeLines = 0;
 
         forms.forEach(function(form) {
-            const productField = form.querySelector('[name*="product"]');
             const subtotalField = form.querySelector('[name*="subtotal"]');
             const subtotal = parseFloat(subtotalField?.value) || 0;
-            const hasProduct = productField && productField.value;
-
-            if (hasProduct || subtotal > 0) {
-                activeLines += 1;
-            }
             total += subtotal;
         });
 
-        const formatted = '$' + total.toFixed(2);
-        lineCountSummary.textContent = activeLines.toString();
+        const formatted = formatPeso(total);
+        lineCountSummary.textContent = forms.length.toString();
         totalSummary.textContent = formatted;
         grandTotal.textContent = formatted;
+    }
+
+    function updateLineItemPreview(form) {
+        const productField = form.querySelector('[name*="product"]');
+        const quantityInput = form.querySelector('[name*="quantity"]');
+        const priceInput = form.querySelector('[name*="price"]');
+        const subtotalInput = form.querySelector('[name*="subtotal"]');
+        const productSummary = form.querySelector('.line-item-product');
+        const itemStatus = form.querySelector('.line-item-status');
+        const totalBadge = form.querySelector('.line-item-total');
+        const totalInline = form.querySelector('.line-item-total-inline');
+
+        const selectedOption = productField?.options[productField.selectedIndex];
+        const productLabel = selectedOption?.text && selectedOption.value ? selectedOption.text : 'Choose a product to begin this item.';
+        const quantity = parseFloat(quantityInput?.value) || 0;
+        const price = parseFloat(priceInput?.value) || 0;
+        const subtotal = parseFloat(subtotalInput?.value) || 0;
+
+        if (productSummary) {
+            productSummary.textContent = productLabel;
+        }
+        if (itemStatus) {
+            if (!productField?.value) {
+                itemStatus.textContent = 'Select a product and quantity to complete this item.';
+            } else if (quantity <= 0) {
+                itemStatus.textContent = 'Add the quantity for this product.';
+            } else {
+                itemStatus.textContent = 'Ready: ' + quantity + ' unit(s) at ' + formatPeso(price) + ' each.';
+            }
+        }
+        if (totalBadge) {
+            totalBadge.textContent = formatPeso(subtotal);
+        }
+        if (totalInline) {
+            totalInline.textContent = formatPeso(subtotal);
+        }
     }
 
     function syncLineItemPricing(form) {
@@ -240,6 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const quantity = parseFloat(quantityInput?.value) || 0;
         const price = parseFloat(priceInput.value) || 0;
         subtotalInput.value = (quantity * price).toFixed(2);
+        updateLineItemPreview(form);
     }
 
     function renumberLineItems() {
@@ -267,6 +363,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const newForm = formsetContainer.querySelectorAll('.formset-form')[nextIndex];
         if (newForm) {
             syncLineItemPricing(newForm);
+            updateLineItemPreview(newForm);
+            newForm.querySelector('[name*="product"]')?.focus();
         }
         renumberLineItems();
         updateTotals();
@@ -292,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
         removeButton.closest('.formset-form').remove();
         renumberExistingForms();
         renumberLineItems();
+        formsetContainer.querySelector('.formset-form:last-child [name*="product"]')?.focus();
         updateTotals();
     });
 
@@ -325,8 +424,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateTopLevelSummary();
     renumberLineItems();
-    formsetContainer.querySelectorAll('.formset-form').forEach(syncLineItemPricing);
+    formsetContainer.querySelectorAll('.formset-form').forEach(function(form) {
+        syncLineItemPricing(form);
+        updateLineItemPreview(form);
+    });
     updateTotals();
 });
 </script>
 {% endblock %}
+

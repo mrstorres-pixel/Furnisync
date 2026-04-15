@@ -58,8 +58,8 @@
                                 <tr>
                                     <td class="px-6 py-4 font-medium text-slate-900">{{ item.product.name }}</td>
                                     <td class="px-6 py-4 text-right text-slate-700">{{ item.quantity }}</td>
-                                    <td class="px-6 py-4 text-right text-slate-700">${{ item.price }}</td>
-                                    <td class="px-6 py-4 text-right font-semibold text-slate-900">${{ item.subtotal }}</td>
+                                    <td class="px-6 py-4 text-right text-slate-700">&#8369;{{ item.price }}</td>
+                                    <td class="px-6 py-4 text-right font-semibold text-slate-900">&#8369;{{ item.subtotal }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -72,20 +72,20 @@
                 <div class="mt-5 space-y-3 text-sm">
                     <div class="flex items-center justify-between">
                         <span class="text-slate-500">Order Total</span>
-                        <span class="font-semibold text-slate-900">${{ receipt.order.total_amount }}</span>
+                        <span class="font-semibold text-slate-900">&#8369;{{ receipt.order.total_amount }}</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-slate-500">Paid Before This Transaction</span>
-                        <span class="font-semibold text-slate-900">${{ receipt.order.total_paid|add:"-"|add:receipt.total_paid }}</span>
+                        <span class="font-semibold text-slate-900">&#8369;{{ receipt.order.total_paid|add:"-"|add:receipt.total_paid }}</span>
                     </div>
                     <div class="flex items-center justify-between border-t border-slate-200 pt-3">
                         <span class="font-semibold text-slate-700">Payment Amount</span>
-                        <span class="text-lg font-bold text-emerald-700">${{ receipt.total_paid }}</span>
+                        <span class="text-lg font-bold text-emerald-700">&#8369;{{ receipt.total_paid }}</span>
                     </div>
                     <div class="flex items-center justify-between border-t border-slate-200 pt-3">
                         <span class="font-semibold text-slate-700">Remaining Balance</span>
                         <span class="text-lg font-bold {% if receipt.remaining_balance > 0 %}text-rose-700{% else %}text-emerald-700{% endif %}">
-                            ${{ receipt.remaining_balance }}
+                            &#8369;{{ receipt.remaining_balance }}
                         </span>
                     </div>
                     <div class="flex items-center justify-between border-t border-slate-200 pt-3">
@@ -166,7 +166,7 @@
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                             <p class="font-semibold text-slate-900">{{ receipt.payment.customer_confirmation_name }}</p>
                             <p class="mt-1 text-slate-500">Confirmed on {{ receipt.payment.customer_confirmed_at|date:"Y-m-d H:i" }}</p>
-                            <p class="mt-2 text-slate-700">Customer-confirmed amount: <span class="font-semibold">${{ receipt.payment.customer_reported_amount }}</span></p>
+                            <p class="mt-2 text-slate-700">Customer-confirmed amount: <span class="font-semibold">&#8369;{{ receipt.payment.customer_reported_amount }}</span></p>
                         </div>
                         {% if receipt.payment.customer_receipt %}
                             <div class="space-y-3">
@@ -307,3 +307,4 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 {% endblock %}
+
