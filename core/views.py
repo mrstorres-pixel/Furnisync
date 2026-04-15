@@ -80,7 +80,7 @@ def _get_collectible_orders_for_user(user: User):
         qs = qs.filter(branch=active_branch)
 
     active_statuses = {OrderStatus.PENDING, OrderStatus.RESERVED}
-    qs = qs.filter(Q(assigned_collector=user) | Q(assigned_collector__isnull=True))
+    qs = qs.filter(assigned_collector=user)
     return [order for order in qs if order.status in active_statuses and order.remaining_balance > Decimal("0.00")]
 
 
@@ -849,7 +849,7 @@ def order_list(request: HttpRequest) -> HttpResponse:
     allowed_statuses = None
     if role == UserRole.COLLECTOR:
         allowed_statuses = {OrderStatus.PENDING, OrderStatus.RESERVED}
-        qs = qs.filter(status__in=allowed_statuses).filter(Q(assigned_collector=request.user) | Q(assigned_collector__isnull=True))
+        qs = qs.filter(status__in=allowed_statuses, assigned_collector=request.user)
     if status and (allowed_statuses is None or status in allowed_statuses):
         qs = qs.filter(status=status)
 

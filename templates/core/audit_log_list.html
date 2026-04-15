@@ -112,3 +112,20 @@
     </div>
 </section>
 {% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[method="get"]');
+    if (!form) {
+        return;
+    }
+    const instantFields = Array.from(form.querySelectorAll('select, input[type="date"]'));
+    instantFields.forEach(function(field) {
+        field.addEventListener('change', function() {
+            form.requestSubmit();
+        });
+    });
+});
+</script>
+{% endblock %}

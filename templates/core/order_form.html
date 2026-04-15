@@ -83,6 +83,7 @@
                                 </div>
                                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                     {% for field in form.visible_fields %}
+                                        {% if field.name != 'DELETE' %}
                                         <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" data-field-name="{{ field.name }}">
                                             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{{ field.label }}</label>
                                             {{ field }}
@@ -93,6 +94,7 @@
                                                 <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
                                             {% endfor %}
                                         </div>
+                                        {% endif %}
                                     {% endfor %}
                                 </div>
                                 <div class="mt-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -139,6 +141,7 @@
                             </div>
                             <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 {% for field in formset.empty_form.visible_fields %}
+                                    {% if field.name != 'DELETE' %}
                                     <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" data-field-name="{{ field.name }}">
                                         <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{{ field.label }}</label>
                                         {{ field }}
@@ -146,6 +149,7 @@
                                             <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
                                         {% endif %}
                                     </div>
+                                    {% endif %}
                                 {% endfor %}
                             </div>
                             <div class="mt-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -258,6 +262,30 @@ document.addEventListener('DOMContentLoaded', function() {
         grandTotal.textContent = formatted;
     }
 
+    function syncProductAvailabilityAcrossLines() {
+        const forms = Array.from(formsetContainer.querySelectorAll('.formset-form'));
+        const selectedValues = forms
+            .map(function(form) {
+                return form.querySelector('[name*="product"]')?.value || '';
+            })
+            .filter(Boolean);
+
+        forms.forEach(function(form) {
+            const select = form.querySelector('[name*="product"]');
+            if (!select) {
+                return;
+            }
+            const ownValue = select.value;
+            Array.from(select.options).forEach(function(option) {
+                if (!option.value) {
+                    option.disabled = false;
+                    return;
+                }
+                option.disabled = option.value !== ownValue && selectedValues.includes(option.value);
+            });
+        });
+    }
+
     function updateLineItemPreview(form) {
         const productField = form.querySelector('[name*="product"]');
         const quantityInput = form.querySelector('[name*="quantity"]');
@@ -276,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const subtotal = parseFloat(subtotalInput?.value) || 0;
 
         if (productSummary) {
-            productSummary.textContent = selectedOption?.value ? productLabel + ' · Available: ' + available : productLabel;
+            productSummary.textContent = selectedOption?.value ? productLabel + ' - Available: ' + available : productLabel;
         }
         if (itemStatus) {
             if (!productField?.value) {
@@ -321,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function renumberLineItems() {
         const forms = Array.from(formsetContainer.querySelectorAll('.formset-form'));
         forms.forEach(function(form, index) {
-            const title = form.querySelector('.line-item-title') || form.querySelector('.text-sm.font-semibold.text-slate-900');
+            const title = form.querySelector('.line-item-title');
             if (title) {
                 title.textContent = 'Line Item ' + (index + 1);
             }
@@ -342,12 +370,30 @@ document.addEventListener('DOMContentLoaded', function() {
         totalFormsInput.value = String(nextIndex + 1);
         const newForm = formsetContainer.querySelectorAll('.formset-form')[nextIndex];
         if (newForm) {
+            syncProductAvailabilityAcrossLines();
             syncLineItemPricing(newForm);
             updateLineItemPreview(newForm);
             newForm.querySelector('[name*="product"]')?.focus();
         }
         renumberLineItems();
         updateTotals();
+    }
+
+    function renumberExistingForms() {
+        const forms = Array.from(formsetContainer.querySelectorAll('.formset-form'));
+        forms.forEach(function(form, index) {
+            form.querySelectorAll('input, select, textarea, label').forEach(function(node) {
+                ['name', 'id', 'for'].forEach(function(attr) {
+                    const current = node.getAttribute(attr);
+                    if (current) {
+                        node.setAttribute(attr, current.replace(/items-\d+-/g, 'items-' + index + '-'));
+                    }
+                });
+            });
+        });
+        if (totalFormsInput) {
+            totalFormsInput.value = String(forms.length);
+        }
     }
 
     formsetContainer.addEventListener('input', function(e) {
@@ -369,41 +415,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         removeButton.closest('.formset-form').remove();
         renumberExistingForms();
+        syncProductAvailabilityAcrossLines();
         renumberLineItems();
         formsetContainer.querySelector('.formset-form:last-child [name*="product"]')?.focus();
         updateTotals();
     });
 
-    function renumberExistingForms() {
-        const forms = Array.from(formsetContainer.querySelectorAll('.formset-form'));
-        forms.forEach(function(form, index) {
-            form.querySelectorAll('input, select, textarea, label').forEach(function(node) {
-                ['name', 'id', 'for'].forEach(function(attr) {
-                    const current = node.getAttribute(attr);
-                    if (current) {
-                        node.setAttribute(attr, current.replace(/items-\d+-/g, 'items-' + index + '-'));
-                    }
-                });
-            });
-        });
-        if (totalFormsInput) {
-            totalFormsInput.value = String(forms.length);
-        }
-    }
-
     formsetContainer.addEventListener('change', function(e) {
         const form = e.target.closest('.formset-form');
         if (form && (e.target.name.includes('product') || e.target.name.includes('quantity') || e.target.name.includes('price'))) {
+            syncProductAvailabilityAcrossLines();
             syncLineItemPricing(form);
         }
         updateTotals();
     });
+
     customerField?.addEventListener('change', updateTopLevelSummary);
     statusField?.addEventListener('change', updateTopLevelSummary);
     addLineItemButton?.addEventListener('click', addLineItem);
 
     updateTopLevelSummary();
     renumberLineItems();
+    syncProductAvailabilityAcrossLines();
     formsetContainer.querySelectorAll('.formset-form').forEach(function(form) {
         syncLineItemPricing(form);
         updateLineItemPreview(form);
@@ -412,4 +445,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
-

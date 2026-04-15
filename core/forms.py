@@ -8,6 +8,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import UploadedFile
 from django.forms import BaseInlineFormSet
+from django.utils import timezone
 
 from .models import (
     Customer,
@@ -201,6 +202,8 @@ class BaseOrderItemFormSet(BaseInlineFormSet):
             return
 
         requested_quantities: dict[int, int] = {}
+        seen_products: dict[int, forms.Form] = {}
+        duplicate_found = False
         for form in self.forms:
             if not hasattr(form, "cleaned_data"):
                 continue
@@ -210,7 +213,15 @@ class BaseOrderItemFormSet(BaseInlineFormSet):
             quantity = form.cleaned_data.get("quantity")
             if not product or not quantity:
                 continue
+            if product.id in seen_products:
+                form.add_error("product", "This product is already selected in another line item.")
+                duplicate_found = True
+            else:
+                seen_products[product.id] = form
             requested_quantities[product.id] = requested_quantities.get(product.id, 0) + quantity
+
+        if duplicate_found:
+            raise forms.ValidationError("Each product can only be added once per order.")
 
         if not requested_quantities or self.current_branch is None:
             return
@@ -240,7 +251,7 @@ OrderItemFormSet = forms.inlineformset_factory(
     OrderItem, 
     formset=BaseOrderItemFormSet,
     form=OrderItemForm, 
-    extra=1, 
+    extra=0, 
     can_delete=True,
     min_num=1,
     validate_min=True
@@ -320,12 +331,22 @@ class PaymentForm(forms.ModelForm):
         apply_tailwind_classes(self)
         self.fields["receipt"].required = True
         self.fields["receipt"].label = "Collector Receipt Photo"
+        self.fields["paid_at"].widget = forms.DateTimeInput(
+            attrs={"type": "datetime-local"},
+            format="%Y-%m-%dT%H:%M",
+        )
+        self.fields["paid_at"].input_formats = ["%Y-%m-%dT%H:%M"]
+        paid_at_value = self.initial.get("paid_at") or getattr(self.instance, "paid_at", None) or timezone.localtime()
+        if timezone.is_aware(paid_at_value):
+            paid_at_value = timezone.localtime(paid_at_value)
+        self.initial["paid_at"] = paid_at_value.strftime("%Y-%m-%dT%H:%M")
         
         # Limit orders to those with remaining balance for collectors
         if user and hasattr(user, 'profile') and user.profile.branch:
             # Show active branch orders only; remaining balance is validated below.
             branch_orders = user.profile.branch.orders.filter(
-                status__in=[OrderStatus.PENDING, OrderStatus.RESERVED]
+                status__in=[OrderStatus.PENDING, OrderStatus.RESERVED],
+                assigned_collector=user,
             )
             self.fields['order'].queryset = branch_orders
         else:
