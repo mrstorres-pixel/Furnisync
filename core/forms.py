@@ -91,13 +91,29 @@ class CustomerForm(forms.ModelForm):
 
 
 class OrderItemForm(forms.ModelForm):
-    def __init__(self, *args, user_role: str | None = None, **kwargs):
+    def __init__(self, *args, user_role: str | None = None, current_branch=None, **kwargs):
         self.user_role = user_role
+        self.current_branch = current_branch
         super().__init__(*args, **kwargs)
+        if self.current_branch is not None:
+            self.fields["product"].queryset = (
+                Product.objects.filter(
+                    inventories__branch=self.current_branch,
+                    inventories__available__gt=0,
+                )
+                .distinct()
+                .order_by("name")
+            )
         product_queryset = self.fields["product"].queryset
         price_map = {str(product.pk): str(product.price) for product in product_queryset}
-        self.fields["product"].widget = ProductPriceSelect(price_map=price_map)
+        self.fields["product"].widget = ProductPriceSelect(
+            choices=self.fields["product"].choices,
+            price_map=price_map,
+        )
         apply_tailwind_classes(self)
+        self.fields["product"].empty_label = "Select a product"
+        if not product_queryset.exists():
+            self.fields["product"].help_text = "No products are currently available for sale in this branch. Add stock first."
         # Auto-populate price from product if not set
         if self.instance and self.instance.product_id and not self.instance.price:
             self.initial['price'] = self.instance.product.price

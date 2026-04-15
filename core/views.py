@@ -619,7 +619,10 @@ def create_order(request: HttpRequest) -> HttpResponse:
 
     if request.method == "POST":
         form = OrderForm(request.POST, current_branch=active_branch, current_role=current_role)
-        formset = OrderItemFormSet(request.POST, form_kwargs={"user_role": current_role})
+        formset = OrderItemFormSet(
+            request.POST,
+            form_kwargs={"user_role": current_role, "current_branch": active_branch},
+        )
         if form.is_valid() and formset.is_valid():
             with transaction.atomic():
                 order = form.save()
@@ -650,7 +653,9 @@ def create_order(request: HttpRequest) -> HttpResponse:
             return redirect("order_detail", order_id=order.id)
     else:
         form = OrderForm(current_branch=active_branch, current_role=current_role)
-        formset = OrderItemFormSet(form_kwargs={"user_role": current_role})
+        formset = OrderItemFormSet(
+            form_kwargs={"user_role": current_role, "current_branch": active_branch},
+        )
     return render(request, "core/order_form.html", {"form": form, "formset": formset})
 
 
