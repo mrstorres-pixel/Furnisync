@@ -6,60 +6,15 @@
     <div class="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <aside class="space-y-6">
             <section class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Cash Control</p>
                 <h3 class="mt-3 text-2xl font-bold tracking-tight">{% if user.profile.role == 'collector' %}Daily Cash Turnover{% else %}Daily Reconciliation{% endif %}</h3>
-                <p class="mt-3 text-sm leading-6 text-slate-300">
-                    {% if user.profile.role == 'collector' %}
-                        This form is limited to your own field collections. Management will compare what you counted against the payments you personally logged for that date.
-                    {% else %}
-                        This record helps management compare system transactions against actual physical cash counted at the end of the day.
-                    {% endif %}
-                </p>
-                <div class="mt-5 space-y-4">
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm font-semibold text-white">{% if user.profile.role == 'collector' %}Choose the collection date{% else %}Enter the system total{% endif %}</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">
-                            {% if user.profile.role == 'collector' %}
-                                Pick the exact day you are turning over collections for.
-                            {% else %}
-                                Use the amount reflected by the system for the day being reconciled.
-                            {% endif %}
-                        </p>
-                    </div>
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm font-semibold text-white">{% if user.profile.role == 'collector' %}Count your physical cash{% else %}Count the actual cash{% endif %}</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">
-                            {% if user.profile.role == 'collector' %}
-                                Input only the actual cash currently in your possession.
-                            {% else %}
-                                Input the exact physical amount collected so discrepancies are visible immediately.
-                            {% endif %}
-                        </p>
-                    </div>
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-sm font-semibold text-white">Submit for review</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-300">
-                            {% if user.profile.role == 'collector' %}
-                                Managers or owners will compare your cash turnover against the payments you logged in the system.
-                            {% else %}
-                                Managers or owners can approve or reject the entry as part of the branch audit process.
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
+                <p class="mt-3 text-sm text-slate-300">{% if user.profile.role == 'collector' %}Cash turnover.{% else %}Daily review.{% endif %}</p>
             </section>
         </aside>
 
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-8 py-6">
                 <h3 class="text-xl font-bold text-slate-900">{% if user.profile.role == 'collector' %}Cash Turnover Entry{% else %}Reconciliation Entry{% endif %}</h3>
-                <p class="mt-1 text-sm text-slate-500">
-                    {% if user.profile.role == 'collector' %}
-                        Enter the date and the cash you physically collected. Your system total is calculated automatically from your logged payments.
-                    {% else %}
-                        Enter the system total and the actual cash counted so discrepancies can be reviewed properly.
-                    {% endif %}
-                </p>
+                <p class="mt-1 text-sm text-slate-500">{% if user.profile.role == 'collector' %}Entry form.{% else %}Review entry.{% endif %}</p>
             </div>
             <div class="grid gap-6 px-8 py-8 lg:grid-cols-[1fr_260px]">
                 <form method="post" class="space-y-5">
@@ -96,14 +51,7 @@
                 </form>
 
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Review Note</p>
-                    <p class="mt-3 text-sm leading-6 text-slate-600">
-                        {% if user.profile.role == 'collector' %}
-                            If your counted cash does not match the total from the payments you logged for that date, management will see the discrepancy immediately.
-                        {% else %}
-                            Any difference between system total and counted cash becomes part of the review record, so accurate encoding matters here.
-                        {% endif %}
-                    </p>
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Review</p>
                 </div>
             </div>
         </section>
