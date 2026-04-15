@@ -23,6 +23,11 @@
         <div class="mt-3 text-3xl font-extrabold text-slate-900">{{ transaction_summary.receipt_count }}</div>
         <p class="mt-2 text-sm text-slate-500">Transactions in view that already have an associated generated receipt record.</p>
     </div>
+    <div class="rounded-xl border border-sky-200 bg-sky-50 p-5 shadow-sm md:col-span-2 xl:col-span-4">
+        <div class="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Matched Customer Confirmations</div>
+        <div class="mt-3 text-3xl font-extrabold text-sky-900">{{ transaction_summary.matched_count }}</div>
+        <p class="mt-2 text-sm text-sky-800">Payments where the customer independently confirmed the transaction and the reported amount matched the collector entry.</p>
+    </div>
 </section>
 
 <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -56,6 +61,7 @@
                 <th class="px-6 py-4 text-left font-semibold">Employee</th>
                 <th class="px-6 py-4 text-right font-semibold">Amount</th>
                 <th class="px-6 py-4 text-right font-semibold">Remaining Balance</th>
+                <th class="px-6 py-4 text-left font-semibold">Verification</th>
             </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -73,10 +79,21 @@
                     <td class="px-6 py-4 text-right {% if tx.balance_after_payment > 0 %}font-semibold text-rose-700{% else %}text-slate-400{% endif %}">
                         ${{ tx.balance_after_payment }}
                     </td>
+                    <td class="px-6 py-4">
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold
+                            {% if tx.verification_status == 'matched' %}bg-emerald-100 text-emerald-800
+                            {% elif tx.verification_status == 'review_required' %}bg-rose-100 text-rose-800
+                            {% else %}bg-amber-100 text-amber-800{% endif %}">
+                            {{ tx.get_verification_status_display }}
+                        </span>
+                        {% if tx.suspicious_confirmation %}
+                            <div class="mt-2 text-xs font-medium text-rose-700">Suspicious</div>
+                        {% endif %}
+                    </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="6">No transactions have been recorded for the selected filter.</td>
+                    <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="7">No transactions have been recorded for the selected filter.</td>
                 </tr>
             {% endfor %}
             </tbody>

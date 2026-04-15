@@ -88,17 +88,76 @@
                             ${{ receipt.remaining_balance }}
                         </span>
                     </div>
+                    <div class="flex items-center justify-between border-t border-slate-200 pt-3">
+                        <span class="font-semibold text-slate-700">Verification Status</span>
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold
+                            {% if receipt.payment.verification_status == 'matched' %}bg-emerald-100 text-emerald-800
+                            {% elif receipt.payment.verification_status == 'review_required' %}bg-rose-100 text-rose-800
+                            {% else %}bg-amber-100 text-amber-800{% endif %}">
+                            {{ receipt.payment.get_verification_status_display }}
+                        </span>
+                    </div>
+                    {% if receipt.payment.suspicious_confirmation %}
+                        <div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                            <p class="font-semibold">Suspicious confirmation flagged</p>
+                            <p class="mt-2">{{ receipt.payment.suspicious_reason }}</p>
+                        </div>
+                    {% endif %}
                 </div>
             </section>
         </section>
 
-        {% if receipt.payment.receipt %}
+        <section class="grid gap-6 xl:grid-cols-2">
+            {% if receipt.payment.receipt %}
+                <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                    <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
+                        <h3 class="text-lg font-bold text-slate-900">Collector Receipt Photo</h3>
+                    </div>
+                    <div class="p-6">
+                        <img src="{{ receipt.payment.receipt.url }}" alt="Collector Receipt Photo" class="max-w-full rounded-xl border border-slate-200">
+                    </div>
+                </section>
+            {% endif %}
+
             <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
                 <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
-                    <h3 class="text-lg font-bold text-slate-900">Uploaded Receipt Photo</h3>
+                    <h3 class="text-lg font-bold text-slate-900">Customer Confirmation</h3>
+                </div>
+                <div class="space-y-4 p-6 text-sm">
+                    {% if receipt.payment.customer_confirmed_at %}
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <p class="font-semibold text-slate-900">{{ receipt.payment.customer_confirmation_name }}</p>
+                            <p class="mt-1 text-slate-500">Confirmed on {{ receipt.payment.customer_confirmed_at|date:"Y-m-d H:i" }}</p>
+                            <p class="mt-2 text-slate-700">Customer-confirmed amount: <span class="font-semibold">${{ receipt.payment.customer_reported_amount }}</span></p>
+                        </div>
+                        {% if receipt.payment.customer_receipt %}
+                            <img src="{{ receipt.payment.customer_receipt.url }}" alt="Customer Receipt Photo" class="max-w-full rounded-xl border border-slate-200">
+                        {% endif %}
+                    {% else %}
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                            <p class="font-semibold text-amber-900">Pending customer-side confirmation</p>
+                            <p class="mt-2 text-amber-800">Ask the customer to scan the QR code below so they can confirm the payment on their own device without creating an account.</p>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
+                            <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Customer QR Code</p>
+                            <div id="confirmation-qrcode" class="mt-4 flex justify-center"></div>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Customer Link</p>
+                            <p id="customer-confirmation-url" class="mt-2 break-all font-medium text-slate-900">{{ request.scheme }}://{{ request.get_host }}{% url 'confirm_payment_by_customer' receipt.payment.customer_confirmation_token %}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </section>
+
+        {% if receipt.payment.customer_signature_data %}
+            <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
+                    <h3 class="text-lg font-bold text-slate-900">Customer Signature</h3>
                 </div>
                 <div class="p-6">
-                    <img src="{{ receipt.payment.receipt.url }}" alt="Receipt Photo" class="max-w-full rounded-xl border border-slate-200">
+                    <img src="{{ receipt.payment.customer_signature_data }}" alt="Customer Signature" class="max-w-full rounded-xl border border-slate-200 bg-slate-50">
                 </div>
             </section>
         {% endif %}
@@ -113,6 +172,24 @@
         </div>
     </div>
 </section>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const qrTarget = document.getElementById('confirmation-qrcode');
+    const urlNode = document.getElementById('customer-confirmation-url');
+    if (qrTarget && urlNode) {
+        new QRCode(qrTarget, {
+            text: urlNode.textContent.trim(),
+            width: 180,
+            height: 180,
+            colorDark: '#0f172a',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+    }
+});
+</script>
 
 <style>
 @media print {

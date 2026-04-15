@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+import secrets
 from typing import Any, Optional
 
 from django.conf import settings
@@ -186,12 +187,34 @@ def payment_receipt_temp_upload_to(instance: "Payment", filename: str) -> str:
 
 
 class Payment(models.Model):
+    class VerificationStatus(models.TextChoices):
+        PENDING_CUSTOMER = "pending_customer", "Pending Customer Confirmation"
+        MATCHED = "matched", "Matched"
+        REVIEW_REQUIRED = "review_required", "Review Required"
+
     order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="payments")
     branch = models.ForeignKey(Branch, on_delete=models.PROTECT, related_name="payments")
     collector = models.ForeignKey(User, on_delete=models.PROTECT, related_name="collected_payments")
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     paid_at = models.DateTimeField(default=timezone.now)
     receipt = models.ImageField(upload_to=payment_receipt_temp_upload_to, blank=True)
+    collector_submission_ip = models.GenericIPAddressField(null=True, blank=True)
+    collector_submission_user_agent = models.TextField(blank=True)
+    customer_receipt = models.ImageField(upload_to=payment_receipt_temp_upload_to, blank=True)
+    customer_confirmation_name = models.CharField(max_length=255, blank=True)
+    customer_reported_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    customer_confirmed_at = models.DateTimeField(null=True, blank=True)
+    customer_confirmation_token = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    customer_confirmation_ip = models.GenericIPAddressField(null=True, blank=True)
+    customer_confirmation_user_agent = models.TextField(blank=True)
+    customer_signature_data = models.TextField(blank=True)
+    suspicious_confirmation = models.BooleanField(default=False)
+    suspicious_reason = models.TextField(blank=True)
+    verification_status = models.CharField(
+        max_length=30,
+        choices=VerificationStatus.choices,
+        default=VerificationStatus.PENDING_CUSTOMER,
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -208,6 +231,9 @@ class Payment(models.Model):
         return self.order.total_amount - total_paid
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        if not self.customer_confirmation_token:
+            self.customer_confirmation_token = secrets.token_urlsafe(24)
+
         # Enforce immutability - payments cannot be edited after creation
         if self.pk:
             orig = Payment.objects.get(pk=self.pk)
@@ -216,6 +242,61 @@ class Payment(models.Model):
                 if getattr(orig, field) != getattr(self, field):
                     raise ValueError("Payments are immutable and cannot be edited after creation.")
         super().save(*args, **kwargs)
+
+    def apply_customer_confirmation(
+        self,
+        *,
+        customer_name: str,
+        reported_amount: Decimal,
+        customer_receipt_file,
+        signature_data: str,
+        confirmation_ip: str | None,
+        confirmation_user_agent: str,
+    ) -> None:
+        suspicious_reasons: list[str] = []
+        if self.collector_submission_ip and confirmation_ip and self.collector_submission_ip == confirmation_ip:
+            suspicious_reasons.append("Customer confirmation came from the same IP address as the collector submission.")
+        if (
+            self.collector_submission_user_agent
+            and confirmation_user_agent
+            and self.collector_submission_user_agent == confirmation_user_agent
+        ):
+            suspicious_reasons.append("Customer confirmation used the same browser/device signature as the collector submission.")
+        if self.created_at and timezone.now() - self.created_at <= timezone.timedelta(minutes=2):
+            suspicious_reasons.append("Customer confirmation happened unusually quickly after the payment was recorded.")
+
+        self.customer_confirmation_name = customer_name
+        self.customer_reported_amount = reported_amount
+        self.customer_confirmed_at = timezone.now()
+        self.customer_confirmation_ip = confirmation_ip
+        self.customer_confirmation_user_agent = confirmation_user_agent
+        self.customer_signature_data = signature_data
+        self.suspicious_confirmation = bool(suspicious_reasons)
+        self.suspicious_reason = " ".join(suspicious_reasons)
+        self.verification_status = (
+            self.VerificationStatus.MATCHED
+            if reported_amount == self.amount and not self.suspicious_confirmation
+            else self.VerificationStatus.REVIEW_REQUIRED
+        )
+        self.customer_receipt.save(
+            f"uploads/customer_confirmations/payment_{self.id}.jpg",
+            customer_receipt_file,
+            save=False,
+        )
+        self.save(
+            update_fields=[
+                "customer_confirmation_name",
+                "customer_reported_amount",
+                "customer_confirmed_at",
+                "customer_receipt",
+                "customer_confirmation_ip",
+                "customer_confirmation_user_agent",
+                "customer_signature_data",
+                "suspicious_confirmation",
+                "suspicious_reason",
+                "verification_status",
+            ]
+        )
 
 
 class Receipt(models.Model):

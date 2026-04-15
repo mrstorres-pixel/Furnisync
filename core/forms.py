@@ -152,7 +152,7 @@ class PaymentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         apply_tailwind_classes(self)
         self.fields["receipt"].required = True
-        self.fields["receipt"].label = "Receipt Photo"
+        self.fields["receipt"].label = "Collector Receipt Photo"
         
         # Limit orders to those with remaining balance for collectors
         if user and hasattr(user, 'profile') and user.profile.branch:
@@ -223,6 +223,36 @@ class DailyReconciliationForm(forms.ModelForm):
     class Meta:
         model = DailyReconciliation
         fields = ["system_total", "cash_counted", "date"]
+
+
+class CustomerPaymentConfirmationForm(forms.Form):
+    customer_name = forms.CharField(max_length=255)
+    reported_amount = forms.DecimalField(max_digits=12, decimal_places=2)
+    customer_receipt = forms.ImageField()
+    customer_signature = forms.CharField(widget=forms.HiddenInput())
+
+    def __init__(self, *args, payment: Payment | None = None, **kwargs):
+        self.payment = payment
+        super().__init__(*args, **kwargs)
+        apply_tailwind_classes(self)
+        self.fields["customer_name"].label = "Customer Name"
+        self.fields["reported_amount"].label = "Amount Confirmed by Customer"
+        self.fields["customer_receipt"].label = "Customer Receipt Photo"
+        self.fields["customer_signature"].label = "Customer Signature"
+        if payment is not None:
+            self.fields["reported_amount"].initial = payment.amount
+
+    def clean_reported_amount(self):
+        amount = self.cleaned_data["reported_amount"]
+        if amount <= 0:
+            raise forms.ValidationError("Confirmed amount must be greater than zero.")
+        return amount
+
+    def clean_customer_signature(self):
+        signature = self.cleaned_data["customer_signature"].strip()
+        if not signature:
+            raise forms.ValidationError("Customer signature is required.")
+        return signature
 
 
 class InventoryAdjustmentForm(forms.ModelForm):

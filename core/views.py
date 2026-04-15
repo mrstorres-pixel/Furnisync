@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .forms import (
+    CustomerPaymentConfirmationForm,
     CustomerForm,
     DailyReconciliationForm,
     InventoryAdjustmentForm,
@@ -43,6 +44,13 @@ from .models import (
 )
 
 User = get_user_model()
+
+
+def _get_client_ip(request: HttpRequest) -> str | None:
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
 
 
 def _user_has_role(user: User, *roles: str) -> bool: # type: ignore
@@ -253,6 +261,9 @@ def log_payment(request: HttpRequest) -> HttpResponse:
             else:
                 with transaction.atomic():
                     payment = form.save()
+                    payment.collector_submission_ip = _get_client_ip(request)
+                    payment.collector_submission_user_agent = request.META.get("HTTP_USER_AGENT", "")[:1000]
+                    payment.save(update_fields=["collector_submission_ip", "collector_submission_user_agent"])
                     create_audit_log(
                         user=request.user,
                         action="Create Payment",
@@ -265,7 +276,7 @@ def log_payment(request: HttpRequest) -> HttpResponse:
                         },
                     )
                 messages.success(request, f"Payment logged successfully. Receipt: {payment.payment_receipt.receipt_number}")
-                return redirect("dashboard")
+                return redirect("view_receipt", receipt_id=payment.payment_receipt.id)
         # Form errors (incl validation) shown below
     else:
         form = PaymentForm(user=request.user)
@@ -291,6 +302,58 @@ def view_receipt(request: HttpRequest, receipt_id: int) -> HttpResponse:
             return redirect("dashboard")
     
     return render(request, "core/receipt_detail.html", {"receipt": receipt})
+
+
+def confirm_payment_by_customer(request: HttpRequest, token: str) -> HttpResponse:
+    payment = get_object_or_404(
+        Payment.objects.select_related("order__customer", "payment_receipt", "collector", "branch"),
+        customer_confirmation_token=token,
+    )
+
+    if payment.customer_confirmed_at:
+        return render(
+            request,
+            "core/customer_payment_confirmed.html",
+            {"payment": payment, "already_confirmed": True},
+        )
+
+    if request.method == "POST":
+        form = CustomerPaymentConfirmationForm(request.POST, request.FILES, payment=payment)
+        if form.is_valid():
+            payment.apply_customer_confirmation(
+                customer_name=form.cleaned_data["customer_name"],
+                reported_amount=form.cleaned_data["reported_amount"],
+                customer_receipt_file=form.cleaned_data["customer_receipt"],
+                signature_data=form.cleaned_data["customer_signature"],
+                confirmation_ip=_get_client_ip(request),
+                confirmation_user_agent=request.META.get("HTTP_USER_AGENT", "")[:1000],
+            )
+            create_audit_log(
+                user=None,
+                action="Customer Payment Confirmation",
+                instance=payment,
+                old_values=None,
+                new_values={
+                    "customer_confirmation_name": payment.customer_confirmation_name,
+                    "customer_reported_amount": str(payment.customer_reported_amount),
+                    "verification_status": payment.verification_status,
+                    "suspicious_confirmation": payment.suspicious_confirmation,
+                    "suspicious_reason": payment.suspicious_reason,
+                },
+            )
+            return render(
+                request,
+                "core/customer_payment_confirmed.html",
+                {"payment": payment, "already_confirmed": False},
+            )
+    else:
+        form = CustomerPaymentConfirmationForm(payment=payment)
+
+    return render(
+        request,
+        "core/customer_payment_confirmation.html",
+        {"payment": payment, "form": form},
+    )
 
 
 @role_required(UserRole.COLLECTOR, UserRole.SECRETARY)
@@ -781,6 +844,10 @@ def transaction_list(request: HttpRequest) -> HttpResponse:
                 "total_amount": sum((transaction.amount for transaction in transactions), Decimal("0.00")),
                 "outstanding_total": sum((transaction.balance_after_payment for transaction in transactions), Decimal("0.00")),
                 "receipt_count": sum((1 for transaction in transactions if getattr(transaction, "payment_receipt", None)), 0),
+                "matched_count": sum(
+                    (1 for transaction in transactions if transaction.verification_status == Payment.VerificationStatus.MATCHED),
+                    0,
+                ),
             },
         },
     )

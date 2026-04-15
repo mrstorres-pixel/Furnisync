@@ -1,0 +1,103 @@
+{% extends "base_simple.html" %}
+{% block title %}Confirm Payment{% endblock %}
+{% block content %}
+<section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-200 bg-slate-950 px-8 py-7 text-white">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Customer Confirmation</p>
+        <h1 class="mt-3 text-3xl font-bold tracking-tight">Confirm This Payment</h1>
+        <p class="mt-2 text-sm leading-6 text-slate-300">You do not need an account. Confirm the amount you paid and upload your own receipt photo so the branch can verify the transaction independently.</p>
+    </div>
+    <div class="grid gap-6 px-8 py-8 lg:grid-cols-[1fr_260px]">
+        <form method="post" enctype="multipart/form-data" class="space-y-5">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                <p class="font-semibold text-slate-900">Payment summary</p>
+                <p class="mt-2 text-slate-600">Customer: {{ payment.order.customer.full_name }}</p>
+                <p class="mt-1 text-slate-600">Order: #{{ payment.order.id }}</p>
+                <p class="mt-1 text-slate-600">Collector-entered amount: <span class="font-semibold text-slate-900">${{ payment.amount }}</span></p>
+            </div>
+            {% for field in form %}
+                {% if field.name == 'customer_signature' %}
+                    {{ field }}
+                {% else %}
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endfor %}
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-slate-700">Customer Signature</label>
+                <div class="rounded-xl border border-slate-300 bg-white p-3">
+                    <canvas id="signature-pad" class="h-48 w-full rounded-lg bg-slate-50"></canvas>
+                </div>
+                <div class="mt-3 flex gap-3">
+                    <button id="clear-signature" type="button" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                        Clear Signature
+                    </button>
+                </div>
+                {% for error in form.customer_signature.errors %}
+                    <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <button class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
+                Submit Customer Confirmation
+            </button>
+        </form>
+
+        <aside class="rounded-xl border border-slate-200 bg-slate-50 p-5 text-sm">
+            <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Why This Matters</p>
+            <ul class="mt-4 space-y-3 text-slate-600">
+                <li>The branch keeps the collector's receipt photo.</li>
+                <li>You upload your own receipt proof independently.</li>
+                <li>If the confirmed amount does not match, the payment is flagged for review.</li>
+            </ul>
+        </aside>
+    </div>
+</section>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@5.0.4/dist/signature_pad.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('signature-pad');
+    const signatureInput = document.getElementById('id_customer_signature');
+    const clearButton = document.getElementById('clear-signature');
+    const form = signatureInput.closest('form');
+
+    function resizeCanvas() {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext('2d').scale(ratio, ratio);
+    }
+
+    resizeCanvas();
+    const signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgb(248, 250, 252)',
+        penColor: 'rgb(15, 23, 42)'
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+    clearButton.addEventListener('click', function() {
+        signaturePad.clear();
+        signatureInput.value = '';
+    });
+
+    form.addEventListener('submit', function(e) {
+        if (signaturePad.isEmpty()) {
+            e.preventDefault();
+            alert('Customer signature is required before submitting.');
+            return;
+        }
+        signatureInput.value = signaturePad.toDataURL('image/png');
+    });
+});
+</script>
+{% endblock %}
