@@ -1,79 +1,62 @@
 {% extends "base.html" %}
 {% block header %}Edit User Account{% endblock %}
-{% block header_subtitle %}User account.{% endblock %}
+{% block header_subtitle %}{% endblock %}
 {% block content %}
-<section class="mx-auto max-w-6xl space-y-6">
-    <div class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <aside class="space-y-6">
-            <section class="rounded-2xl border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
-                <h3 class="text-2xl font-bold tracking-tight">{{ profile.user.username }}</h3>
-                <p class="mt-2 text-sm text-slate-300">{{ profile.user.email|default:"No email recorded" }}</p>
-            </section>
-        </aside>
-
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div class="border-b border-slate-200 px-8 py-6">
-                <h3 class="text-xl font-bold text-slate-900">User Account Settings</h3>
-                <p class="mt-1 text-sm text-slate-500">Account settings.</p>
-            </div>
-            <form method="post" class="space-y-8 px-8 py-8">
-                {% csrf_token %}
-                {% if form.non_field_errors %}
-                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                        {{ form.non_field_errors }}
-                    </div>
-                {% endif %}
-
-                <section class="space-y-4">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Identity</p>
-                        <h4 class="mt-2 text-lg font-bold text-slate-900">Basic Account Information</h4>
-                    </div>
-                    <div class="grid gap-4 md:grid-cols-2">
-                        {% for field in form %}
-                            {% if field.name == 'username' or field.name == 'email' or field.name == 'first_name' or field.name == 'last_name' %}
-                                <div>
-                                    <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
-                                    {{ field }}
-                                    {% for error in field.errors %}
-                                        <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </section>
-
-                <section class="space-y-4">
-                    <div>
-                        <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Access</p>
-                        <h4 class="mt-2 text-lg font-bold text-slate-900">Role and Password</h4>
-                    </div>
-                    <div class="grid gap-4 md:grid-cols-2">
-                        {% for field in form %}
-                            {% if field.name == 'role' or field.name == 'new_password1' or field.name == 'new_password2' %}
-                                <div>
-                                    <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
-                                    {{ field }}
-                                    {% for error in field.errors %}
-                                        <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </section>
-
-                <div class="flex flex-col gap-3 pt-2 sm:flex-row">
-                    <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
-                        Save Account Changes
-                    </button>
-                    <a href="{% url 'user_list' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                        Back to Users
-                    </a>
+<section class="mx-auto max-w-4xl">
+    <section class="surface-card overflow-hidden">
+        <div class="section-bar px-8 py-6">
+            <h3 class="text-xl font-bold text-slate-900">{{ profile.user.username }}</h3>
+            <p class="mt-1 text-sm text-slate-500">{{ profile.user.email|default:"No email recorded" }}</p>
+        </div>
+        <form method="post" class="space-y-8 px-8 py-8">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {{ form.non_field_errors }}
                 </div>
-            </form>
-        </section>
-    </div>
+            {% endif %}
+
+            <section class="space-y-4">
+                <div class="grid gap-4 md:grid-cols-2">
+                    {% for field in form %}
+                        {% if field.name == 'username' or field.name == 'email' or field.name == 'first_name' or field.name == 'last_name' %}
+                            <div>
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                                {{ field }}
+                                {% for error in field.errors %}
+                                    <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="space-y-4">
+                <div class="grid gap-4 md:grid-cols-2">
+                    {% for field in form %}
+                        {% if field.name == 'role' or field.name == 'new_password1' or field.name == 'new_password2' %}
+                            <div>
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                                {{ field }}
+                                {% for error in field.errors %}
+                                    <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            <div class="flex flex-col gap-3 pt-2 sm:flex-row">
+                <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
+                    Save Account Changes
+                </button>
+                <a href="{% url 'user_list' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    Back to Users
+                </a>
+            </div>
+        </form>
+    </section>
 </section>
 {% endblock %}

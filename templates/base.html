@@ -78,6 +78,9 @@
         .stat-value {
             letter-spacing: -0.03em;
         }
+        .header-subtitle:empty {
+            display: none;
+        }
     </style>
 </head>
 <body class="min-h-full bg-slate-100 font-sans text-slate-800">
@@ -186,7 +189,7 @@
                     <div class="min-w-0">
                         <p class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">Furniture Branch Management</p>
                         <h2 class="mt-2 truncate text-2xl font-bold tracking-tight text-slate-950">{% block header %}Dashboard{% endblock %}</h2>
-                        <p class="mt-1 max-w-3xl text-sm text-slate-500">{% block header_subtitle %}{% endblock %}</p>
+                        <p class="header-subtitle mt-1 max-w-3xl text-sm text-slate-500">{% block header_subtitle %}{% endblock %}</p>
                     </div>
                 </div>
                 <div class="hidden shrink-0 items-center gap-3 sm:flex">

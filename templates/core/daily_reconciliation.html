@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block header %}{% if user.profile.role == 'collector' %}Cash Turnover{% else %}Daily Reconciliation{% endif %}{% endblock %}
-{% block header_subtitle %}{% if user.profile.role == 'collector' %}Daily cash report.{% else %}Reconciliation review.{% endif %}{% endblock %}
+{% block header_subtitle %}{% endblock %}
 {% block content %}
 <section class="mx-auto max-w-3xl">
     <section class="surface-card overflow-hidden">
