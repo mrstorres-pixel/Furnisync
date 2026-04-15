@@ -58,13 +58,23 @@
                             <div class="formset-form rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                                 <div class="mb-4 flex items-center justify-between">
                                     <p class="text-sm font-semibold text-slate-900">Line Item {{ forloop.counter }}</p>
-                                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Product Sale</p>
+                                    <div class="flex items-center gap-3">
+                                        <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Product Sale</p>
+                                        {% if not forloop.first %}
+                                            <button type="button" class="remove-line-item rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50">
+                                                Remove
+                                            </button>
+                                        {% endif %}
+                                    </div>
                                 </div>
                                 <div class="grid gap-4 md:grid-cols-4">
                                     {% for field in form.visible_fields %}
                                         <div>
                                             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{{ field.label }}</label>
                                             {{ field }}
+                                            {% if field.help_text %}
+                                                <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
+                                            {% endif %}
                                             {% for error in field.errors %}
                                                 <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
                                             {% endfor %}
@@ -77,6 +87,38 @@
                             </div>
                         {% endfor %}
                     </div>
+                    <div class="mt-4">
+                        <button id="add-line-item" type="button" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                            Add Another Item
+                        </button>
+                    </div>
+                    <template id="empty-form-template">
+                        <div class="formset-form rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <div class="mb-4 flex items-center justify-between">
+                                <p class="line-item-title text-sm font-semibold text-slate-900">Line Item</p>
+                                <div class="flex items-center gap-3">
+                                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Product Sale</p>
+                                    <button type="button" class="remove-line-item rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50">
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid gap-4 md:grid-cols-4">
+                                {% for field in formset.empty_form.visible_fields %}
+                                    <div>
+                                        <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{{ field.label }}</label>
+                                        {{ field }}
+                                        {% if field.help_text %}
+                                            <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% for hidden in formset.empty_form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                        </div>
+                    </template>
                 </section>
 
                 <div class="flex flex-col gap-3 sm:flex-row">
@@ -137,6 +179,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const formsetContainer = document.getElementById('formset-container');
+    const totalFormsInput = document.getElementById('id_items-TOTAL_FORMS');
+    const addLineItemButton = document.getElementById('add-line-item');
+    const emptyFormTemplate = document.getElementById('empty-form-template');
     const customerField = document.getElementById('id_customer');
     const statusField = document.getElementById('id_status');
     const customerSummary = document.getElementById('order-customer-summary');
@@ -177,6 +222,32 @@ document.addEventListener('DOMContentLoaded', function() {
         grandTotal.textContent = formatted;
     }
 
+    function renumberLineItems() {
+        const forms = Array.from(formsetContainer.querySelectorAll('.formset-form'));
+        forms.forEach(function(form, index) {
+            const title = form.querySelector('.line-item-title') || form.querySelector('.text-sm.font-semibold.text-slate-900');
+            if (title) {
+                title.textContent = 'Line Item ' + (index + 1);
+            }
+            const removeButton = form.querySelector('.remove-line-item');
+            if (removeButton) {
+                removeButton.classList.toggle('hidden', forms.length === 1);
+            }
+        });
+    }
+
+    function addLineItem() {
+        if (!totalFormsInput || !emptyFormTemplate) {
+            return;
+        }
+        const nextIndex = parseInt(totalFormsInput.value, 10);
+        const html = emptyFormTemplate.innerHTML.replace(/__prefix__/g, nextIndex);
+        formsetContainer.insertAdjacentHTML('beforeend', html);
+        totalFormsInput.value = String(nextIndex + 1);
+        renumberLineItems();
+        updateTotals();
+    }
+
     formsetContainer.addEventListener('input', function(e) {
         if (e.target.name.includes('quantity') || e.target.name.includes('price')) {
             const form = e.target.closest('.formset-form');
@@ -193,11 +264,45 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTotals();
     });
 
+    formsetContainer.addEventListener('click', function(e) {
+        const removeButton = e.target.closest('.remove-line-item');
+        if (!removeButton) {
+            return;
+        }
+        const forms = formsetContainer.querySelectorAll('.formset-form');
+        if (forms.length <= 1) {
+            return;
+        }
+        removeButton.closest('.formset-form').remove();
+        renumberExistingForms();
+        renumberLineItems();
+        updateTotals();
+    });
+
+    function renumberExistingForms() {
+        const forms = Array.from(formsetContainer.querySelectorAll('.formset-form'));
+        forms.forEach(function(form, index) {
+            form.querySelectorAll('input, select, textarea, label').forEach(function(node) {
+                ['name', 'id', 'for'].forEach(function(attr) {
+                    const current = node.getAttribute(attr);
+                    if (current) {
+                        node.setAttribute(attr, current.replace(/items-\d+-/g, 'items-' + index + '-'));
+                    }
+                });
+            });
+        });
+        if (totalFormsInput) {
+            totalFormsInput.value = String(forms.length);
+        }
+    }
+
     formsetContainer.addEventListener('change', updateTotals);
     customerField?.addEventListener('change', updateTopLevelSummary);
     statusField?.addEventListener('change', updateTopLevelSummary);
+    addLineItemButton?.addEventListener('click', addLineItem);
 
     updateTopLevelSummary();
+    renumberLineItems();
     updateTotals();
 });
 </script>

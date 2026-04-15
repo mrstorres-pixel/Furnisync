@@ -76,20 +76,26 @@ class CustomerForm(forms.ModelForm):
 
 
 class OrderItemForm(forms.ModelForm):
-    class Meta:
-        model = OrderItem
-        fields = ["product", "quantity", "price", "subtotal"]
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user_role: str | None = None, **kwargs):
+        self.user_role = user_role
         super().__init__(*args, **kwargs)
         apply_tailwind_classes(self)
         # Auto-populate price from product if not set
         if self.instance and self.instance.product_id and not self.instance.price:
             self.initial['price'] = self.instance.product.price
-        
+
         # Make subtotal read-only in the form (calculated automatically)
         self.fields['subtotal'].required = False
         self.fields['subtotal'].widget.attrs['readonly'] = True
+        self.fields['subtotal'].widget.attrs['tabindex'] = '-1'
+
+        if self.user_role == UserRole.SECRETARY:
+            self.fields['price'].widget.attrs['readonly'] = True
+            self.fields['price'].help_text = "Selling price is locked to the product catalog for secretary accounts."
+
+    class Meta:
+        model = OrderItem
+        fields = ["product", "quantity", "price", "subtotal"]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -99,6 +105,11 @@ class OrderItemForm(forms.ModelForm):
 
         # Auto-fill price from product if not provided
         if product and not price:
+            cleaned_data['price'] = product.price
+            price = product.price
+
+        # Secretaries cannot alter catalog pricing during order encoding.
+        if product and self.user_role == UserRole.SECRETARY:
             cleaned_data['price'] = product.price
             price = product.price
 
@@ -113,7 +124,7 @@ OrderItemFormSet = forms.inlineformset_factory(
     Order, 
     OrderItem, 
     form=OrderItemForm, 
-    extra=3, 
+    extra=1, 
     can_delete=True,
     min_num=1,
     validate_min=True
@@ -121,12 +132,18 @@ OrderItemFormSet = forms.inlineformset_factory(
 
 
 class OrderForm(forms.ModelForm):
-    def __init__(self, *args, current_branch=None, **kwargs):
+    def __init__(self, *args, current_branch=None, current_role: str | None = None, **kwargs):
         self.current_branch = current_branch
+        self.current_role = current_role
         super().__init__(*args, **kwargs)
         apply_tailwind_classes(self)
         if self.current_branch is not None:
             self.fields["customer"].queryset = Customer.objects.filter(branch=self.current_branch).order_by("full_name")
+        if self.current_role == UserRole.SECRETARY:
+            self.fields["status"].choices = [
+                (OrderStatus.PENDING, OrderStatus.PENDING.label),
+                (OrderStatus.RESERVED, OrderStatus.RESERVED.label),
+            ]
 
     class Meta:
         model = Order
@@ -137,6 +154,12 @@ class OrderForm(forms.ModelForm):
         if self.current_branch is not None and customer.branch_id != self.current_branch.id:
             raise forms.ValidationError("Customer must belong to the active branch.")
         return customer
+
+    def clean_status(self):
+        status = self.cleaned_data["status"]
+        if self.current_role == UserRole.SECRETARY and status not in {OrderStatus.PENDING, OrderStatus.RESERVED}:
+            raise forms.ValidationError("Secretary accounts can only create pending or reserved orders.")
+        return status
 
     def save(self, commit=True):
         order = super().save(commit=False)

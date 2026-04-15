@@ -569,13 +569,14 @@ def create_customer(request: HttpRequest) -> HttpResponse:
 @role_required(UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
 def create_order(request: HttpRequest) -> HttpResponse:
     active_branch = _get_active_branch(request.user)
+    current_role = getattr(getattr(request.user, "profile", None), "role", None)
     if active_branch is None:
         messages.error(request, "Set up the operating branch before creating orders.")
         return redirect("dashboard")
 
     if request.method == "POST":
-        form = OrderForm(request.POST, current_branch=active_branch)
-        formset = OrderItemFormSet(request.POST)
+        form = OrderForm(request.POST, current_branch=active_branch, current_role=current_role)
+        formset = OrderItemFormSet(request.POST, form_kwargs={"user_role": current_role})
         if form.is_valid() and formset.is_valid():
             with transaction.atomic():
                 order = form.save()
@@ -591,8 +592,8 @@ def create_order(request: HttpRequest) -> HttpResponse:
             messages.success(request, "Order created.")
             return redirect("dashboard")
     else:
-        form = OrderForm(current_branch=active_branch)
-        formset = OrderItemFormSet()
+        form = OrderForm(current_branch=active_branch, current_role=current_role)
+        formset = OrderItemFormSet(form_kwargs={"user_role": current_role})
     return render(request, "core/order_form.html", {"form": form, "formset": formset})
 
 

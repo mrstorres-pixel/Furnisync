@@ -111,7 +111,12 @@
             {% if receipt.payment.receipt %}
                 <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
                     <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
-                        <h3 class="text-lg font-bold text-slate-900">Collector Receipt Photo</h3>
+                        <div class="flex items-center justify-between gap-4">
+                            <h3 class="text-lg font-bold text-slate-900">Collector Receipt Photo</h3>
+                            <a href="{{ receipt.payment.receipt.url }}" download class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                                Download Image
+                            </a>
+                        </div>
                     </div>
                     <div class="p-6">
                         <img src="{{ receipt.payment.receipt.url }}" alt="Collector Receipt Photo" class="max-w-full rounded-xl border border-slate-200">
@@ -131,7 +136,14 @@
                             <p class="mt-2 text-slate-700">Customer-confirmed amount: <span class="font-semibold">${{ receipt.payment.customer_reported_amount }}</span></p>
                         </div>
                         {% if receipt.payment.customer_receipt %}
-                            <img src="{{ receipt.payment.customer_receipt.url }}" alt="Customer Receipt Photo" class="max-w-full rounded-xl border border-slate-200">
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-end">
+                                    <a href="{{ receipt.payment.customer_receipt.url }}" download class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                                        Download Image
+                                    </a>
+                                </div>
+                                <img src="{{ receipt.payment.customer_receipt.url }}" alt="Customer Receipt Photo" class="max-w-full rounded-xl border border-slate-200">
+                            </div>
                         {% endif %}
                     {% elif user.profile.role != 'collector' %}
                         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -159,7 +171,12 @@
         {% if receipt.payment.customer_signature_data and user.profile.role != 'collector' %}
             <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
                 <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
-                    <h3 class="text-lg font-bold text-slate-900">Customer Signature</h3>
+                    <div class="flex items-center justify-between gap-4">
+                        <h3 class="text-lg font-bold text-slate-900">Customer Signature</h3>
+                        <a href="{{ receipt.payment.customer_signature_data }}" download="customer-signature-{{ receipt.receipt_number }}.png" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                            Download Signature
+                        </a>
+                    </div>
                 </div>
                 <div class="p-6">
                     <img src="{{ receipt.payment.customer_signature_data }}" alt="Customer Signature" class="max-w-full rounded-xl border border-slate-200 bg-slate-50">
