@@ -73,19 +73,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const signatureInput = document.getElementById('id_customer_signature');
     const clearButton = document.getElementById('clear-signature');
     const form = signatureInput.closest('form');
+    let signaturePad;
+
+    function syncSignatureInput() {
+        signatureInput.value = signaturePad.isEmpty() ? '' : signaturePad.toDataURL('image/png');
+    }
 
     function resizeCanvas() {
+        const existingData = signaturePad && !signaturePad.isEmpty() ? signaturePad.toData() : null;
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
         canvas.width = canvas.offsetWidth * ratio;
         canvas.height = canvas.offsetHeight * ratio;
         canvas.getContext('2d').scale(ratio, ratio);
+        if (signaturePad) {
+            signaturePad.clear();
+            if (existingData) {
+                signaturePad.fromData(existingData);
+                syncSignatureInput();
+            }
+        }
     }
 
-    resizeCanvas();
-    const signaturePad = new SignaturePad(canvas, {
+    signaturePad = new SignaturePad(canvas, {
         backgroundColor: 'rgb(248, 250, 252)',
         penColor: 'rgb(15, 23, 42)'
     });
+    resizeCanvas();
+
+    signaturePad.addEventListener('endStroke', syncSignatureInput);
 
     window.addEventListener('resize', resizeCanvas);
     clearButton.addEventListener('click', function() {
@@ -99,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Customer signature is required before submitting.');
             return;
         }
-        signatureInput.value = signaturePad.toDataURL('image/png');
+        syncSignatureInput();
     });
 });
 </script>

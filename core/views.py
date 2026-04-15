@@ -64,6 +64,20 @@ def _get_active_branch(user: User):
     return Branch.objects.order_by("id").first()
 
 
+def _get_collectible_orders_for_user(user: User):
+    active_branch = _get_active_branch(user)
+    qs = (
+        Order.objects.select_related("customer", "branch")
+        .prefetch_related("payments", "items__product")
+        .order_by("-created_at")
+    )
+    if active_branch is not None:
+        qs = qs.filter(branch=active_branch)
+
+    active_statuses = {OrderStatus.PENDING, OrderStatus.RESERVED}
+    return [order for order in qs if order.status in active_statuses and order.remaining_balance > Decimal("0.00")]
+
+
 def _build_customer_summary(customer: Customer) -> dict[str, object]:
     orders = list(customer.orders.all())
     total_purchased = sum((order.total_amount for order in orders), Decimal("0.00"))
@@ -226,6 +240,32 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "customers_with_balance": customers_with_balance,
     }
 
+    if role == UserRole.COLLECTOR:
+        collectible_orders = _get_collectible_orders_for_user(request.user)
+        collector_payments_today = list(
+            payments_qs.filter(collector=request.user, paid_at__date=today).order_by("-paid_at")
+        )
+        recent_collector_payments = list(
+            payments_qs.filter(collector=request.user).order_by("-paid_at")[:5]
+        )
+        last_reconciliation = (
+            DailyReconciliation.objects.filter(collector=request.user).order_by("-date", "-created_at").first()
+        )
+        context.update(
+            {
+                "collectible_orders": collectible_orders[:8],
+                "collectible_order_count": len(collectible_orders),
+                "collector_payments_today": collector_payments_today,
+                "collector_payments_today_count": len(collector_payments_today),
+                "collector_payments_today_total": sum(
+                    (payment.amount for payment in collector_payments_today),
+                    Decimal("0.00"),
+                ),
+                "recent_collector_payments": recent_collector_payments,
+                "last_reconciliation": last_reconciliation,
+            }
+        )
+
     # Extra aggregates for owner/manager dashboards
     if role in {UserRole.MANAGER, UserRole.OWNER}:
         recent_payments = (
@@ -367,11 +407,17 @@ def daily_reconciliation(request: HttpRequest) -> HttpResponse:
         return redirect("dashboard")
 
     if request.method == "POST":
-        form = DailyReconciliationForm(request.POST)
+        form = DailyReconciliationForm(request.POST, user=request.user)
         if form.is_valid():
             reconciliation: DailyReconciliation = form.save(commit=False)
             reconciliation.collector = request.user
             reconciliation.branch = active_branch
+            if _user_has_role(request.user, UserRole.COLLECTOR):
+                reconciliation.system_total = (
+                    Payment.objects.filter(collector=request.user, paid_at__date=reconciliation.date)
+                    .aggregate(total=Sum("amount"))["total"]
+                    or Decimal("0.00")
+                )
             reconciliation.save()
             create_audit_log(
                 user=request.user,
@@ -390,7 +436,13 @@ def daily_reconciliation(request: HttpRequest) -> HttpResponse:
             return redirect("dashboard")
     else:
         initial = {"date": date.today()}
-        form = DailyReconciliationForm(initial=initial)
+        if _user_has_role(request.user, UserRole.COLLECTOR):
+            initial["system_total"] = (
+                Payment.objects.filter(collector=request.user, paid_at__date=initial["date"])
+                .aggregate(total=Sum("amount"))["total"]
+                or Decimal("0.00")
+            )
+        form = DailyReconciliationForm(initial=initial, user=request.user)
     return render(request, "core/daily_reconciliation.html", {"form": form})
 
 
@@ -544,7 +596,7 @@ def create_order(request: HttpRequest) -> HttpResponse:
     return render(request, "core/order_form.html", {"form": form, "formset": formset})
 
 
-@role_required(UserRole.COLLECTOR, UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
+@role_required(UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
 def inventory_list(request: HttpRequest) -> HttpResponse:
     qs = Inventory.objects.select_related("product", "branch")
     active_branch = _get_active_branch(request.user)
@@ -566,20 +618,28 @@ def inventory_list(request: HttpRequest) -> HttpResponse:
 
 @role_required(UserRole.COLLECTOR, UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
 def order_list(request: HttpRequest) -> HttpResponse:
-    qs = Order.objects.select_related("customer", "branch").prefetch_related("items__product")
+    role = getattr(getattr(request.user, "profile", None), "role", None)
+    qs = Order.objects.select_related("customer", "branch").prefetch_related("payments", "items__product")
     active_branch = _get_active_branch(request.user)
     if active_branch is not None:
         qs = qs.filter(branch=active_branch)
 
     status = request.GET.get("status")
-    if status:
+    allowed_statuses = None
+    if role == UserRole.COLLECTOR:
+        allowed_statuses = {OrderStatus.PENDING, OrderStatus.RESERVED}
+        qs = qs.filter(status__in=allowed_statuses)
+    if status and (allowed_statuses is None or status in allowed_statuses):
         qs = qs.filter(status=status)
 
     qs = qs.order_by("-created_at")
     orders = list(qs)
+    if role == UserRole.COLLECTOR:
+        orders = [order for order in orders if order.remaining_balance > Decimal("0.00")]
     context = {
         "orders": orders,
         "selected_status": status or "",
+        "role": role,
         "order_summary": {
             "count": len(orders),
             "pending": sum((1 for order in orders if order.status == OrderStatus.PENDING), 0),

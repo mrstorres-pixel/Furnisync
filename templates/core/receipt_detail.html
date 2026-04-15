@@ -133,7 +133,7 @@
                         {% if receipt.payment.customer_receipt %}
                             <img src="{{ receipt.payment.customer_receipt.url }}" alt="Customer Receipt Photo" class="max-w-full rounded-xl border border-slate-200">
                         {% endif %}
-                    {% else %}
+                    {% elif user.profile.role != 'collector' %}
                         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
                             <p class="font-semibold text-amber-900">Pending customer-side confirmation</p>
                             <p class="mt-2 text-amber-800">Ask the customer to scan the QR code below so they can confirm the payment on their own device without creating an account.</p>
@@ -146,12 +146,17 @@
                             <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Customer Link</p>
                             <p id="customer-confirmation-url" class="mt-2 break-all font-medium text-slate-900">{{ request.scheme }}://{{ request.get_host }}{% url 'confirm_payment_by_customer' receipt.payment.customer_confirmation_token %}</p>
                         </div>
+                    {% else %}
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <p class="font-semibold text-slate-900">Customer confirmation is still pending</p>
+                            <p class="mt-2 text-slate-600">The official confirmation link and printable receipt controls are restricted to office-side review to reduce collector-side fraud risk.</p>
+                        </div>
                     {% endif %}
                 </div>
             </section>
         </section>
 
-        {% if receipt.payment.customer_signature_data %}
+        {% if receipt.payment.customer_signature_data and user.profile.role != 'collector' %}
             <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
                 <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
                     <h3 class="text-lg font-bold text-slate-900">Customer Signature</h3>
@@ -163,12 +168,20 @@
         {% endif %}
 
         <div class="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-center no-print">
-            <button onclick="window.print()" class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
-                Print Receipt
-            </button>
-            <a href="{% url 'transaction_list' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                Back to Transactions
-            </a>
+            {% if user.profile.role != 'collector' %}
+                <button onclick="window.print()" class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
+                    Print Receipt
+                </button>
+            {% endif %}
+            {% if user.profile.role == 'collector' %}
+                <a href="{% url 'dashboard' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    Back to Dashboard
+                </a>
+            {% else %}
+                <a href="{% url 'transaction_list' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    Back to Transactions
+                </a>
+            {% endif %}
         </div>
     </div>
 </section>

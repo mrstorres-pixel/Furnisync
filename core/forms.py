@@ -156,8 +156,10 @@ class PaymentForm(forms.ModelForm):
         
         # Limit orders to those with remaining balance for collectors
         if user and hasattr(user, 'profile') and user.profile.branch:
-            # Show orders from collector's branch that have remaining balance
-            branch_orders = user.profile.branch.orders.all()
+            # Show active branch orders only; remaining balance is validated below.
+            branch_orders = user.profile.branch.orders.filter(
+                status__in=[OrderStatus.PENDING, OrderStatus.RESERVED]
+            )
             self.fields['order'].queryset = branch_orders
         else:
             self.fields['order'].queryset = Order.objects.all()
@@ -216,9 +218,17 @@ class PaymentForm(forms.ModelForm):
 
 
 class DailyReconciliationForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user: User | None = None, **kwargs):
+        self.user = user
         super().__init__(*args, **kwargs)
         apply_tailwind_classes(self)
+        if user and hasattr(user, "profile") and user.profile.role == UserRole.COLLECTOR:
+            self.fields["system_total"].widget = forms.HiddenInput()
+            self.fields["system_total"].required = False
+            self.fields["system_total"].initial = Decimal("0.00")
+            self.fields["cash_counted"].label = "Cash You Are Turning Over"
+            self.fields["date"].help_text = "Choose the date for the cash collection you are reporting."
+            self.fields["cash_counted"].help_text = "Enter only the physical cash currently in your possession for the selected day."
 
     class Meta:
         model = DailyReconciliation
