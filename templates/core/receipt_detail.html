@@ -97,6 +97,22 @@
                             {{ receipt.payment.get_verification_status_display }}
                         </span>
                     </div>
+                    <div class="flex items-center justify-between border-t border-slate-200 pt-3">
+                        <span class="font-semibold text-slate-700">Next Action</span>
+                        <span class="text-right text-sm font-semibold text-slate-900">{{ receipt.payment.next_action_label }}</span>
+                    </div>
+                    <div class="flex items-start justify-between gap-3 border-t border-slate-200 pt-3">
+                        <span class="font-semibold text-slate-700">Management Resolution</span>
+                        <div class="text-right">
+                            <div class="text-sm font-semibold text-slate-900">{{ receipt.payment.get_manager_resolution_status_display }}</div>
+                            {% if receipt.payment.manager_resolved_at %}
+                                <div class="mt-1 text-xs text-slate-500">
+                                    {{ receipt.payment.manager_resolved_at|date:"Y-m-d H:i" }}
+                                    {% if receipt.payment.manager_resolved_by %}by {{ receipt.payment.manager_resolved_by.username }}{% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                     {% if receipt.payment.suspicious_confirmation %}
                         <div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
                             <p class="font-semibold">Suspicious confirmation flagged</p>
@@ -112,6 +128,12 @@
                         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                             <p class="font-semibold">Review required due to suspicious confirmation</p>
                             <p class="mt-2">The amount matched, but the confirmation environment triggered fraud-risk checks and was escalated for review.</p>
+                        </div>
+                    {% endif %}
+                    {% if receipt.payment.manager_resolution_note %}
+                        <div class="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                            <p class="font-semibold text-slate-900">Management Review Note</p>
+                            <p class="mt-2">{{ receipt.payment.manager_resolution_note }}</p>
                         </div>
                     {% endif %}
                 </div>
@@ -191,6 +213,45 @@
                 </div>
                 <div class="p-6">
                     <img src="{{ receipt.payment.customer_signature_data }}" alt="Customer Signature" class="max-w-full rounded-xl border border-slate-200 bg-slate-50">
+                </div>
+            </section>
+        {% endif %}
+
+        {% if user.profile.role == 'manager' or user.profile.role == 'owner' %}
+            <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
+                    <h3 class="text-lg font-bold text-slate-900">Manager Review Decision</h3>
+                </div>
+                <div class="space-y-4 p-6">
+                    {% if receipt.payment.requires_manager_resolution %}
+                        <div class="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900">
+                            <p class="font-semibold">This payment is still unresolved.</p>
+                            <p class="mt-2">Record whether the payment should be accepted, disputed, or escalated for follow-up. This becomes part of the audit trail.</p>
+                        </div>
+                    {% else %}
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                            <p class="font-semibold text-slate-900">Decision already recorded</p>
+                            <p class="mt-2">You can still update the resolution if additional evidence changes the outcome.</p>
+                        </div>
+                    {% endif %}
+                    <form method="post" action="{% url 'resolve_payment_review' receipt.payment.id %}" class="space-y-4">
+                        {% csrf_token %}
+                        {% for field in resolution_form %}
+                            <div>
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
+                            Save Review Decision
+                        </button>
+                    </form>
                 </div>
             </section>
         {% endif %}

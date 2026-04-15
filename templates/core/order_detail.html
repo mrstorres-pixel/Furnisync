@@ -26,6 +26,10 @@
                 <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Remaining Balance</div>
                 <div class="mt-2 font-semibold {% if order.remaining_balance > 0 %}text-rose-700{% else %}text-emerald-700{% endif %}">${{ order.remaining_balance }}</div>
             </div>
+            <div class="rounded-xl border border-brand-200 bg-brand-50 px-4 py-4 md:col-span-2 xl:col-span-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-brand-700">Next Action</div>
+                <div class="mt-2 font-semibold text-slate-900">{{ order.next_action_label }}</div>
+            </div>
         </div>
     </section>
 
@@ -109,6 +113,9 @@
                             <div class="mt-2 text-xs {% if payment.verification_status == 'review_required' %}text-rose-700{% elif payment.verification_status == 'matched' %}text-emerald-700{% else %}text-amber-700{% endif %}">
                                 {{ payment.get_verification_status_display }}
                             </div>
+                            {% if payment.manager_resolution_status != 'unresolved' %}
+                                <div class="mt-1 text-xs text-slate-500">{{ payment.get_manager_resolution_status_display }}</div>
+                            {% endif %}
                         </div>
                         <div class="text-right">
                             <div class="font-semibold text-emerald-700">${{ payment.amount }}</div>

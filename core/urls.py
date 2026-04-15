@@ -19,6 +19,7 @@ urlpatterns = [
     path("payments/log/", views.log_payment, name="log_payment"),
     path("payments/confirm/<str:token>/", views.confirm_payment_by_customer, name="confirm_payment_by_customer"),
     path("payments/<int:payment_id>/customer-qr/", views.payment_customer_qr, name="payment_customer_qr"),
+    path("payments/<int:payment_id>/resolve-review/", views.resolve_payment_review, name="resolve_payment_review"),
     path("receipts/<int:receipt_id>/", views.view_receipt, name="view_receipt"),
     # Reconciliation
     path("reconciliation/daily/", views.daily_reconciliation, name="daily_reconciliation"),

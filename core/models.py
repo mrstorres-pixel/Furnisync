@@ -127,6 +127,29 @@ class Order(models.Model):
     def is_collection_ready(self) -> bool:
         return self.status in {OrderStatus.PENDING, OrderStatus.RESERVED} and self.remaining_balance > Decimal("0.00")
 
+    @property
+    def next_action_label(self) -> str:
+        if self.status == OrderStatus.CANCELLED:
+            return "Order is cancelled"
+        if not self.assigned_collector and self.remaining_balance > Decimal("0.00"):
+            return "Assign a collector"
+        unresolved_review_exists = self.payments.filter(
+            verification_status=Payment.VerificationStatus.REVIEW_REQUIRED,
+            manager_resolution_status=Payment.ManagerResolutionStatus.UNRESOLVED,
+        ).exists()
+        if unresolved_review_exists:
+            return "Resolve flagged payment"
+        pending_customer_exists = self.payments.filter(
+            verification_status=Payment.VerificationStatus.PENDING_CUSTOMER
+        ).exists()
+        if pending_customer_exists:
+            return "Wait for customer confirmation"
+        if self.remaining_balance > Decimal("0.00"):
+            return "Continue collection"
+        if self.status != OrderStatus.COMPLETED:
+            return "Close order"
+        return "Order complete"
+
     def _apply_inventory_transition(self, old_status: Optional[str], new_status: str) -> None:
         """
         Apply inventory rules based on status transitions:
@@ -238,6 +261,12 @@ class Payment(models.Model):
         MATCHED = "matched", "Matched"
         REVIEW_REQUIRED = "review_required", "Review Required"
 
+    class ManagerResolutionStatus(models.TextChoices):
+        UNRESOLVED = "unresolved", "Awaiting Review Decision"
+        ACCEPTED = "accepted", "Accepted By Management"
+        DISPUTED = "disputed", "Disputed"
+        FOLLOW_UP = "follow_up", "Needs Follow-Up"
+
     order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name="payments")
     branch = models.ForeignKey(Branch, on_delete=models.PROTECT, related_name="payments")
     collector = models.ForeignKey(User, on_delete=models.PROTECT, related_name="collected_payments")
@@ -261,6 +290,20 @@ class Payment(models.Model):
         choices=VerificationStatus.choices,
         default=VerificationStatus.PENDING_CUSTOMER,
     )
+    manager_resolution_status = models.CharField(
+        max_length=20,
+        choices=ManagerResolutionStatus.choices,
+        default=ManagerResolutionStatus.UNRESOLVED,
+    )
+    manager_resolution_note = models.TextField(blank=True)
+    manager_resolved_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="resolved_payments",
+        null=True,
+        blank=True,
+    )
+    manager_resolved_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -275,6 +318,31 @@ class Payment(models.Model):
             Decimal("0.00")
         )
         return self.order.total_amount - total_paid
+
+    @property
+    def amount_matches_customer(self) -> bool:
+        return self.customer_reported_amount is not None and self.customer_reported_amount == self.amount
+
+    @property
+    def requires_manager_resolution(self) -> bool:
+        return (
+            self.verification_status == self.VerificationStatus.REVIEW_REQUIRED
+            and self.manager_resolution_status == self.ManagerResolutionStatus.UNRESOLVED
+        )
+
+    @property
+    def next_action_label(self) -> str:
+        if self.verification_status == self.VerificationStatus.PENDING_CUSTOMER:
+            return "Wait for customer confirmation"
+        if self.requires_manager_resolution:
+            return "Manager review required"
+        if self.manager_resolution_status == self.ManagerResolutionStatus.ACCEPTED:
+            return "Review resolved and accepted"
+        if self.manager_resolution_status == self.ManagerResolutionStatus.DISPUTED:
+            return "Investigate disputed payment"
+        if self.manager_resolution_status == self.ManagerResolutionStatus.FOLLOW_UP:
+            return "Complete follow-up actions"
+        return "Payment verified"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         if not self.customer_confirmation_token:
@@ -324,6 +392,10 @@ class Payment(models.Model):
             if reported_amount == self.amount and not self.suspicious_confirmation
             else self.VerificationStatus.REVIEW_REQUIRED
         )
+        self.manager_resolution_status = self.ManagerResolutionStatus.UNRESOLVED
+        self.manager_resolution_note = ""
+        self.manager_resolved_by = None
+        self.manager_resolved_at = None
         self.customer_receipt.save(
             f"uploads/customer_confirmations/payment_{self.id}.jpg",
             customer_receipt_file,
@@ -341,6 +413,24 @@ class Payment(models.Model):
                 "suspicious_confirmation",
                 "suspicious_reason",
                 "verification_status",
+                "manager_resolution_status",
+                "manager_resolution_note",
+                "manager_resolved_by",
+                "manager_resolved_at",
+            ]
+        )
+
+    def resolve_review(self, *, resolution: str, note: str, resolved_by: User) -> None:
+        self.manager_resolution_status = resolution
+        self.manager_resolution_note = note
+        self.manager_resolved_by = resolved_by
+        self.manager_resolved_at = timezone.now()
+        self.save(
+            update_fields=[
+                "manager_resolution_status",
+                "manager_resolution_note",
+                "manager_resolved_by",
+                "manager_resolved_at",
             ]
         )
 

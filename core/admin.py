@@ -65,15 +65,17 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ("id", "order", "branch", "collector", "amount", "paid_at", "verification_status")
-    list_filter = ("branch", "collector", "verification_status")
+    list_display = ("id", "order", "branch", "collector", "amount", "paid_at", "verification_status", "manager_resolution_status")
+    list_filter = ("branch", "collector", "verification_status", "manager_resolution_status")
     readonly_fields = (
         "order", "branch", "collector", "amount", "paid_at", "receipt",
         "customer_receipt", "customer_confirmation_name", "customer_reported_amount",
         "customer_confirmed_at", "customer_confirmation_token", "verification_status",
         "collector_submission_ip", "collector_submission_user_agent",
         "customer_confirmation_ip", "customer_confirmation_user_agent",
-        "customer_signature_data", "suspicious_confirmation", "suspicious_reason", "created_at"
+        "customer_signature_data", "suspicious_confirmation", "suspicious_reason",
+        "manager_resolution_status", "manager_resolution_note", "manager_resolved_by",
+        "manager_resolved_at", "created_at"
     )
 
     def has_change_permission(self, request, obj=None):

@@ -286,6 +286,31 @@ class PaymentForm(forms.ModelForm):
         return payment
 
 
+class PaymentReviewResolutionForm(forms.Form):
+    resolution = forms.ChoiceField(choices=Payment.ManagerResolutionStatus.choices)
+    note = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+        help_text="Record the basis for your decision so review outcomes stay auditable.",
+    )
+
+    def __init__(self, *args, payment: Payment, **kwargs):
+        self.payment = payment
+        super().__init__(*args, **kwargs)
+        self.fields["resolution"].choices = [
+            (Payment.ManagerResolutionStatus.ACCEPTED, Payment.ManagerResolutionStatus.ACCEPTED.label),
+            (Payment.ManagerResolutionStatus.DISPUTED, Payment.ManagerResolutionStatus.DISPUTED.label),
+            (Payment.ManagerResolutionStatus.FOLLOW_UP, Payment.ManagerResolutionStatus.FOLLOW_UP.label),
+        ]
+        self.fields["resolution"].initial = (
+            payment.manager_resolution_status
+            if payment.manager_resolution_status != Payment.ManagerResolutionStatus.UNRESOLVED
+            else Payment.ManagerResolutionStatus.ACCEPTED
+        )
+        self.fields["note"].initial = payment.manager_resolution_note
+        apply_tailwind_classes(self)
+
+
 class DailyReconciliationForm(forms.ModelForm):
     def __init__(self, *args, user: User | None = None, **kwargs):
         self.user = user

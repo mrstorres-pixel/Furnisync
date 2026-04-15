@@ -23,6 +23,7 @@ from .forms import (
     OrderForm,
     OrderItemFormSet,
     PaymentForm,
+    PaymentReviewResolutionForm,
     ProductForm,
     UserProfileForm,
 )
@@ -374,8 +375,16 @@ def view_receipt(request: HttpRequest, receipt_id: int) -> HttpResponse:
         if receipt.collector != request.user:
             messages.error(request, "You can only view your own receipts.")
             return redirect("dashboard")
-    
-    return render(request, "core/receipt_detail.html", {"receipt": receipt})
+
+    resolution_form = None
+    if role in {UserRole.MANAGER, UserRole.OWNER}:
+        resolution_form = PaymentReviewResolutionForm(payment=receipt.payment)
+
+    return render(
+        request,
+        "core/receipt_detail.html",
+        {"receipt": receipt, "resolution_form": resolution_form},
+    )
 
 
 def confirm_payment_by_customer(request: HttpRequest, token: str) -> HttpResponse:
@@ -1212,6 +1221,7 @@ def fraud_review_list(request: HttpRequest) -> HttpResponse:
                 (1 for payment in payments if payment.verification_status == Payment.VerificationStatus.REVIEW_REQUIRED),
                 0,
             ),
+            "unresolved_reviews": sum((1 for payment in payments if payment.requires_manager_resolution), 0),
             "suspicious": sum((1 for payment in payments if payment.suspicious_confirmation), 0),
             "matched": sum(
                 (1 for payment in payments if payment.verification_status == Payment.VerificationStatus.MATCHED),
@@ -1221,6 +1231,52 @@ def fraud_review_list(request: HttpRequest) -> HttpResponse:
         "verification_statuses": Payment.VerificationStatus.choices,
     }
     return render(request, "core/fraud_review_list.html", context)
+
+
+@role_required(UserRole.MANAGER, UserRole.OWNER)
+def resolve_payment_review(request: HttpRequest, payment_id: int) -> HttpResponse:
+    payment = get_object_or_404(
+        Payment.objects.select_related("order__customer", "payment_receipt"),
+        pk=payment_id,
+    )
+    if request.method != "POST":
+        return redirect("view_receipt", receipt_id=payment.payment_receipt.id)
+
+    form = PaymentReviewResolutionForm(request.POST, payment=payment)
+    if not form.is_valid():
+        messages.error(request, "Review decision could not be saved. Please check the form and try again.")
+        return render(
+            request,
+            "core/receipt_detail.html",
+            {"receipt": payment.payment_receipt, "resolution_form": form},
+            status=400,
+        )
+
+    old_values = {
+        "manager_resolution_status": payment.manager_resolution_status,
+        "manager_resolution_note": payment.manager_resolution_note,
+        "manager_resolved_by": payment.manager_resolved_by_id,
+        "manager_resolved_at": payment.manager_resolved_at.isoformat() if payment.manager_resolved_at else None,
+    }
+    payment.resolve_review(
+        resolution=form.cleaned_data["resolution"],
+        note=form.cleaned_data["note"],
+        resolved_by=request.user,
+    )
+    create_audit_log(
+        user=request.user,
+        action="Resolve Payment Review",
+        instance=payment,
+        old_values=old_values,
+        new_values={
+            "manager_resolution_status": payment.manager_resolution_status,
+            "manager_resolution_note": payment.manager_resolution_note,
+            "manager_resolved_by": payment.manager_resolved_by_id,
+            "manager_resolved_at": payment.manager_resolved_at.isoformat() if payment.manager_resolved_at else None,
+        },
+    )
+    messages.success(request, "Payment review decision saved.")
+    return redirect("view_receipt", receipt_id=payment.payment_receipt.id)
 
 
 @role_required(UserRole.OWNER)
