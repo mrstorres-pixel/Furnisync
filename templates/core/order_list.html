@@ -62,6 +62,7 @@
             <tr>
                 <th class="px-6 py-4 text-left font-semibold">ID</th>
                 <th class="px-6 py-4 text-left font-semibold">Customer</th>
+                <th class="px-6 py-4 text-left font-semibold">Assigned Collector</th>
                 <th class="px-6 py-4 text-left font-semibold">Items</th>
                 <th class="px-6 py-4 text-left font-semibold">Status</th>
                 <th class="px-6 py-4 text-right font-semibold">Total</th>
@@ -73,8 +74,19 @@
             <tbody class="divide-y divide-slate-100">
             {% for order in orders %}
                 <tr class="hover:bg-slate-50">
-                    <td class="px-6 py-4 font-semibold text-slate-900">#{{ order.id }}</td>
-                    <td class="px-6 py-4 text-slate-700">{{ order.customer.full_name }}</td>
+                    <td class="px-6 py-4 font-semibold text-slate-900">
+                        <a href="{% url 'order_detail' order.id %}" class="hover:text-brand-700">#{{ order.id }}</a>
+                    </td>
+                    <td class="px-6 py-4 text-slate-700">
+                        <a href="{% url 'order_detail' order.id %}" class="hover:text-brand-700">{{ order.customer.full_name }}</a>
+                    </td>
+                    <td class="px-6 py-4 text-slate-700">
+                        {% if order.assigned_collector %}
+                            {{ order.assigned_collector.username }}
+                        {% else %}
+                            <span class="text-slate-400">Unassigned</span>
+                        {% endif %}
+                    </td>
                     <td class="px-6 py-4">
                         <details class="cursor-pointer">
                             <summary class="font-medium text-brand-700 hover:text-brand-800">{{ order.items.count }} item(s)</summary>
@@ -103,7 +115,7 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="8">No orders found for the selected filter.</td>
+                    <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="9">No orders found for the selected filter.</td>
                 </tr>
             {% endfor %}
             </tbody>

@@ -10,6 +10,10 @@ urlpatterns = [
     path("customers/<int:customer_id>/", views.customer_detail, name="customer_detail"),
     path("orders/new/", views.create_order, name="create_order"),
     path("orders/", views.order_list, name="order_list"),
+    path("orders/<int:order_id>/", views.order_detail, name="order_detail"),
+    path("orders/<int:order_id>/manage/", views.order_manage, name="order_manage"),
+    path("orders/<int:order_id>/change-request/", views.order_change_request_create, name="order_change_request_create"),
+    path("order-change-requests/<int:request_id>/<str:decision>/", views.order_change_request_process, name="order_change_request_process"),
     path("inventory/", views.inventory_list, name="inventory_list"),
     # Payments & Receipts
     path("payments/log/", views.log_payment, name="log_payment"),

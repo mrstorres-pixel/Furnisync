@@ -29,7 +29,15 @@
         </div>
         {% if payment.verification_status == 'review_required' %}
             <div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
-                The customer-confirmed amount did not match the collector-entered amount, so this payment has been flagged for management review.
+                {% if payment.customer_reported_amount != payment.amount and payment.suspicious_confirmation %}
+                    Your confirmation was recorded, but this payment was flagged for management review because the confirmed amount did not match and the confirmation environment also appeared suspicious.
+                {% elif payment.customer_reported_amount != payment.amount %}
+                    Your confirmation was recorded, but the confirmed amount did not match the collector-entered amount, so management review is required.
+                {% elif payment.suspicious_confirmation %}
+                    Your confirmation was recorded, but this payment was flagged for management review because the confirmation environment appeared suspicious.
+                {% else %}
+                    Your confirmation was recorded and has been flagged for management review.
+                {% endif %}
             </div>
         {% endif %}
     </div>

@@ -18,6 +18,8 @@ from .forms import (
     CustomerForm,
     DailyReconciliationForm,
     InventoryAdjustmentForm,
+    OrderChangeRequestForm,
+    OrderManagementForm,
     OrderForm,
     OrderItemFormSet,
     PaymentForm,
@@ -32,6 +34,8 @@ from .models import (
     Inventory,
     InventoryAdjustment,
     Order,
+    OrderChangeRequest,
+    OrderChangeRequestStatus,
     OrderItem,
     OrderStatus,
     Payment,
@@ -75,6 +79,7 @@ def _get_collectible_orders_for_user(user: User):
         qs = qs.filter(branch=active_branch)
 
     active_statuses = {OrderStatus.PENDING, OrderStatus.RESERVED}
+    qs = qs.filter(Q(assigned_collector=user) | Q(assigned_collector__isnull=True))
     return [order for order in qs if order.status in active_statuses and order.remaining_balance > Decimal("0.00")]
 
 
@@ -609,6 +614,12 @@ def create_order(request: HttpRequest) -> HttpResponse:
         if form.is_valid() and formset.is_valid():
             with transaction.atomic():
                 order = form.save()
+                order.created_by = request.user
+                order.last_modified_by = request.user
+                if current_role in {UserRole.MANAGER, UserRole.OWNER}:
+                    order.approved_by = request.user
+                    order.approved_at = timezone.now()
+                order.save(update_fields=["created_by", "last_modified_by", "approved_by", "approved_at"])
                 formset.instance = order
                 formset.save()
                 create_audit_log(
@@ -621,16 +632,166 @@ def create_order(request: HttpRequest) -> HttpResponse:
                         "customer_name": order.customer.full_name,
                         "branch_id": order.branch_id,
                         "status": order.status,
+                        "assigned_collector": order.assigned_collector.username if order.assigned_collector else "",
                         "total_amount": str(order.total_amount),
                         "line_items": _serialize_order_items(order),
                     },
                 )
             messages.success(request, "Order created.")
-            return redirect("dashboard")
+            return redirect("order_detail", order_id=order.id)
     else:
         form = OrderForm(current_branch=active_branch, current_role=current_role)
         formset = OrderItemFormSet(form_kwargs={"user_role": current_role})
     return render(request, "core/order_form.html", {"form": form, "formset": formset})
+
+
+@role_required(UserRole.COLLECTOR, UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
+def order_detail(request: HttpRequest, order_id: int) -> HttpResponse:
+    active_branch = _get_active_branch(request.user)
+    order_qs = Order.objects.select_related(
+        "customer", "branch", "created_by", "last_modified_by", "assigned_collector", "approved_by"
+    ).prefetch_related(
+        "items__product", "payments__collector", "payments__payment_receipt", "change_requests__requested_by", "change_requests__reviewed_by"
+    )
+    if active_branch is not None:
+        order_qs = order_qs.filter(branch=active_branch)
+    order = get_object_or_404(order_qs, pk=order_id)
+    role = getattr(getattr(request.user, "profile", None), "role", None)
+    if role == UserRole.COLLECTOR and order.assigned_collector_id not in {None, request.user.id}:
+        messages.error(request, "You can only access orders assigned to you.")
+        return redirect("order_list")
+    order_audit_logs = list(
+        AuditLog.objects.filter(model_name="Order", object_id=str(order.id)).select_related("user").order_by("-created_at")
+    )
+    payments = list(order.payments.all().order_by("-paid_at"))
+    change_requests = list(order.change_requests.all().order_by("-created_at"))
+    context = {
+        "order": order,
+        "payments": payments,
+        "change_requests": change_requests,
+        "order_audit_logs": order_audit_logs,
+        "change_request_form": OrderChangeRequestForm(current_branch=order.branch),
+    }
+    return render(request, "core/order_detail.html", context)
+
+
+@role_required(UserRole.MANAGER, UserRole.OWNER)
+def order_manage(request: HttpRequest, order_id: int) -> HttpResponse:
+    active_branch = _get_active_branch(request.user)
+    order_qs = Order.objects.select_related("customer", "assigned_collector", "branch")
+    if active_branch is not None:
+        order_qs = order_qs.filter(branch=active_branch)
+    order = get_object_or_404(order_qs, pk=order_id)
+
+    if request.method == "POST":
+        form = OrderManagementForm(request.POST, instance=order, current_branch=order.branch)
+        if form.is_valid():
+            old_values = {
+                "status": order.status,
+                "assigned_collector": order.assigned_collector.username if order.assigned_collector else "",
+            }
+            updated_order = form.save(commit=False)
+            updated_order.last_modified_by = request.user
+            updated_order.approved_by = request.user
+            updated_order.approved_at = timezone.now()
+            updated_order.save()
+            create_audit_log(
+                user=request.user,
+                action="Manage Order",
+                instance=updated_order,
+                old_values=old_values,
+                new_values={
+                    "status": updated_order.status,
+                    "assigned_collector": updated_order.assigned_collector.username if updated_order.assigned_collector else "",
+                    "approved_by": request.user.username,
+                },
+            )
+            messages.success(request, "Order updated.")
+            return redirect("order_detail", order_id=updated_order.id)
+    else:
+        form = OrderManagementForm(instance=order, current_branch=order.branch)
+    return render(request, "core/order_manage.html", {"form": form, "order": order})
+
+
+@role_required(UserRole.SECRETARY)
+def order_change_request_create(request: HttpRequest, order_id: int) -> HttpResponse:
+    active_branch = _get_active_branch(request.user)
+    order_qs = Order.objects.select_related("customer", "branch")
+    if active_branch is not None:
+        order_qs = order_qs.filter(branch=active_branch)
+    order = get_object_or_404(order_qs, pk=order_id)
+
+    if request.method != "POST":
+        return redirect("order_detail", order_id=order.id)
+
+    form = OrderChangeRequestForm(request.POST, current_branch=order.branch)
+    if form.is_valid():
+        change_request = form.save(commit=False)
+        change_request.order = order
+        change_request.requested_by = request.user
+        change_request.save()
+        create_audit_log(
+            user=request.user,
+            action="Create Order Change Request",
+            instance=change_request,
+            old_values=None,
+            new_values={
+                "order_id": order.id,
+                "requested_status": change_request.requested_status,
+                "requested_assigned_collector": change_request.requested_assigned_collector.username if change_request.requested_assigned_collector else "",
+                "reason": change_request.reason,
+            },
+        )
+        messages.success(request, "Order change request submitted for manager review.")
+    else:
+        messages.error(request, form.non_field_errors() or "Unable to submit order change request.")
+    return redirect("order_detail", order_id=order.id)
+
+
+@role_required(UserRole.MANAGER, UserRole.OWNER)
+def order_change_request_process(request: HttpRequest, request_id: int, decision: str) -> HttpResponse:
+    change_request = get_object_or_404(
+        OrderChangeRequest.objects.select_related("order", "requested_assigned_collector", "requested_by"),
+        pk=request_id,
+    )
+    if change_request.status != OrderChangeRequestStatus.PENDING:
+        messages.error(request, "This order change request has already been reviewed.")
+        return redirect("order_detail", order_id=change_request.order_id)
+    if decision not in {"approve", "reject"}:
+        return HttpResponseForbidden("Invalid decision")
+
+    change_request.reviewed_by = request.user
+    change_request.reviewed_at = timezone.now()
+    old_values = {
+        "status": change_request.order.status,
+        "assigned_collector": change_request.order.assigned_collector.username if change_request.order.assigned_collector else "",
+    }
+    if decision == "approve":
+        if change_request.requested_status:
+            change_request.order.status = change_request.requested_status
+        change_request.order.assigned_collector = change_request.requested_assigned_collector
+        change_request.order.last_modified_by = request.user
+        change_request.order.approved_by = request.user
+        change_request.order.approved_at = timezone.now()
+        change_request.order.save()
+        change_request.status = OrderChangeRequestStatus.APPROVED
+        create_audit_log(
+            user=request.user,
+            action="Approve Order Change Request",
+            instance=change_request.order,
+            old_values=old_values,
+            new_values={
+                "status": change_request.order.status,
+                "assigned_collector": change_request.order.assigned_collector.username if change_request.order.assigned_collector else "",
+                "source_request_id": change_request.id,
+            },
+        )
+        messages.success(request, "Order change request approved.")
+    else:
+        change_request.status = OrderChangeRequestStatus.REJECTED
+        messages.info(request, "Order change request rejected.")
+    change_request.save()
+    return redirect("order_detail", order_id=change_request.order_id)
 
 
 @role_required(UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
@@ -665,7 +826,7 @@ def order_list(request: HttpRequest) -> HttpResponse:
     allowed_statuses = None
     if role == UserRole.COLLECTOR:
         allowed_statuses = {OrderStatus.PENDING, OrderStatus.RESERVED}
-        qs = qs.filter(status__in=allowed_statuses)
+        qs = qs.filter(status__in=allowed_statuses).filter(Q(assigned_collector=request.user) | Q(assigned_collector__isnull=True))
     if status and (allowed_statuses is None or status in allowed_statuses):
         qs = qs.filter(status=status)
 

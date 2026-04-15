@@ -89,6 +89,19 @@ class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name="orders")
     branch = models.ForeignKey(Branch, on_delete=models.PROTECT, related_name="orders")
     status = models.CharField(max_length=20, choices=OrderStatus.choices, default=OrderStatus.PENDING)
+    created_by = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="created_orders", null=True, blank=True
+    )
+    last_modified_by = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="modified_orders", null=True, blank=True
+    )
+    assigned_collector = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="assigned_orders", null=True, blank=True
+    )
+    approved_by = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="approved_orders", null=True, blank=True
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -109,6 +122,10 @@ class Order(models.Model):
     def remaining_balance(self) -> Decimal:
         """Remaining balance to be paid."""
         return self.total_amount - self.total_paid
+
+    @property
+    def is_collection_ready(self) -> bool:
+        return self.status in {OrderStatus.PENDING, OrderStatus.RESERVED} and self.remaining_balance > Decimal("0.00")
 
     def _apply_inventory_transition(self, old_status: Optional[str], new_status: str) -> None:
         """
@@ -160,6 +177,35 @@ class Order(models.Model):
 
             # Apply status-based inventory changes
             self._apply_inventory_transition(old_status, self.status)
+
+
+class OrderChangeRequestStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    APPROVED = "approved", "Approved"
+    REJECTED = "rejected", "Rejected"
+
+
+class OrderChangeRequest(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="change_requests")
+    requested_by = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="order_change_requests"
+    )
+    reviewed_by = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="reviewed_order_change_requests", null=True, blank=True
+    )
+    requested_status = models.CharField(max_length=20, choices=OrderStatus.choices, blank=True)
+    requested_assigned_collector = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="requested_assignments", null=True, blank=True
+    )
+    reason = models.TextField()
+    status = models.CharField(
+        max_length=20, choices=OrderChangeRequestStatus.choices, default=OrderChangeRequestStatus.PENDING
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"Order change request #{self.pk} for Order #{self.order_id}"
 
 
 class OrderItem(models.Model):

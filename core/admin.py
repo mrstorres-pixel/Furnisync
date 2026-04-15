@@ -8,6 +8,7 @@ from .models import (
     Inventory,
     InventoryAdjustment,
     Order,
+    OrderChangeRequest,
     OrderItem,
     Payment,
     Product,
@@ -53,7 +54,7 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "customer", "branch", "status", "created_at", "get_total_amount")
+    list_display = ("id", "customer", "branch", "status", "assigned_collector", "created_by", "created_at", "get_total_amount")
     list_filter = ("branch", "status")
     inlines = [OrderItemInline]
     
@@ -124,4 +125,10 @@ class DailyReconciliationAdmin(admin.ModelAdmin):
 class InventoryAdjustmentAdmin(admin.ModelAdmin):
     list_display = ("product", "branch", "quantity", "approved", "created_by", "approved_by", "created_at")
     list_filter = ("branch", "approved")
+
+
+@admin.register(OrderChangeRequest)
+class OrderChangeRequestAdmin(admin.ModelAdmin):
+    list_display = ("order", "requested_by", "requested_status", "requested_assigned_collector", "status", "created_at")
+    list_filter = ("status", "requested_status")
 

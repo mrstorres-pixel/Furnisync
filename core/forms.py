@@ -13,6 +13,8 @@ from .models import (
     DailyReconciliation,
     InventoryAdjustment,
     Order,
+    OrderChangeRequest,
+    OrderChangeRequestStatus,
     OrderItem,
     OrderStatus,
     Payment,
@@ -139,15 +141,24 @@ class OrderForm(forms.ModelForm):
         apply_tailwind_classes(self)
         if self.current_branch is not None:
             self.fields["customer"].queryset = Customer.objects.filter(branch=self.current_branch).order_by("full_name")
+            collector_profiles = UserProfile.objects.filter(branch=self.current_branch, role=UserRole.COLLECTOR).select_related("user")
+            self.fields["assigned_collector"].queryset = User.objects.filter(
+                id__in=[profile.user_id for profile in collector_profiles]
+            ).order_by("username")
         if self.current_role == UserRole.SECRETARY:
             self.fields["status"].choices = [
                 (OrderStatus.PENDING, OrderStatus.PENDING.label),
                 (OrderStatus.RESERVED, OrderStatus.RESERVED.label),
             ]
+            self.fields["assigned_collector"].widget = forms.HiddenInput()
+            self.fields["assigned_collector"].required = False
+        else:
+            self.fields["assigned_collector"].required = False
+            self.fields["assigned_collector"].help_text = "Optional: assign this order to a specific collector."
 
     class Meta:
         model = Order
-        fields = ["customer", "status"]
+        fields = ["customer", "status", "assigned_collector"]
 
     def clean_customer(self):
         customer = self.cleaned_data["customer"]
@@ -160,6 +171,14 @@ class OrderForm(forms.ModelForm):
         if self.current_role == UserRole.SECRETARY and status not in {OrderStatus.PENDING, OrderStatus.RESERVED}:
             raise forms.ValidationError("Secretary accounts can only create pending or reserved orders.")
         return status
+
+    def clean_assigned_collector(self):
+        collector = self.cleaned_data.get("assigned_collector")
+        if collector and (not hasattr(collector, "profile") or collector.profile.role != UserRole.COLLECTOR):
+            raise forms.ValidationError("Assigned user must be a collector account.")
+        if collector and self.current_branch is not None and collector.profile.branch_id != self.current_branch.id:
+            raise forms.ValidationError("Assigned collector must belong to the active branch.")
+        return collector
 
     def save(self, commit=True):
         order = super().save(commit=False)
@@ -326,6 +345,63 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = ["name", "sku", "description", "price"]
+
+
+class OrderManagementForm(forms.ModelForm):
+    def __init__(self, *args, current_branch=None, **kwargs):
+        self.current_branch = current_branch
+        super().__init__(*args, **kwargs)
+        apply_tailwind_classes(self)
+        if current_branch is not None:
+            collector_profiles = UserProfile.objects.filter(branch=current_branch, role=UserRole.COLLECTOR).select_related("user")
+            self.fields["assigned_collector"].queryset = User.objects.filter(
+                id__in=[profile.user_id for profile in collector_profiles]
+            ).order_by("username")
+        self.fields["assigned_collector"].required = False
+
+    class Meta:
+        model = Order
+        fields = ["status", "assigned_collector"]
+
+    def clean_assigned_collector(self):
+        collector = self.cleaned_data.get("assigned_collector")
+        if collector and (not hasattr(collector, "profile") or collector.profile.role != UserRole.COLLECTOR):
+            raise forms.ValidationError("Assigned user must be a collector account.")
+        if collector and self.current_branch is not None and collector.profile.branch_id != self.current_branch.id:
+            raise forms.ValidationError("Assigned collector must belong to the active branch.")
+        return collector
+
+
+class OrderChangeRequestForm(forms.ModelForm):
+    def __init__(self, *args, current_branch=None, **kwargs):
+        self.current_branch = current_branch
+        super().__init__(*args, **kwargs)
+        apply_tailwind_classes(self)
+        if current_branch is not None:
+            collector_profiles = UserProfile.objects.filter(branch=current_branch, role=UserRole.COLLECTOR).select_related("user")
+            self.fields["requested_assigned_collector"].queryset = User.objects.filter(
+                id__in=[profile.user_id for profile in collector_profiles]
+            ).order_by("username")
+        self.fields["requested_status"].required = False
+        self.fields["requested_assigned_collector"].required = False
+
+    class Meta:
+        model = OrderChangeRequest
+        fields = ["requested_status", "requested_assigned_collector", "reason"]
+
+    def clean_requested_assigned_collector(self):
+        collector = self.cleaned_data.get("requested_assigned_collector")
+        if collector and (not hasattr(collector, "profile") or collector.profile.role != UserRole.COLLECTOR):
+            raise forms.ValidationError("Assigned user must be a collector account.")
+        if collector and self.current_branch is not None and collector.profile.branch_id != self.current_branch.id:
+            raise forms.ValidationError("Assigned collector must belong to the active branch.")
+        return collector
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data.get("requested_status") and not cleaned_data.get("requested_assigned_collector"):
+            raise forms.ValidationError("Request at least one change: status or assigned collector.")
+        return cleaned_data
 
 
 class UserProfileForm(forms.ModelForm):

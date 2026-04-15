@@ -103,6 +103,17 @@
                             <p class="mt-2">{{ receipt.payment.suspicious_reason }}</p>
                         </div>
                     {% endif %}
+                    {% if receipt.payment.verification_status == 'review_required' and receipt.payment.customer_confirmed_at and receipt.payment.customer_reported_amount != receipt.payment.amount %}
+                        <div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                            <p class="font-semibold">Amount mismatch detected</p>
+                            <p class="mt-2">The customer-confirmed amount does not match the collector-entered amount, so management review is required.</p>
+                        </div>
+                    {% elif receipt.payment.verification_status == 'review_required' and receipt.payment.customer_confirmed_at and receipt.payment.suspicious_confirmation %}
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                            <p class="font-semibold">Review required due to suspicious confirmation</p>
+                            <p class="mt-2">The amount matched, but the confirmation environment triggered fraud-risk checks and was escalated for review.</p>
+                        </div>
+                    {% endif %}
                 </div>
             </section>
         </section>

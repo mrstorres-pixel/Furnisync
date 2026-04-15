@@ -17,7 +17,7 @@
     <div class="rounded-xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-rose-700">Review Required</div>
         <div class="mt-3 text-3xl font-extrabold text-rose-900">{{ review_summary.review_required }}</div>
-        <p class="mt-2 text-sm text-rose-800">Payments where the customer-reported details do not match the collector-side entry.</p>
+        <p class="mt-2 text-sm text-rose-800">Payments that need management review because of amount mismatch, suspicious confirmation signals, or both.</p>
     </div>
     <div class="rounded-xl border border-sky-200 bg-sky-50 p-5 shadow-sm">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Suspicious Flags</div>
@@ -109,8 +109,12 @@
                                 {% else %}bg-amber-100 text-amber-800{% endif %}">
                                 {{ payment.get_verification_status_display }}
                             </span>
-                            {% if payment.customer_reported_amount and payment.customer_reported_amount != payment.amount %}
+                            {% if payment.customer_reported_amount and payment.customer_reported_amount != payment.amount and payment.suspicious_confirmation %}
+                                <div class="mt-2 text-xs font-medium text-rose-700">Amount mismatch and suspicious confirmation</div>
+                            {% elif payment.customer_reported_amount and payment.customer_reported_amount != payment.amount %}
                                 <div class="mt-2 text-xs font-medium text-rose-700">Amount mismatch detected</div>
+                            {% elif payment.suspicious_confirmation %}
+                                <div class="mt-2 text-xs font-medium text-rose-700">Review triggered by suspicious confirmation</div>
                             {% endif %}
                         </td>
                         <td class="px-6 py-4">
