@@ -8,7 +8,18 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import UploadedFile
 
-from .models import Customer, DailyReconciliation, InventoryAdjustment, Order, OrderItem, Payment, Product, UserProfile, UserRole
+from .models import (
+    Customer,
+    DailyReconciliation,
+    InventoryAdjustment,
+    Order,
+    OrderItem,
+    OrderStatus,
+    Payment,
+    Product,
+    UserProfile,
+    UserRole,
+)
 
 User = get_user_model()
 
