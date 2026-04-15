@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block header %}Branch Dashboard{% endblock %}
-{% block header_subtitle %}A focused workspace for day-to-day branch operations, customer servicing, inventory visibility, and payment control.{% endblock %}
+{% block header_subtitle %}Dashboard.{% endblock %}
 {% block content %}
 <section class="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
     <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -42,7 +42,7 @@
             <div class="rounded-xl border border-white/10 bg-white/5 p-4">
                 <p class="text-sm font-medium text-slate-200">Outstanding customer balances</p>
                 <p class="mt-2 text-3xl font-bold">&#8369;{{ outstanding_balance_total }}</p>
-                <p class="mt-2 text-sm text-slate-400">{{ customers_with_balance_count }} customer account{{ customers_with_balance_count|pluralize }} still need follow-up.</p>
+                <p class="mt-2 text-sm text-slate-400">{{ customers_with_balance_count }} account{{ customers_with_balance_count|pluralize }} with balance.</p>
             </div>
             <div class="grid grid-cols-2 gap-3 text-sm">
                 <div class="rounded-xl border border-white/10 bg-white/5 p-4">
@@ -62,95 +62,80 @@
     <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Employees</div>
         <div class="mt-3 text-3xl font-extrabold text-slate-900">{{ total_employees }}</div>
-        <p class="mt-2 text-sm text-slate-500">People currently assigned to branch workflows and approvals.</p>
+        <p class="mt-2 text-sm text-slate-500">Active accounts.</p>
     </div>
     <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Customers</div>
         <div class="mt-3 text-3xl font-extrabold text-slate-900">{{ total_customers }}</div>
-        <p class="mt-2 text-sm text-slate-500">Customer records available for servicing, billing, and follow-up.</p>
+        <p class="mt-2 text-sm text-slate-500">Customer records.</p>
     </div>
     <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Orders</div>
         <div class="mt-3 text-3xl font-extrabold text-slate-900">{{ total_orders }}</div>
-        <p class="mt-2 text-sm text-slate-500">Orders tracked from initial entry through completion and payment.</p>
+        <p class="mt-2 text-sm text-slate-500">Tracked orders.</p>
     </div>
     <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Inventory Units</div>
         <div class="mt-3 text-3xl font-extrabold text-slate-900">{{ total_inventory_units }}</div>
-        <p class="mt-2 text-sm text-slate-500">Current branch stock available across products in the catalog.</p>
+        <p class="mt-2 text-sm text-slate-500">Units on hand.</p>
     </div>
 </section>
 
 <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
     <div class="border-b border-slate-200 px-6 py-5">
         <h3 class="text-lg font-bold text-slate-900">Quick Actions</h3>
-        <p class="mt-1 text-sm text-slate-500">Use the most common branch tasks without hunting through the menu.</p>
+        <p class="mt-1 text-sm text-slate-500">Common tasks.</p>
     </div>
     <div class="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
         {% if role == 'collector' %}
             <a href="{% url 'log_payment' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Log payment</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Capture a customer payment and attach the receipt photo immediately.</p>
             </a>
             <a href="{% url 'daily_reconciliation' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Submit reconciliation</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Record counted cash and compare it against system totals for the day.</p>
             </a>
             <a href="{% url 'order_list' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Review assigned orders</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Check customer balances, payment status, and item details before collection.</p>
             </a>
         {% elif role == 'secretary' %}
             <a href="{% url 'create_customer' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Add customer</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Create a complete customer profile before encoding a new transaction.</p>
             </a>
             <a href="{% url 'create_order' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Create order</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Encode a new furniture sale with products, quantities, and status details.</p>
             </a>
             <a href="{% url 'customer_list' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Review customer records</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Check contact information, purchase history, and balances before follow-up.</p>
             </a>
         {% elif role == 'manager' %}
             <a href="{% url 'inventory_adjustment' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Adjust inventory</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Correct stock discrepancies and keep inventory counts aligned with actual branch stock.</p>
             </a>
             <a href="{% url 'transaction_list' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Inspect transactions</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Review payments by employee, date, customer, and receipt trail.</p>
             </a>
             <a href="{% url 'employee_list' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Monitor employees</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">View staff roles and recent activity related to collections and branch operations.</p>
             </a>
         {% elif role == 'owner' %}
             <a href="{% url 'transaction_list' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Review financial activity</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Audit the latest payments, collectors, and customer balances from one page.</p>
             </a>
             <a href="{% url 'product_list' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Inspect product performance</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">See which products are selling, where stock is low, and what needs replenishment.</p>
             </a>
             <a href="{% url 'user_list' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Manage access</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Keep user roles aligned with actual branch responsibilities and approvals.</p>
             </a>
         {% else %}
             <a href="{% url 'order_list' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Review orders</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Inspect current transactions, statuses, balances, and line items.</p>
             </a>
             <a href="{% url 'inventory_list' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Open inventory</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Check stock availability and identify items that need attention soon.</p>
             </a>
             <a href="{% url 'customer_list' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Open customers</p>
-                <p class="mt-2 text-sm leading-6 text-slate-500">Review customer details, balances, and purchase activity.</p>
             </a>
         {% endif %}
     </div>
@@ -162,7 +147,7 @@
             <div class="flex items-center justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-900">Order Pipeline</h3>
-                    <p class="mt-1 text-sm text-slate-500">A quick read of how work is currently distributed across order stages.</p>
+                    <p class="mt-1 text-sm text-slate-500">Orders by status.</p>
                 </div>
                 <a href="{% url 'order_list' %}" class="text-sm font-semibold text-brand-700 hover:text-brand-800">Open orders</a>
             </div>
@@ -192,7 +177,7 @@
             <div class="flex items-center justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-900">Recent Transactions</h3>
-                    <p class="mt-1 text-sm text-slate-500">Latest payments recorded in the system.</p>
+                    <p class="mt-1 text-sm text-slate-500">Latest payments.</p>
                 </div>
                 <a href="{% url 'transaction_list' %}" class="text-sm font-semibold text-brand-700 hover:text-brand-800">View all</a>
             </div>

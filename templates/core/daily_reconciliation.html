@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block header %}{% if user.profile.role == 'collector' %}Cash Turnover{% else %}Daily Reconciliation{% endif %}{% endblock %}
-{% block header_subtitle %}{% if user.profile.role == 'collector' %}Report only the physical cash you personally collected for the selected day. The system computes your logged collection total automatically.{% else %}Compare recorded system totals with counted cash so discrepancies can be reviewed and approved transparently.{% endif %}{% endblock %}
+{% block header_subtitle %}{% if user.profile.role == 'collector' %}Daily cash report.{% else %}Reconciliation review.{% endif %}{% endblock %}
 {% block content %}
 <section class="mx-auto max-w-6xl space-y-6">
     <div class="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Receipt {{ receipt.receipt_number }}{% endblock %}
 {% block header %}Receipt Details{% endblock %}
-{% block header_subtitle %}Review the official payment record, included order items, and remaining balance after this transaction.{% endblock %}
+{% block header_subtitle %}Receipt details.{% endblock %}
 {% block content %}
 <section class="mx-auto max-w-6xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
     <div class="border-b border-slate-200 bg-slate-950 px-8 py-8 text-white">
@@ -180,7 +180,7 @@
                         {% endif %}
                     {% elif user.profile.role != 'collector' %}
                         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                            <p class="font-semibold text-amber-900">Pending customer-side confirmation</p>
+                            <p class="font-semibold text-amber-900">Pending customer confirmation</p>
                             <p class="mt-2 text-amber-800">Ask the customer to scan the QR code below so they can confirm the payment on their own device without creating an account.</p>
                         </div>
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
@@ -194,7 +194,7 @@
                     {% else %}
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                             <p class="font-semibold text-slate-900">Customer confirmation is still pending</p>
-                            <p class="mt-2 text-slate-600">The official confirmation link and printable receipt controls are restricted to office-side review to reduce collector-side fraud risk.</p>
+                            <p class="mt-2 text-slate-600">Confirmation tools are restricted for collectors.</p>
                         </div>
                     {% endif %}
                 </div>

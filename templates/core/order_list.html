@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block header %}{% if role == 'collector' %}Orders To Collect{% else %}Orders{% endif %}{% endblock %}
-{% block header_subtitle %}{% if role == 'collector' %}Review only active orders in your branch that still have unpaid balance and need collection follow-up.{% else %}Review order status, customer details, outstanding balances, and line items in one place.{% endif %}{% endblock %}
+{% block header_subtitle %}{% if role == 'collector' %}Orders to collect.{% else %}Order register.{% endif %}{% endblock %}
 {% block content %}
 <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
     <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -30,7 +30,7 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <h3 class="text-lg font-bold text-slate-900">{% if role == 'collector' %}Collection Queue{% else %}Order Register{% endif %}</h3>
-                <p class="mt-1 text-sm text-slate-500">{% if role == 'collector' %}Completed and cancelled orders are hidden so you only see accounts that still need payment collection.{% else %}Use the status filter to focus on the current stage of branch transactions.{% endif %}</p>
+                <p class="mt-1 text-sm text-slate-500">{% if role == 'collector' %}Active orders only.{% else %}Orders by status.{% endif %}</p>
             </div>
             <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
                 {% if role != 'collector' %}

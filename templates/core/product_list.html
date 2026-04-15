@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block header %}Products{% endblock %}
-{% block header_subtitle %}Track available products, stock position, and which items are generating sales.{% endblock %}
+{% block header_subtitle %}Products and stock.{% endblock %}
 {% block content %}
 <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
     <div class="border-b border-slate-200/80 px-6 py-5">
         <div class="flex items-center justify-between gap-4">
             <div>
                 <h3 class="text-lg font-bold text-slate-900">Product Performance</h3>
-                <p class="mt-1 text-sm text-slate-500">See which products exist in the catalog, how much stock remains, and which items are selling.</p>
+                <p class="mt-1 text-sm text-slate-500">Catalog and performance.</p>
             </div>
             <a href="{% url 'product_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">New Product</a>
         </div>
