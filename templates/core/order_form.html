@@ -222,6 +222,26 @@ document.addEventListener('DOMContentLoaded', function() {
         grandTotal.textContent = formatted;
     }
 
+    function syncLineItemPricing(form) {
+        const productField = form.querySelector('[name*="product"]');
+        const quantityInput = form.querySelector('[name*="quantity"]');
+        const priceInput = form.querySelector('[name*="price"]');
+        const subtotalInput = form.querySelector('[name*="subtotal"]');
+        if (!productField || !priceInput || !subtotalInput) {
+            return;
+        }
+
+        const selectedOption = productField.options[productField.selectedIndex];
+        const selectedPrice = parseFloat(selectedOption?.dataset.price || '');
+        if (!Number.isNaN(selectedPrice)) {
+            priceInput.value = selectedPrice.toFixed(2);
+        }
+
+        const quantity = parseFloat(quantityInput?.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        subtotalInput.value = (quantity * price).toFixed(2);
+    }
+
     function renumberLineItems() {
         const forms = Array.from(formsetContainer.querySelectorAll('.formset-form'));
         forms.forEach(function(form, index) {
@@ -244,6 +264,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const html = emptyFormTemplate.innerHTML.replace(/__prefix__/g, nextIndex);
         formsetContainer.insertAdjacentHTML('beforeend', html);
         totalFormsInput.value = String(nextIndex + 1);
+        const newForm = formsetContainer.querySelectorAll('.formset-form')[nextIndex];
+        if (newForm) {
+            syncLineItemPricing(newForm);
+        }
         renumberLineItems();
         updateTotals();
     }
@@ -251,15 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
     formsetContainer.addEventListener('input', function(e) {
         if (e.target.name.includes('quantity') || e.target.name.includes('price')) {
             const form = e.target.closest('.formset-form');
-            const quantityInput = form.querySelector('[name*="quantity"]');
-            const priceInput = form.querySelector('[name*="price"]');
-            const subtotalInput = form.querySelector('[name*="subtotal"]');
-
-            if (quantityInput && priceInput && subtotalInput) {
-                const quantity = parseFloat(quantityInput.value) || 0;
-                const price = parseFloat(priceInput.value) || 0;
-                subtotalInput.value = (quantity * price).toFixed(2);
-            }
+            syncLineItemPricing(form);
         }
         updateTotals();
     });
@@ -296,13 +312,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    formsetContainer.addEventListener('change', updateTotals);
+    formsetContainer.addEventListener('change', function(e) {
+        const form = e.target.closest('.formset-form');
+        if (form && (e.target.name.includes('product') || e.target.name.includes('quantity') || e.target.name.includes('price'))) {
+            syncLineItemPricing(form);
+        }
+        updateTotals();
+    });
     customerField?.addEventListener('change', updateTopLevelSummary);
     statusField?.addEventListener('change', updateTopLevelSummary);
     addLineItemButton?.addEventListener('click', addLineItem);
 
     updateTopLevelSummary();
     renumberLineItems();
+    formsetContainer.querySelectorAll('.formset-form').forEach(syncLineItemPricing);
     updateTotals();
 });
 </script>

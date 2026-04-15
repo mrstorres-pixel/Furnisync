@@ -26,6 +26,19 @@ from .models import (
 User = get_user_model()
 
 
+class ProductPriceSelect(forms.Select):
+    def __init__(self, *args, price_map: dict[str, str] | None = None, **kwargs):
+        self.price_map = price_map or {}
+        super().__init__(*args, **kwargs)
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+        option_value = "" if value is None else str(value)
+        if option_value in self.price_map:
+            option["attrs"]["data-price"] = self.price_map[option_value]
+        return option
+
+
 def apply_tailwind_classes(form: forms.Form) -> None:
     """
     Apply a consistent UI treatment to default Django widgets so templates
@@ -81,6 +94,9 @@ class OrderItemForm(forms.ModelForm):
     def __init__(self, *args, user_role: str | None = None, **kwargs):
         self.user_role = user_role
         super().__init__(*args, **kwargs)
+        product_queryset = self.fields["product"].queryset
+        price_map = {str(product.pk): str(product.price) for product in product_queryset}
+        self.fields["product"].widget = ProductPriceSelect(price_map=price_map)
         apply_tailwind_classes(self)
         # Auto-populate price from product if not set
         if self.instance and self.instance.product_id and not self.instance.price:
