@@ -191,6 +191,9 @@
                 </button>
             {% endif %}
             {% if user.profile.role == 'collector' %}
+                <a href="{% url 'payment_customer_qr' receipt.payment.id %}" class="rounded-xl bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-brand-800">
+                    Show Customer QR
+                </a>
                 <a href="{% url 'dashboard' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                     Back to Dashboard
                 </a>

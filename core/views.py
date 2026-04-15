@@ -329,11 +329,27 @@ def log_payment(request: HttpRequest) -> HttpResponse:
                         },
                     )
                 messages.success(request, f"Payment logged successfully. Receipt: {payment.payment_receipt.receipt_number}")
-                return redirect("view_receipt", receipt_id=payment.payment_receipt.id)
+                return redirect("payment_customer_qr", payment_id=payment.id)
         # Form errors (incl validation) shown below
     else:
         form = PaymentForm(user=request.user)
     return render(request, "core/log_payment.html", {"form": form})
+
+
+@role_required(UserRole.COLLECTOR, UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
+def payment_customer_qr(request: HttpRequest, payment_id: int) -> HttpResponse:
+    payment = get_object_or_404(
+        Payment.objects.select_related("order__customer", "payment_receipt", "collector", "branch"),
+        pk=payment_id,
+    )
+
+    user_profile = getattr(request.user, "profile", None)
+    role = getattr(user_profile, "role", None)
+    if role == UserRole.COLLECTOR and payment.collector != request.user:
+        messages.error(request, "You can only open QR handoff screens for your own payments.")
+        return redirect("dashboard")
+
+    return render(request, "core/payment_customer_qr.html", {"payment": payment})
 
 
 @role_required(UserRole.COLLECTOR, UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
