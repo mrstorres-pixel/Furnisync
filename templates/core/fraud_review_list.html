@@ -43,7 +43,7 @@
                 <h3 class="text-lg font-bold text-slate-900">Anti-Fraud Review Queue</h3>
                 <p class="mt-1 text-sm text-slate-500">Compare collector-submitted records against customer-side confirmation evidence before you accept a payment as trustworthy.</p>
             </div>
-            <form id="fraud-filter-form" method="get" class="grid gap-3 md:grid-cols-3">
+            <form id="fraud-filter-form" method="get" class="grid gap-3 md:grid-cols-2">
                 <select id="fraud-filter-status" name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                     <option value="">All verification states</option>
                     {% for value, label in verification_statuses %}
@@ -55,7 +55,6 @@
                     <option value="suspicious" {% if filters.risk == "suspicious" %}selected{% endif %}>Suspicious only</option>
                     <option value="clean" {% if filters.risk == "clean" %}selected{% endif %}>Clean only</option>
                 </select>
-                <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">Apply Filter</button>
             </form>
         </div>
     </div>

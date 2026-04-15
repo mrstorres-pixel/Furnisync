@@ -36,14 +36,13 @@
                 <a href="{% url 'create_customer' %}" class="rounded-xl border border-slate-900 bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-brand-800">
                     Add Customer
                 </a>
-                <form id="customer-filter-form" method="get" class="grid gap-3 md:grid-cols-[1.6fr_1fr_auto]">
+                <form id="customer-filter-form" method="get" class="grid gap-3 md:grid-cols-[1.8fr_1fr]">
                     <input id="customer-filter-query" type="text" name="q" value="{{ filters.q }}" placeholder="Search customer name, phone, email, or address" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                     <select id="customer-filter-balance" name="balance" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                         <option value="">All balances</option>
                         <option value="with_balance" {% if filters.balance == 'with_balance' %}selected{% endif %}>With balance</option>
                         <option value="paid" {% if filters.balance == 'paid' %}selected{% endif %}>Fully paid</option>
                     </select>
-                    <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">Apply Filter</button>
                 </form>
             </div>
         </div>

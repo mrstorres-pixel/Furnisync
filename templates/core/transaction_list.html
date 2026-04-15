@@ -42,7 +42,7 @@
                 <h3 class="text-lg font-bold text-slate-900">Transaction History</h3>
                 <p class="mt-1 text-sm text-slate-500">A payment-by-payment record showing when money was received, from which customer, and by which employee.</p>
             </div>
-            <form id="transaction-filter-form" method="get" class="grid gap-3 xl:grid-cols-[1.4fr_1fr_1fr_1fr_auto]">
+            <form id="transaction-filter-form" method="get" class="grid gap-3 xl:grid-cols-[1.4fr_1fr_1fr_1fr]">
                 <input id="transaction-filter-query" type="text" name="q" value="{{ filters.q }}" placeholder="Search customer, employee, or receipt" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                 <select id="transaction-filter-employee" name="employee" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                     <option value="">All employees</option>
@@ -52,7 +52,6 @@
                 </select>
                 <input id="transaction-filter-date-from" type="date" name="date_from" value="{{ filters.date_from }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                 <input id="transaction-filter-date-to" type="date" name="date_to" value="{{ filters.date_to }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
-                <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">Apply Filter</button>
             </form>
         </div>
     </div>

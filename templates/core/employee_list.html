@@ -32,7 +32,7 @@
                 <h3 class="text-lg font-bold text-slate-900">Employee Activity</h3>
                 <p class="mt-1 text-sm text-slate-500">A branch-level view of who works in the system, their role, and what actions they perform.</p>
             </div>
-            <form id="employee-filter-form" method="get" class="grid gap-3 md:grid-cols-[1.5fr_1fr_auto]">
+            <form id="employee-filter-form" method="get" class="grid gap-3 md:grid-cols-[1.7fr_1fr]">
                 <input id="employee-filter-query" type="text" name="q" value="{{ filters.q }}" placeholder="Search employee name or email" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                 <select id="employee-filter-role" name="role" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                     <option value="">All roles</option>
@@ -40,7 +40,6 @@
                         <option value="{{ value }}" {% if filters.role == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
-                <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">Apply Filter</button>
             </form>
         </div>
     </div>
