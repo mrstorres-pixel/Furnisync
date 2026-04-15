@@ -153,9 +153,10 @@ class Order(models.Model):
     def _apply_inventory_transition(self, old_status: Optional[str], new_status: str) -> None:
         """
         Apply inventory rules based on status transitions:
-        - On NEW -> RESERVED: increase reserved, decrease available.
-        - RESERVED -> COMPLETED: decrease reserved and stock.
-        - RESERVED -> CANCELLED: decrease reserved, increase available.
+        - NEW/PENDING -> RESERVED: increase reserved.
+        - NEW/PENDING -> COMPLETED: consume stock directly.
+        - RESERVED -> COMPLETED: release reserved units and consume stock.
+        - RESERVED -> PENDING/CANCELLED: release reserved units.
         """
         if old_status == new_status:
             return
@@ -166,24 +167,19 @@ class Order(models.Model):
             )
             qty = item.quantity
 
-            if old_status is None and new_status in {OrderStatus.RESERVED, OrderStatus.COMPLETED}:
-                # New order directly reserved/completed -> reserve immediately
+            if old_status is None and new_status == OrderStatus.RESERVED:
                 inventory.reserved += qty
-                if inventory.available >= qty:
-                    inventory.available -= qty
+            elif old_status is None and new_status == OrderStatus.COMPLETED:
+                inventory.stock = max(inventory.stock - qty, 0)
             elif old_status == OrderStatus.PENDING and new_status == OrderStatus.RESERVED:
                 inventory.reserved += qty
-                if inventory.available >= qty:
-                    inventory.available -= qty
+            elif old_status == OrderStatus.PENDING and new_status == OrderStatus.COMPLETED:
+                inventory.stock = max(inventory.stock - qty, 0)
             elif old_status == OrderStatus.RESERVED and new_status == OrderStatus.COMPLETED:
-                if inventory.reserved >= qty:
-                    inventory.reserved -= qty
-                if inventory.stock >= qty:
-                    inventory.stock -= qty
-            elif old_status == OrderStatus.RESERVED and new_status == OrderStatus.CANCELLED:
-                if inventory.reserved >= qty:
-                    inventory.reserved -= qty
-                inventory.available += qty
+                inventory.reserved = max(inventory.reserved - qty, 0)
+                inventory.stock = max(inventory.stock - qty, 0)
+            elif old_status == OrderStatus.RESERVED and new_status in {OrderStatus.PENDING, OrderStatus.CANCELLED}:
+                inventory.reserved = max(inventory.reserved - qty, 0)
 
             inventory.recalculate_available()
             inventory.save()

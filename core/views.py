@@ -636,6 +636,8 @@ def create_order(request: HttpRequest) -> HttpResponse:
                 order.save(update_fields=["created_by", "last_modified_by", "approved_by", "approved_at"])
                 formset.instance = order
                 formset.save()
+                if order.status in {OrderStatus.RESERVED, OrderStatus.COMPLETED}:
+                    order._apply_inventory_transition(None, order.status)
                 create_audit_log(
                     user=request.user,
                     action="Create Order",
