@@ -3,30 +3,30 @@
 {% block header_subtitle %}Customer records.{% endblock %}
 {% block content %}
 <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="surface-card p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Visible Customers</div>
-        <div class="mt-3 text-3xl font-extrabold text-slate-900">{{ customer_summary.count }}</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ customer_summary.count }}</div>
         <p class="mt-2 text-sm text-slate-500">Customer records currently shown based on the selected search and balance filter.</p>
     </div>
-    <div class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+    <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">With Balance</div>
-        <div class="mt-3 text-3xl font-extrabold text-amber-900">{{ customer_summary.with_balance }}</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-amber-900">{{ customer_summary.with_balance }}</div>
         <p class="mt-2 text-sm text-amber-800">Accounts that still require collection, follow-up, or payment confirmation.</p>
     </div>
-    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="surface-card p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Total Purchased</div>
-        <div class="mt-3 text-3xl font-extrabold text-slate-900">&#8369;{{ customer_summary.total_purchased }}</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">&#8369;{{ customer_summary.total_purchased }}</div>
         <p class="mt-2 text-sm text-slate-500">Combined purchase value across the customer records currently in view.</p>
     </div>
-    <div class="rounded-xl border {% if customer_summary.outstanding_total > 0 %}border-rose-200 bg-rose-50{% else %}border-emerald-200 bg-emerald-50{% endif %} p-5 shadow-sm">
+    <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] {% if customer_summary.outstanding_total > 0 %}text-rose-700{% else %}text-emerald-700{% endif %}">Outstanding Total</div>
-        <div class="mt-3 text-3xl font-extrabold {% if customer_summary.outstanding_total > 0 %}text-rose-900{% else %}text-emerald-900{% endif %}">&#8369;{{ customer_summary.outstanding_total }}</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold {% if customer_summary.outstanding_total > 0 %}text-rose-900{% else %}text-emerald-900{% endif %}">&#8369;{{ customer_summary.outstanding_total }}</div>
         <p class="mt-2 text-sm {% if customer_summary.outstanding_total > 0 %}text-rose-800{% else %}text-emerald-800{% endif %}">Remaining unpaid balance across the customers currently listed.</p>
     </div>
 </section>
 
-<section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-    <div class="border-b border-slate-200/80 px-6 py-5">
+<section class="surface-card overflow-hidden">
+    <div class="section-bar px-6 py-5">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <h3 class="text-lg font-bold text-slate-900">Customer Records</h3>
@@ -36,7 +36,7 @@
                 <a href="{% url 'create_customer' %}" class="rounded-xl border border-slate-900 bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-brand-800">
                     Add Customer
                 </a>
-                <form id="customer-filter-form" method="get" class="grid gap-3 md:grid-cols-[1.8fr_1fr]">
+                <form id="customer-filter-form" method="get" class="filter-shell grid gap-3 md:grid-cols-[1.8fr_1fr]">
                     <input id="customer-filter-query" type="text" name="q" value="{{ filters.q }}" placeholder="Search customer name, phone, email, or address" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                     <select id="customer-filter-balance" name="balance" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                         <option value="">All balances</option>
@@ -48,7 +48,7 @@
         </div>
     </div>
     <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
+        <table class="table-compact min-w-full text-sm">
             <thead class="bg-slate-50 text-slate-500">
             <tr>
                 <th class="px-6 py-4 text-left font-semibold">Customer</th>

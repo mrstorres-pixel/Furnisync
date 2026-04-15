@@ -3,29 +3,29 @@
 {% block header_subtitle %}Transactions.{% endblock %}
 {% block content %}
 <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="surface-card p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Visible Transactions</div>
-        <div class="mt-3 text-3xl font-extrabold text-slate-900">{{ transaction_summary.count }}</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ transaction_summary.count }}</div>
         <p class="mt-2 text-sm text-slate-500">Transactions currently shown after applying the selected search and date filters.</p>
     </div>
-    <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
+    <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Collected Amount</div>
-        <div class="mt-3 text-3xl font-extrabold text-emerald-900">&#8369;{{ transaction_summary.total_amount }}</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-emerald-900">&#8369;{{ transaction_summary.total_amount }}</div>
         <p class="mt-2 text-sm text-emerald-800">Total money received across the transactions currently in view.</p>
     </div>
-    <div class="rounded-xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
+    <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-rose-700">Remaining Balance</div>
-        <div class="mt-3 text-3xl font-extrabold text-rose-900">&#8369;{{ transaction_summary.outstanding_total }}</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-rose-900">&#8369;{{ transaction_summary.outstanding_total }}</div>
         <p class="mt-2 text-sm text-rose-800">Balance still left on the related orders after these visible payments.</p>
     </div>
-    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="surface-card p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Receipt Coverage</div>
-        <div class="mt-3 text-3xl font-extrabold text-slate-900">{{ transaction_summary.receipt_count }}</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ transaction_summary.receipt_count }}</div>
         <p class="mt-2 text-sm text-slate-500">Transactions in view that already have an associated generated receipt record.</p>
     </div>
-    <div class="rounded-xl border border-sky-200 bg-sky-50 p-5 shadow-sm md:col-span-2 xl:col-span-4">
+    <div class="surface-card-soft p-5 md:col-span-2 xl:col-span-4">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Matched Customer Confirmations</div>
-        <div class="mt-3 text-3xl font-extrabold text-sky-900">{{ transaction_summary.matched_count }}</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-sky-900">{{ transaction_summary.matched_count }}</div>
         <p class="mt-2 text-sm text-sky-800">Matched confirmations.</p>
         <div class="mt-4">
             <a href="{% url 'fraud_review_list' %}" class="inline-flex rounded-xl border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100">
@@ -35,14 +35,14 @@
     </div>
 </section>
 
-<section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-    <div class="border-b border-slate-200/80 px-6 py-5">
+<section class="surface-card overflow-hidden">
+    <div class="section-bar px-6 py-5">
         <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div>
                 <h3 class="text-lg font-bold text-slate-900">Transaction History</h3>
                 <p class="mt-1 text-sm text-slate-500">A payment-by-payment record showing when money was received, from which customer, and by which employee.</p>
             </div>
-            <form id="transaction-filter-form" method="get" class="grid gap-3 xl:grid-cols-[1.4fr_1fr_1fr_1fr]">
+            <form id="transaction-filter-form" method="get" class="filter-shell grid gap-3 xl:grid-cols-[1.4fr_1fr_1fr_1fr]">
                 <input id="transaction-filter-query" type="text" name="q" value="{{ filters.q }}" placeholder="Search customer, employee, or receipt" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                 <select id="transaction-filter-employee" name="employee" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                     <option value="">All employees</option>
@@ -56,7 +56,7 @@
         </div>
     </div>
     <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
+        <table class="table-compact min-w-full text-sm">
             <thead class="bg-slate-50 text-slate-500">
             <tr>
                 <th class="px-6 py-4 text-left font-semibold">Date</th>

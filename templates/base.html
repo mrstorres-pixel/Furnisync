@@ -39,6 +39,45 @@
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         [x-cloak] { display: none !important; }
+        .surface-card {
+            border-radius: 1rem;
+            border: 1px solid rgb(226 232 240);
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 18px 40px -30px rgba(15, 23, 42, 0.28);
+        }
+        .surface-card-soft {
+            border-radius: 1rem;
+            border: 1px solid rgb(226 232 240);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96));
+            box-shadow: 0 16px 36px -28px rgba(15, 23, 42, 0.24);
+        }
+        .section-bar {
+            border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.92));
+        }
+        .filter-shell {
+            border-radius: 1rem;
+            border: 1px solid rgb(226 232 240);
+            background: rgb(248 250 252);
+            padding: 0.9rem;
+        }
+        .table-compact thead th {
+            padding-top: 0.9rem;
+            padding-bottom: 0.9rem;
+            font-size: 0.72rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+        .table-compact tbody td {
+            padding-top: 0.95rem;
+            padding-bottom: 0.95rem;
+            vertical-align: top;
+        }
+        .stat-value {
+            letter-spacing: -0.03em;
+        }
     </style>
 </head>
 <body class="min-h-full bg-slate-100 font-sans text-slate-800">
