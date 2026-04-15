@@ -860,18 +860,35 @@ def user_edit(request: HttpRequest, profile_id: int) -> HttpResponse:
     if request.method == "POST":
         form = UserProfileForm(request.POST, instance=profile)
         if form.is_valid():
+            old_values = {
+                "username": profile.user.username,
+                "email": profile.user.email,
+                "first_name": profile.user.first_name,
+                "last_name": profile.user.last_name,
+                "role": profile.role,
+                "branch_id": profile.branch_id,
+            }
             obj = form.save()
             if active_branch is not None and obj.branch_id != active_branch.id:
                 obj.branch = active_branch
                 obj.save(update_fields=["branch"])
+            changed_password = bool(form.cleaned_data.get("new_password1"))
             create_audit_log(
                 user=request.user,
                 action="Update User Profile",
                 instance=obj,
-                old_values=None,
-                new_values={"role": obj.role, "branch_id": obj.branch_id},
+                old_values=old_values,
+                new_values={
+                    "username": obj.user.username,
+                    "email": obj.user.email,
+                    "first_name": obj.user.first_name,
+                    "last_name": obj.user.last_name,
+                    "role": obj.role,
+                    "branch_id": obj.branch_id,
+                    "password_reset": changed_password,
+                },
             )
-            messages.success(request, "User profile updated.")
+            messages.success(request, "User account updated.")
             return redirect("user_list")
     else:
         form = UserProfileForm(instance=profile)

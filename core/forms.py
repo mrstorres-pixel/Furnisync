@@ -289,14 +289,81 @@ class UserProfileForm(forms.ModelForm):
     Owner-facing form to manage user roles and branch assignments.
     """
 
+    username = forms.CharField(max_length=150)
+    email = forms.EmailField(required=False)
+    first_name = forms.CharField(max_length=150, required=False)
+    last_name = forms.CharField(max_length=150, required=False)
     role = forms.ChoiceField(choices=UserRole.choices)
+    new_password1 = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(render_value=False),
+        label="New Password",
+    )
+    new_password2 = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(render_value=False),
+        label="Confirm New Password",
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         apply_tailwind_classes(self)
+        if self.instance.pk:
+            self.fields["username"].initial = self.instance.user.username
+            self.fields["email"].initial = self.instance.user.email
+            self.fields["first_name"].initial = self.instance.user.first_name
+            self.fields["last_name"].initial = self.instance.user.last_name
 
     class Meta:
         model = UserProfile
         fields = ["role"]
+
+    def clean_username(self):
+        username = self.cleaned_data["username"].strip()
+        user_qs = User.objects.filter(username__iexact=username)
+        if self.instance.pk:
+            user_qs = user_qs.exclude(pk=self.instance.user_id)
+        if user_qs.exists():
+            raise forms.ValidationError("A user with that username already exists.")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip()
+        if not email:
+            return email
+        user_qs = User.objects.filter(email__iexact=email)
+        if self.instance.pk:
+            user_qs = user_qs.exclude(pk=self.instance.user_id)
+        if user_qs.exists():
+            raise forms.ValidationError("A user with that email already exists.")
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("new_password1", "")
+        password2 = cleaned_data.get("new_password2", "")
+        if password1 or password2:
+            if password1 != password2:
+                raise forms.ValidationError("The new passwords do not match.")
+            if len(password1) < 8:
+                raise forms.ValidationError("The new password must be at least 8 characters long.")
+        return cleaned_data
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        user = profile.user
+        user.username = self.cleaned_data["username"]
+        user.email = self.cleaned_data["email"]
+        user.first_name = self.cleaned_data["first_name"]
+        user.last_name = self.cleaned_data["last_name"]
+
+        password = self.cleaned_data.get("new_password1")
+        if password:
+            user.set_password(password)
+
+        if commit:
+            user.save()
+            profile.save()
+        return profile
 
 
