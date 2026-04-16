@@ -480,14 +480,24 @@ class CustomerPaymentConfirmationForm(forms.Form):
 
 
 class InventoryAdjustmentForm(forms.ModelForm):
-    def __init__(self, *args, current_branch=None, **kwargs):
+    def __init__(self, *args, current_branch=None, fixed_product=None, **kwargs):
         self.current_branch = current_branch
+        self.fixed_product = fixed_product
         super().__init__(*args, **kwargs)
         apply_tailwind_classes(self)
+        if self.fixed_product is not None:
+            self.fields["product"].queryset = Product.objects.filter(pk=self.fixed_product.pk)
+            self.fields["product"].initial = self.fixed_product
+            self.fields["product"].widget = forms.HiddenInput()
 
     class Meta:
         model = InventoryAdjustment
         fields = ["product", "quantity", "reason"]
+
+    def clean_product(self):
+        if self.fixed_product is not None:
+            return self.fixed_product
+        return self.cleaned_data["product"]
 
     def save(self, commit=True):
         adjustment = super().save(commit=False)

@@ -98,6 +98,46 @@ def _serialize_order_items(order: Order) -> list[dict[str, object]]:
     ]
 
 
+def _apply_inventory_adjustment(*, request: HttpRequest, form: InventoryAdjustmentForm) -> InventoryAdjustment:
+    with transaction.atomic():
+        adjustment: InventoryAdjustment = form.save(commit=False)
+        adjustment.created_by = request.user
+        adjustment.approved = True
+        adjustment.approved_by = request.user
+        adjustment.approved_at = timezone.now()
+        adjustment.save()
+
+        existing_inventory = Inventory.objects.filter(
+            product=adjustment.product,
+            branch=adjustment.branch,
+        ).first()
+        old_inventory = None
+        if existing_inventory is not None:
+            old_inventory = {
+                "stock": existing_inventory.stock,
+                "reserved": existing_inventory.reserved,
+                "available": existing_inventory.available,
+            }
+
+        inventory = adjustment.apply_to_inventory()
+        new_inv_values = {
+            "stock": inventory.stock,
+            "reserved": inventory.reserved,
+            "available": inventory.available,
+        }
+
+        audit = create_audit_log(
+            user=request.user,
+            action="Inventory Adjustment",
+            instance=inventory,
+            old_values=old_inventory,
+            new_values=new_inv_values,
+        )
+        adjustment.audit_log = audit
+        adjustment.save(update_fields=["audit_log"])
+        return adjustment
+
+
 def _build_customer_summary(customer: Customer) -> dict[str, object]:
     orders = list(customer.orders.all())
     total_purchased = sum((order.total_amount for order in orders), Decimal("0.00"))
@@ -552,32 +592,7 @@ def create_inventory_adjustment(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         form = InventoryAdjustmentForm(request.POST, current_branch=active_branch)
         if form.is_valid():
-            with transaction.atomic():
-                adjustment: InventoryAdjustment = form.save(commit=False)
-                adjustment.created_by = request.user
-                adjustment.approved = True
-                adjustment.approved_by = request.user
-                adjustment.approved_at = timezone.now()
-                adjustment.save()
-
-                old_inventory = None
-                inventory = adjustment.apply_to_inventory()
-                new_inv_values = {
-                    "stock": inventory.stock,
-                    "reserved": inventory.reserved,
-                    "available": inventory.available,
-                }
-
-                audit = create_audit_log(
-                    user=request.user,
-                    action="Inventory Adjustment",
-                    instance=inventory,
-                    old_values=old_inventory,
-                    new_values=new_inv_values,
-                )
-                adjustment.audit_log = audit
-                adjustment.save(update_fields=["audit_log"])
-
+            _apply_inventory_adjustment(request=request, form=form)
             messages.success(request, "Inventory adjusted successfully.")
             return redirect("dashboard")
     else:
@@ -945,6 +960,7 @@ def product_edit(request: HttpRequest, product_id: int | None = None) -> HttpRes
 
 @role_required(UserRole.MANAGER, UserRole.OWNER)
 def product_detail(request: HttpRequest, product_id: int) -> HttpResponse:
+    active_branch = _get_active_branch(request.user)
     product = get_object_or_404(
         Product.objects.select_related("category").prefetch_related(
             Prefetch("inventories", queryset=Inventory.objects.order_by("id"), to_attr="inventories_cache"),
@@ -956,12 +972,49 @@ def product_detail(request: HttpRequest, product_id: int) -> HttpResponse:
         ),
         pk=product_id,
     )
+    if active_branch is None:
+        messages.error(request, "Set up the operating branch before managing stock.")
+        return redirect("product_list")
+
+    if request.method == "POST":
+        adjustment_form = InventoryAdjustmentForm(
+            request.POST,
+            current_branch=active_branch,
+            fixed_product=product,
+        )
+        if adjustment_form.is_valid():
+            _apply_inventory_adjustment(request=request, form=adjustment_form)
+            messages.success(request, f"Stock updated for {product.name}.")
+            return redirect("product_detail", product_id=product.id)
+    else:
+        adjustment_form = InventoryAdjustmentForm(
+            current_branch=active_branch,
+            fixed_product=product,
+        )
+
     summary = _build_product_summary(product)
+    branch_inventory = next(
+        (inventory for inventory in product.inventories_cache if inventory.branch_id == active_branch.id),
+        None,
+    )
+    recent_adjustments = list(
+        product.inventory_adjustments.select_related("created_by", "approved_by", "branch", "audit_log")
+        .filter(branch=active_branch)
+        .order_by("-created_at")[:10]
+    )
     recent_sales = sorted(product.completed_orderitems, key=lambda item: item.order.updated_at, reverse=True)[:10]
     return render(
         request,
         "core/product_detail.html",
-        {"product": product, "summary": summary, "recent_sales": recent_sales},
+        {
+            "product": product,
+            "summary": summary,
+            "recent_sales": recent_sales,
+            "branch_inventory": branch_inventory,
+            "recent_adjustments": recent_adjustments,
+            "adjustment_form": adjustment_form,
+            "active_branch": active_branch,
+        },
     )
 
 

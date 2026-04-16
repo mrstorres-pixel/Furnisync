@@ -89,7 +89,7 @@
                     <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ summary.revenue_total }}</td>
                     <td class="px-6 py-4">
                         {% if user.profile.role == 'manager' or user.profile.role == 'owner' %}
-                            <a href="{% url 'product_edit' summary.product.id %}" class="text-sm font-medium text-brand-700 hover:text-brand-800">Edit</a>
+                            <a href="{% url 'product_detail' summary.product.id %}" class="text-sm font-medium text-brand-700 hover:text-brand-800">Manage</a>
                         {% else %}
                             <span class="text-sm text-slate-400">View only</span>
                         {% endif %}
