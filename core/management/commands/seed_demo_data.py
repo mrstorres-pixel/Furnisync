@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.db.models import Sum
 from django.utils import timezone
 
 from core.models import (
@@ -602,8 +603,23 @@ class Command(BaseCommand):
         collectors = staff["collectors"]
 
         for idx, collector in enumerate(collectors):
-            recon_date = (timezone.now() - timedelta(days=idx + 2)).date()
-            system_total = Decimal(str(18500 + idx * 2350))
+            payment_dates = list(
+                Payment.objects.filter(collector=collector)
+                .order_by("-paid_at")
+                .values_list("paid_at__date", flat=True)
+                .distinct()
+            )
+            if payment_dates:
+                recon_date = payment_dates[0]
+            else:
+                recon_date = (timezone.now() - timedelta(days=idx + 2)).date()
+
+            system_total = (
+                Payment.objects.filter(collector=collector, paid_at__date=recon_date)
+                .aggregate(total=Sum("amount"))["total"]
+                or Decimal("0.00")
+            )
+
             reconciliation = DailyReconciliation.objects.create(
                 branch=branch,
                 collector=collector,
