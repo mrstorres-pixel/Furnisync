@@ -654,7 +654,7 @@ class Command(BaseCommand):
         return amounts
 
     def _money(self, amount: Decimal) -> Decimal:
-        return amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return amount.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
 
     def _price_variation(self, base_price: Decimal, idx: int) -> Decimal:
         adjustment_steps = [Decimal("0.00"), Decimal("250.00"), Decimal("500.00"), Decimal("750.00"), Decimal("1000.00")]
