@@ -29,7 +29,6 @@
             </div>
             <div class="flex gap-3">
                 {% if user.profile.role == 'manager' or user.profile.role == 'owner' %}
-                    <a href="{% url 'inventory_adjustment' %}" class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Adjust Inventory</a>
                     <a href="{% url 'product_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">New Product</a>
                 {% endif %}
             </div>

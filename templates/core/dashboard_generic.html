@@ -112,9 +112,6 @@
                 <p class="text-sm font-semibold text-slate-900">Review customer records</p>
             </a>
         {% elif role == 'manager' %}
-            <a href="{% url 'inventory_adjustment' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
-                <p class="text-sm font-semibold text-slate-900">Adjust inventory</p>
-            </a>
             <a href="{% url 'transaction_list' %}" class="rounded-xl border border-slate-200 bg-slate-50 p-5 transition hover:border-brand-400 hover:bg-white">
                 <p class="text-sm font-semibold text-slate-900">Inspect transactions</p>
             </a>
