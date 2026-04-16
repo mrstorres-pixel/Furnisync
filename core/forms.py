@@ -395,7 +395,7 @@ class PaymentForm(forms.ModelForm):
             payment.save()
 
         # Now build the final path and save the file to that path
-        today = date.today().strftime("%Y-%m-%d")
+        today = timezone.localdate().strftime("%Y-%m-%d")
         branch_id = payment.branch_id or 0
         filename = f"receipt_{payment.id}.jpg"
         relative_path = f"uploads/branch_{branch_id}/{today}/{filename}"
