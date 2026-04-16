@@ -197,6 +197,17 @@
                 </div>
             </section>
 
+            {% if user.profile.role == 'secretary' %}
+            <section class="rounded-xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">Control</p>
+                <div class="mt-3 space-y-2 text-sm text-amber-900">
+                    <p>Catalog pricing is locked for secretary accounts.</p>
+                    <p>Orders you encode stay visible for management approval and collector assignment.</p>
+                    <p>Later workflow changes must pass through the controlled change request process.</p>
+                </div>
+            </section>
+            {% endif %}
+
             <section class="rounded-xl border border-brand-200 bg-brand-50/70 p-6 shadow-sm">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-brand-700">Check</p>
             </section>

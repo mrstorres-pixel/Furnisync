@@ -60,6 +60,7 @@
                 <th class="px-6 py-4 text-left font-semibold">Assigned Collector</th>
                 <th class="px-6 py-4 text-left font-semibold">Items</th>
                 <th class="px-6 py-4 text-left font-semibold">Status</th>
+                <th class="px-6 py-4 text-left font-semibold">Lifecycle</th>
                 <th class="px-6 py-4 text-right font-semibold">Total</th>
                 <th class="px-6 py-4 text-right font-semibold">Paid</th>
                 <th class="px-6 py-4 text-right font-semibold">Balance</th>
@@ -67,7 +68,8 @@
             </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-            {% for order in orders %}
+            {% for row in order_rows %}
+                {% with order=row.order %}
                 <tr class="hover:bg-slate-50">
                     <td class="px-6 py-4 font-semibold text-slate-900">
                         <a href="{% url 'order_detail' order.id %}" class="hover:text-brand-700">#{{ order.id }}</a>
@@ -101,6 +103,13 @@
                             {{ order.get_status_display }}
                         </span>
                     </td>
+                    <td class="px-6 py-4 text-xs text-slate-600">
+                        {% for step in row.lifecycle_steps %}
+                            {% if step.current %}
+                                <span class="rounded-full bg-amber-100 px-3 py-1 font-semibold text-amber-800">{{ step.label }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
                     <td class="px-6 py-4 text-right font-semibold text-slate-900">&#8369;{{ order.total_amount }}</td>
                     <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ order.total_paid }}</td>
                     <td class="px-6 py-4 text-right {% if order.remaining_balance > 0 %}font-semibold text-rose-700{% else %}text-slate-400{% endif %}">
@@ -108,9 +117,10 @@
                     </td>
                     <td class="px-6 py-4 text-slate-500">{{ order.created_at|date:"Y-m-d H:i" }}</td>
                 </tr>
+                {% endwith %}
             {% empty %}
                 <tr>
-                    <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="9">No orders found for the selected filter.</td>
+                    <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="10">No orders found for the selected filter.</td>
                 </tr>
             {% endfor %}
             </tbody>

@@ -29,6 +29,9 @@
                 <h3 class="text-lg font-bold text-slate-900">Customer Records</h3>
             </div>
             <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+                <a href="?q={{ filters.q|urlencode }}&balance={{ filters.balance|urlencode }}&export=csv" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    Export CSV
+                </a>
                 <a href="{% url 'create_customer' %}" class="rounded-xl border border-slate-900 bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-brand-800">
                     Add Customer
                 </a>

@@ -155,6 +155,40 @@
 
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-6 py-5">
+            <h3 class="text-lg font-bold text-slate-900">Stock Ledger</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-slate-500">
+                <tr>
+                    <th class="px-6 py-4 text-left font-semibold">Date</th>
+                    <th class="px-6 py-4 text-left font-semibold">Movement</th>
+                    <th class="px-6 py-4 text-right font-semibold">Quantity</th>
+                    <th class="px-6 py-4 text-left font-semibold">Reference</th>
+                    <th class="px-6 py-4 text-left font-semibold">By</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                {% for entry in stock_ledger %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-6 py-4 text-slate-600">{{ entry.timestamp|date:"Y-m-d H:i" }}</td>
+                        <td class="px-6 py-4 font-medium text-slate-900">{{ entry.movement_type }}</td>
+                        <td class="px-6 py-4 text-right font-semibold {% if entry.direction == 'in' %}text-emerald-700{% elif entry.direction == 'reserve' %}text-sky-700{% else %}text-rose-700{% endif %}">
+                            {% if entry.direction == 'in' %}+{% elif entry.direction == 'out' %}-{% endif %}{{ entry.quantity }}
+                        </td>
+                        <td class="px-6 py-4 text-slate-700">{{ entry.reference }}</td>
+                        <td class="px-6 py-4 text-slate-700">{{ entry.actor }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td class="px-6 py-8 text-center text-sm text-slate-500" colspan="5">No stock ledger activity recorded for this product yet.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-6 py-5">
             <h3 class="text-lg font-bold text-slate-900">Recent Completed Sales</h3>
         </div>
         <div class="overflow-x-auto">

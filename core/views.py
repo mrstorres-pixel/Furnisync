@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 from datetime import date
 from functools import wraps
 from decimal import Decimal
@@ -138,6 +139,108 @@ def _apply_inventory_adjustment(*, request: HttpRequest, form: InventoryAdjustme
         return adjustment
 
 
+def _get_order_lifecycle(order: Order) -> list[dict[str, object]]:
+    has_payments = order.payments.exists()
+    fully_paid = order.remaining_balance <= Decimal("0.00")
+    return [
+        {
+            "label": "Encoded",
+            "done": bool(order.created_by_id),
+            "note": order.created_at,
+        },
+        {
+            "label": "Approved",
+            "done": bool(order.approved_by_id),
+            "current": not order.approved_by_id,
+            "note": order.approved_at or "Awaiting management approval",
+        },
+        {
+            "label": "Assigned",
+            "done": bool(order.assigned_collector_id),
+            "current": bool(order.approved_by_id and not order.assigned_collector_id and order.remaining_balance > Decimal("0.00")),
+            "note": order.assigned_collector.username if order.assigned_collector else "Awaiting collector assignment",
+        },
+        {
+            "label": "Collecting",
+            "done": has_payments,
+            "current": bool(order.assigned_collector_id and not has_payments and order.remaining_balance > Decimal("0.00")),
+            "note": f"{order.payments.count()} payment(s) logged" if has_payments else "No payments logged yet",
+        },
+        {
+            "label": "Settled",
+            "done": fully_paid,
+            "current": bool(has_payments and not fully_paid),
+            "note": "Account fully paid" if fully_paid else f"Balance: \u20b1{order.remaining_balance}",
+        },
+        {
+            "label": "Completed",
+            "done": order.status == OrderStatus.COMPLETED,
+            "current": fully_paid and order.status != OrderStatus.COMPLETED,
+            "note": "Order closed" if order.status == OrderStatus.COMPLETED else "Pending closure",
+        },
+    ]
+
+
+def _build_stock_ledger(product: Product, branch: Branch) -> list[dict[str, object]]:
+    ledger: list[dict[str, object]] = []
+    for adjustment in product.inventory_adjustments.filter(branch=branch).select_related("created_by").order_by("-created_at"):
+        ledger.append(
+            {
+                "timestamp": adjustment.created_at,
+                "movement_type": "Manual Adjustment",
+                "quantity": adjustment.quantity,
+                "direction": "in" if adjustment.quantity >= 0 else "out",
+                "reference": adjustment.reason,
+                "actor": adjustment.created_by.username,
+            }
+        )
+
+    related_items = (
+        OrderItem.objects.filter(order__branch=branch, product=product)
+        .select_related("order__customer", "order__assigned_collector", "order__created_by")
+        .order_by("-order__updated_at")
+    )
+    for item in related_items:
+        if item.order.status == OrderStatus.RESERVED:
+            ledger.append(
+                {
+                    "timestamp": item.order.updated_at,
+                    "movement_type": "Reservation",
+                    "quantity": item.quantity,
+                    "direction": "reserve",
+                    "reference": f"Order #{item.order_id} for {item.order.customer.full_name}",
+                    "actor": item.order.last_modified_by.username if item.order.last_modified_by else "System",
+                }
+            )
+        elif item.order.status == OrderStatus.COMPLETED:
+            ledger.append(
+                {
+                    "timestamp": item.order.updated_at,
+                    "movement_type": "Completed Sale",
+                    "quantity": item.quantity,
+                    "direction": "out",
+                    "reference": f"Order #{item.order_id} for {item.order.customer.full_name}",
+                    "actor": item.order.assigned_collector.username if item.order.assigned_collector else (item.order.last_modified_by.username if item.order.last_modified_by else "System"),
+                }
+            )
+
+    direction_priority = {"Manual Adjustment": 0, "Completed Sale": 1, "Reservation": 2}
+    return sorted(
+        ledger,
+        key=lambda entry: (entry["timestamp"], direction_priority.get(entry["movement_type"], 9)),
+        reverse=True,
+    )[:20]
+
+
+def _csv_response(filename: str, header: list[str], rows: list[list[object]]) -> HttpResponse:
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    writer = csv.writer(response)
+    writer.writerow(header)
+    writer.writerows(rows)
+    return response
+
+
 def _build_customer_summary(customer: Customer) -> dict[str, object]:
     orders = list(customer.orders.all())
     total_purchased = sum((order.total_amount for order in orders), Decimal("0.00"))
@@ -250,6 +353,19 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     payments_today = payments_qs.filter(paid_at__date=today)
     payments_today_total = payments_today.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
     low_stock_count = inventory_qs.filter(available__lte=5).count()
+    pending_change_requests = OrderChangeRequest.objects.filter(status=OrderChangeRequestStatus.PENDING).count()
+    flagged_payments_count = payments_qs.filter(
+        Q(verification_status=Payment.VerificationStatus.REVIEW_REQUIRED) | Q(suspicious_confirmation=True)
+    ).count()
+    unassigned_collectible_orders = sum(
+        (
+            1
+            for order in orders_qs
+            if order.remaining_balance > Decimal("0.00") and not order.assigned_collector_id and order.status != OrderStatus.CANCELLED
+        ),
+        0,
+    )
+    approval_backlog = orders_qs.filter(created_by__profile__role=UserRole.SECRETARY, approved_by__isnull=True).count()
 
     role_focus = {
         UserRole.COLLECTOR: {
@@ -294,6 +410,10 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "pending_reconciliations": DailyReconciliation.objects.filter(
             status=ReconciliationStatus.PENDING
         ).count(),
+        "pending_change_requests": pending_change_requests,
+        "flagged_payments_count": flagged_payments_count,
+        "unassigned_collectible_orders": unassigned_collectible_orders,
+        "approval_backlog": approval_backlog,
         "inventory_low": inventory_qs.filter(available__lte=5)[:10],
         "top_products": top_products,
         "recent_transactions": recent_transactions,
@@ -707,6 +827,7 @@ def order_detail(request: HttpRequest, order_id: int) -> HttpResponse:
         "order": order,
         "payments": payments,
         "change_requests": change_requests,
+        "lifecycle_steps": _get_order_lifecycle(order),
         "show_audit_details": show_audit_details,
         "order_audit_logs": order_audit_logs,
         "change_request_form": OrderChangeRequestForm(current_branch=order.branch),
@@ -858,8 +979,9 @@ def order_list(request: HttpRequest) -> HttpResponse:
     orders = list(qs)
     if role == UserRole.COLLECTOR:
         orders = [order for order in orders if order.remaining_balance > Decimal("0.00")]
+    order_rows = [{"order": order, "lifecycle_steps": _get_order_lifecycle(order)} for order in orders]
     context = {
-        "orders": orders,
+        "order_rows": order_rows,
         "selected_status": status or "",
         "role": role,
         "order_summary": {
@@ -914,6 +1036,24 @@ def product_list(request: HttpRequest) -> HttpResponse:
         product_summaries = [summary for summary in product_summaries if summary["sold_quantity"] > 0]
     elif sales_filter == "unsold":
         product_summaries = [summary for summary in product_summaries if summary["sold_quantity"] == 0]
+    if request.GET.get("export") == "csv":
+        return _csv_response(
+            "catalog_stock_report.csv",
+            ["Product", "Category", "SKU", "Price", "Stock", "Available", "Units Sold", "Revenue"],
+            [
+                [
+                    summary["product"].name,
+                    summary["product"].category.name if summary["product"].category else "Uncategorized",
+                    summary["product"].sku,
+                    summary["product"].price,
+                    summary["inventory_stock"],
+                    summary["inventory_available"],
+                    summary["sold_quantity"],
+                    summary["revenue_total"],
+                ]
+                for summary in product_summaries
+            ],
+        )
 
     return render(
         request,
@@ -1002,6 +1142,7 @@ def product_detail(request: HttpRequest, product_id: int) -> HttpResponse:
         .filter(branch=active_branch)
         .order_by("-created_at")[:10]
     )
+    stock_ledger = _build_stock_ledger(product, active_branch)
     recent_sales = sorted(product.completed_orderitems, key=lambda item: item.order.updated_at, reverse=True)[:10]
     return render(
         request,
@@ -1012,6 +1153,7 @@ def product_detail(request: HttpRequest, product_id: int) -> HttpResponse:
             "recent_sales": recent_sales,
             "branch_inventory": branch_inventory,
             "recent_adjustments": recent_adjustments,
+            "stock_ledger": stock_ledger,
             "adjustment_form": adjustment_form,
             "active_branch": active_branch,
         },
@@ -1184,6 +1326,23 @@ def customer_list(request: HttpRequest) -> HttpResponse:
         customer_summaries = [summary for summary in customer_summaries if summary["outstanding_balance"] > Decimal("0.00")]
     elif balance_filter == "paid":
         customer_summaries = [summary for summary in customer_summaries if summary["outstanding_balance"] <= Decimal("0.00")]
+    if request.GET.get("export") == "csv":
+        return _csv_response(
+            "customer_balance_report.csv",
+            ["Customer", "Phone", "Email", "Installment Plan", "Orders", "Total Purchased", "Outstanding Balance"],
+            [
+                [
+                    summary["customer"].full_name,
+                    summary["customer"].phone,
+                    summary["customer"].email,
+                    summary["customer"].installment_plan,
+                    summary["order_count"],
+                    summary["total_purchased"],
+                    summary["outstanding_balance"],
+                ]
+                for summary in customer_summaries
+            ],
+        )
     return render(
         request,
         "core/customer_list.html",
@@ -1248,6 +1407,23 @@ def transaction_list(request: HttpRequest) -> HttpResponse:
         transactions = transactions.filter(paid_at__date__lte=date_to)
     employees = User.objects.filter(collected_payments__isnull=False).distinct().order_by("username")
     transactions = list(transactions)
+    if request.GET.get("export") == "csv":
+        return _csv_response(
+            "transaction_report.csv",
+            ["Date", "Receipt", "Customer", "Collector", "Amount", "Remaining Balance", "Verification"],
+            [
+                [
+                    transaction.paid_at,
+                    transaction.payment_receipt.receipt_number if getattr(transaction, "payment_receipt", None) else "",
+                    transaction.order.customer.full_name,
+                    transaction.collector.username,
+                    transaction.amount,
+                    transaction.balance_after_payment,
+                    transaction.get_verification_status_display(),
+                ]
+                for transaction in transactions
+            ],
+        )
     return render(
         request,
         "core/transaction_list.html",
@@ -1286,6 +1462,24 @@ def fraud_review_list(request: HttpRequest) -> HttpResponse:
         payments = payments.filter(suspicious_confirmation=False)
 
     payments = list(payments)
+    if request.GET.get("export") == "csv":
+        return _csv_response(
+            "fraud_review_report.csv",
+            ["Payment", "Customer", "Collector", "Collector Amount", "Customer Amount", "Verification", "Suspicious", "Risk Notes"],
+            [
+                [
+                    payment.payment_receipt.receipt_number if getattr(payment, "payment_receipt", None) else f"Payment #{payment.id}",
+                    payment.order.customer.full_name,
+                    payment.collector.username,
+                    payment.amount,
+                    payment.customer_reported_amount or "",
+                    payment.get_verification_status_display(),
+                    "Yes" if payment.suspicious_confirmation else "No",
+                    payment.suspicious_reason,
+                ]
+                for payment in payments
+            ],
+        )
     context = {
         "payments": payments,
         "filters": {"status": status_filter, "risk": risk_filter},

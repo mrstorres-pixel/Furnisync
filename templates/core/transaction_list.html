@@ -37,17 +37,22 @@
             <div>
                 <h3 class="text-lg font-bold text-slate-900">Transaction History</h3>
             </div>
-            <form id="transaction-filter-form" method="get" class="filter-shell grid gap-3 xl:grid-cols-[1.4fr_1fr_1fr_1fr]">
-                <input id="transaction-filter-query" type="text" name="q" value="{{ filters.q }}" placeholder="Search customer, employee, or receipt" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
-                <select id="transaction-filter-employee" name="employee" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
-                    <option value="">All employees</option>
-                    {% for user in employees %}
-                        <option value="{{ user.id }}" {% if filters.employee == user.id|stringformat:"s" %}selected{% endif %}>{{ user.username }}</option>
-                    {% endfor %}
-                </select>
-                <input id="transaction-filter-date-from" type="date" name="date_from" value="{{ filters.date_from }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
-                <input id="transaction-filter-date-to" type="date" name="date_to" value="{{ filters.date_to }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
-            </form>
+            <div class="flex flex-col gap-3 xl:flex-row xl:items-end">
+                <a href="?q={{ filters.q|urlencode }}&employee={{ filters.employee|urlencode }}&date_from={{ filters.date_from|urlencode }}&date_to={{ filters.date_to|urlencode }}&export=csv" class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    Export CSV
+                </a>
+                <form id="transaction-filter-form" method="get" class="filter-shell grid gap-3 xl:grid-cols-[1.4fr_1fr_1fr_1fr]">
+                    <input id="transaction-filter-query" type="text" name="q" value="{{ filters.q }}" placeholder="Search customer, employee, or receipt" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                    <select id="transaction-filter-employee" name="employee" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                        <option value="">All employees</option>
+                        {% for user in employees %}
+                            <option value="{{ user.id }}" {% if filters.employee == user.id|stringformat:"s" %}selected{% endif %}>{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+                    <input id="transaction-filter-date-from" type="date" name="date_from" value="{{ filters.date_from }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                    <input id="transaction-filter-date-to" type="date" name="date_to" value="{{ filters.date_to }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                </form>
+            </div>
         </div>
     </div>
     <div class="overflow-x-auto">

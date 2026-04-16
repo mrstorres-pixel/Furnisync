@@ -61,6 +61,23 @@
 </section>
 
 <section class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm xl:col-span-2">
+        <div class="border-b border-slate-200 px-6 py-5">
+            <h3 class="text-lg font-bold text-slate-900">Order Lifecycle</h3>
+        </div>
+        <div class="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
+            {% for step in lifecycle_steps %}
+                <div class="rounded-xl border px-4 py-4 {% if step.done %}border-emerald-200 bg-emerald-50{% elif step.current %}border-amber-200 bg-amber-50{% else %}border-slate-200 bg-slate-50{% endif %}">
+                    <div class="text-xs uppercase tracking-[0.2em] {% if step.done %}text-emerald-700{% elif step.current %}text-amber-700{% else %}text-slate-500{% endif %}">{{ step.label }}</div>
+                    <div class="mt-2 font-semibold text-slate-900">
+                        {% if step.done %}Completed{% elif step.current %}Current focus{% else %}Pending{% endif %}
+                    </div>
+                    <div class="mt-2 text-xs text-slate-600">{{ step.note }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-6 py-5">
             <h3 class="text-lg font-bold text-slate-900">Order Items</h3>
