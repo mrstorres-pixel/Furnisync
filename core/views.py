@@ -142,41 +142,70 @@ def _apply_inventory_adjustment(*, request: HttpRequest, form: InventoryAdjustme
 def _get_order_lifecycle(order: Order) -> list[dict[str, object]]:
     has_payments = order.payments.exists()
     fully_paid = order.remaining_balance <= Decimal("0.00")
+    order_closed = order.status == OrderStatus.COMPLETED
+    approved_done = bool(
+        order.approved_by_id or order.assigned_collector_id or has_payments or fully_paid or order_closed
+    )
+    assigned_done = bool(order.assigned_collector_id or has_payments or fully_paid or order_closed)
+    collecting_done = bool(has_payments or fully_paid or order_closed)
+    partial_payment_active = has_payments and not fully_paid
+
+    current_stage = "approved"
+    if order.status == OrderStatus.CANCELLED:
+        current_stage = "cancelled"
+    elif order_closed:
+        current_stage = "completed"
+    elif fully_paid:
+        current_stage = "fully_paid"
+    elif partial_payment_active:
+        current_stage = "partially_paid"
+    elif not assigned_done:
+        current_stage = "assigned"
+    elif not collecting_done:
+        current_stage = "collecting"
+
     return [
         {
             "label": "Encoded",
-            "done": bool(order.created_by_id),
+            "done": True,
+            "current": False,
             "note": order.created_at,
         },
         {
             "label": "Approved",
-            "done": bool(order.approved_by_id),
-            "current": not order.approved_by_id,
+            "done": approved_done,
+            "current": current_stage == "approved",
             "note": order.approved_at or "Awaiting management approval",
         },
         {
             "label": "Assigned",
-            "done": bool(order.assigned_collector_id),
-            "current": bool(order.approved_by_id and not order.assigned_collector_id and order.remaining_balance > Decimal("0.00")),
+            "done": assigned_done,
+            "current": current_stage == "assigned",
             "note": order.assigned_collector.username if order.assigned_collector else "Awaiting collector assignment",
         },
         {
             "label": "Collecting",
-            "done": has_payments,
-            "current": bool(order.assigned_collector_id and not has_payments and order.remaining_balance > Decimal("0.00")),
+            "done": collecting_done,
+            "current": current_stage == "collecting",
             "note": f"{order.payments.count()} payment(s) logged" if has_payments else "No payments logged yet",
         },
         {
-            "label": "Settled",
+            "label": "Partially Paid",
+            "done": partial_payment_active,
+            "current": current_stage == "partially_paid",
+            "note": f"Balance: \u20b1{order.remaining_balance}" if partial_payment_active else "No partial payments recorded",
+        },
+        {
+            "label": "Fully Paid",
             "done": fully_paid,
-            "current": bool(has_payments and not fully_paid),
+            "current": current_stage == "fully_paid",
             "note": "Account fully paid" if fully_paid else f"Balance: \u20b1{order.remaining_balance}",
         },
         {
             "label": "Completed",
-            "done": order.status == OrderStatus.COMPLETED,
-            "current": fully_paid and order.status != OrderStatus.COMPLETED,
-            "note": "Order closed" if order.status == OrderStatus.COMPLETED else "Pending closure",
+            "done": order_closed,
+            "current": current_stage == "completed",
+            "note": "Order closed" if order_closed else "Pending closure",
         },
     ]
 
