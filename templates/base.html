@@ -130,16 +130,15 @@
                         <a href="{% url 'customer_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Customer Records</a>
                         <a href="{% url 'create_order' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Create Order</a>
                         <a href="{% url 'order_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Order Register</a>
-                        <a href="{% url 'inventory_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Inventory View</a>
+                        <a href="{% url 'product_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Catalog &amp; Stock</a>
                     </div>
                 {% elif user.profile.role == 'manager' %}
                     <div class="space-y-1.5">
                         <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Operations Control</p>
                         <a href="{% url 'transaction_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Transactions</a>
                         <a href="{% url 'order_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Order Register</a>
-                        <a href="{% url 'inventory_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Inventory</a>
+                        <a href="{% url 'product_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Catalog &amp; Stock</a>
                         <a href="{% url 'inventory_adjustment' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Adjust Inventory</a>
-                        <a href="{% url 'product_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Products</a>
                         <a href="{% url 'customer_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Customers</a>
                         <a href="{% url 'employee_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Employees</a>
                         <a href="{% url 'audit_log_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Audit Trail</a>
@@ -151,8 +150,7 @@
                         <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Business Oversight</p>
                         <a href="{% url 'transaction_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Transactions</a>
                         <a href="{% url 'order_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Orders</a>
-                        <a href="{% url 'product_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Products</a>
-                        <a href="{% url 'inventory_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Inventory</a>
+                        <a href="{% url 'product_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Catalog &amp; Stock</a>
                         <a href="{% url 'customer_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Customers</a>
                         <a href="{% url 'employee_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Employees</a>
                         <a href="{% url 'audit_log_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Audit Trail</a>

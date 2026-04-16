@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block header %}Inventory Adjustment{% endblock %}
-{% block header_subtitle %}Inventory adjustment.{% endblock %}
+{% block header %}Stock Adjustment{% endblock %}
+{% block header_subtitle %}{% endblock %}
 {% block content %}
 <section class="mx-auto max-w-3xl">
     <section class="surface-card overflow-hidden">
@@ -30,8 +30,8 @@
                 <button class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
                     Apply Adjustment
                 </button>
-                <a href="{% url 'inventory_list' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                    Back to Inventory
+                <a href="{% url 'product_list' %}" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    Back to Catalog
                 </a>
             </div>
         </form>

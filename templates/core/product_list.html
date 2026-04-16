@@ -1,14 +1,38 @@
 {% extends "base.html" %}
-{% block header %}Products{% endblock %}
+{% block header %}Catalog & Stock{% endblock %}
 {% block header_subtitle %}{% endblock %}
 {% block content %}
+<section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div class="surface-card p-5">
+        <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Product Lines</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ inventory_summary.product_lines }}</div>
+    </div>
+    <div class="surface-card p-5">
+        <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Physical Stock</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ inventory_summary.total_stock }}</div>
+    </div>
+    <div class="surface-card p-5">
+        <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Reserved Units</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ inventory_summary.total_reserved }}</div>
+    </div>
+    <div class="surface-card-soft p-5">
+        <div class="text-xs font-semibold uppercase tracking-[0.24em] {% if inventory_summary.low_stock_count %}text-amber-700{% else %}text-emerald-700{% endif %}">Low-Stock Items</div>
+        <div class="stat-value mt-3 text-3xl font-extrabold {% if inventory_summary.low_stock_count %}text-amber-900{% else %}text-emerald-900{% endif %}">{{ inventory_summary.low_stock_count }}</div>
+    </div>
+</section>
+
 <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
     <div class="border-b border-slate-200/80 px-6 py-5">
         <div class="flex items-center justify-between gap-4">
             <div>
-                <h3 class="text-lg font-bold text-slate-900">Product Performance</h3>
+                <h3 class="text-lg font-bold text-slate-900">Catalog Register</h3>
             </div>
-            <a href="{% url 'product_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">New Product</a>
+            <div class="flex gap-3">
+                {% if user.profile.role == 'manager' or user.profile.role == 'owner' %}
+                    <a href="{% url 'inventory_adjustment' %}" class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Adjust Inventory</a>
+                    <a href="{% url 'product_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">New Product</a>
+                {% endif %}
+            </div>
         </div>
         <form id="product-filter-form" method="get" class="mt-4 grid gap-3 xl:grid-cols-[1.4fr_1fr_1fr_1fr]">
             <input id="product-filter-query" type="text" name="q" value="{{ filters.q }}" placeholder="Search product name, SKU, or description" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
@@ -50,7 +74,11 @@
             {% for summary in product_summaries %}
                 <tr class="hover:bg-slate-50">
                     <td class="px-6 py-4 font-medium text-slate-900">
-                        <a href="{% url 'product_detail' summary.product.id %}" class="hover:text-brand-700">{{ summary.product.name }}</a>
+                        {% if user.profile.role == 'manager' or user.profile.role == 'owner' %}
+                            <a href="{% url 'product_detail' summary.product.id %}" class="hover:text-brand-700">{{ summary.product.name }}</a>
+                        {% else %}
+                            {{ summary.product.name }}
+                        {% endif %}
                     </td>
                     <td class="px-6 py-4 text-slate-600">{{ summary.product.category.name|default:"Uncategorized" }}</td>
                     <td class="px-6 py-4 text-slate-600">{{ summary.product.sku }}</td>
@@ -60,7 +88,11 @@
                     <td class="px-6 py-4 text-right font-semibold text-slate-900">{{ summary.sold_quantity }}</td>
                     <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ summary.revenue_total }}</td>
                     <td class="px-6 py-4">
-                        <a href="{% url 'product_edit' summary.product.id %}" class="text-sm font-medium text-brand-700 hover:text-brand-800">Edit</a>
+                        {% if user.profile.role == 'manager' or user.profile.role == 'owner' %}
+                            <a href="{% url 'product_edit' summary.product.id %}" class="text-sm font-medium text-brand-700 hover:text-brand-800">Edit</a>
+                        {% else %}
+                            <span class="text-sm text-slate-400">View only</span>
+                        {% endif %}
                     </td>
                 </tr>
             {% empty %}

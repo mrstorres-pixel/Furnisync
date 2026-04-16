@@ -820,22 +820,7 @@ def order_change_request_process(request: HttpRequest, request_id: int, decision
 
 @role_required(UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
 def inventory_list(request: HttpRequest) -> HttpResponse:
-    qs = Inventory.objects.select_related("product", "branch")
-    active_branch = _get_active_branch(request.user)
-    if active_branch is not None:
-        qs = qs.filter(branch=active_branch)
-    qs = qs.order_by("branch__name", "product__name")
-    inventories = list(qs)
-    context = {
-        "inventories": inventories,
-        "inventory_summary": {
-            "product_lines": len(inventories),
-            "total_stock": sum((inventory.stock for inventory in inventories), 0),
-            "total_reserved": sum((inventory.reserved for inventory in inventories), 0),
-            "low_stock_count": sum((1 for inventory in inventories if inventory.available <= 5), 0),
-        },
-    }
-    return render(request, "core/inventory_list.html", context)
+    return redirect("product_list")
 
 
 @role_required(UserRole.COLLECTOR, UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
@@ -873,13 +858,18 @@ def order_list(request: HttpRequest) -> HttpResponse:
     return render(request, "core/order_list.html", context)
 
 
-@role_required(UserRole.MANAGER, UserRole.OWNER)
+@role_required(UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
 def product_list(request: HttpRequest) -> HttpResponse:
     q = request.GET.get("q", "").strip()
     category_filter = request.GET.get("category", "").strip()
     stock_filter = request.GET.get("stock", "").strip()
     sales_filter = request.GET.get("sales", "").strip()
     products = Product.objects.select_related("category").all().order_by("name")
+    inventory_rows = Inventory.objects.select_related("product", "branch")
+    active_branch = _get_active_branch(request.user)
+    if active_branch is not None:
+        inventory_rows = inventory_rows.filter(branch=active_branch)
+    inventory_rows = list(inventory_rows)
     if q:
         products = products.filter(
             Q(name__icontains=q)
@@ -917,6 +907,12 @@ def product_list(request: HttpRequest) -> HttpResponse:
             "product_summaries": product_summaries,
             "filters": {"q": q, "category": category_filter, "stock": stock_filter, "sales": sales_filter},
             "categories": ProductCategory.objects.order_by("name"),
+            "inventory_summary": {
+                "product_lines": len(inventory_rows),
+                "total_stock": sum((inventory.stock for inventory in inventory_rows), 0),
+                "total_reserved": sum((inventory.reserved for inventory in inventory_rows), 0),
+                "low_stock_count": sum((1 for inventory in inventory_rows if inventory.available <= 5), 0),
+            },
         },
     )
 
