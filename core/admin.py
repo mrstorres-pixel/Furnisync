@@ -12,6 +12,7 @@ from .models import (
     OrderItem,
     Payment,
     Product,
+    ProductCategory,
     Receipt,
     UserProfile,
 )
@@ -34,10 +35,17 @@ class CustomerAdmin(admin.ModelAdmin):
     search_fields = ("full_name", "phone", "email")
 
 
+@admin.register(ProductCategory)
+class ProductCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "description")
+    search_fields = ("name", "description")
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "sku", "price")
-    search_fields = ("name", "sku")
+    list_display = ("name", "category", "sku", "price")
+    list_filter = ("category",)
+    search_fields = ("name", "sku", "category__name")
 
 
 @admin.register(Inventory)

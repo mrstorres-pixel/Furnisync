@@ -51,7 +51,27 @@ class Customer(models.Model):
         return f"{self.full_name} ({self.branch})"
 
 
+class ProductCategory(models.Model):
+    name = models.CharField(max_length=120, unique=True)
+    description = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Product Category"
+        verbose_name_plural = "Product Categories"
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Product(models.Model):
+    category = models.ForeignKey(
+        ProductCategory,
+        on_delete=models.PROTECT,
+        related_name="products",
+        null=True,
+        blank=True,
+    )
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)

@@ -1,18 +1,23 @@
 {% extends "base.html" %}
 {% block header %}Products{% endblock %}
-{% block header_subtitle %}Products and stock.{% endblock %}
+{% block header_subtitle %}{% endblock %}
 {% block content %}
 <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
     <div class="border-b border-slate-200/80 px-6 py-5">
         <div class="flex items-center justify-between gap-4">
             <div>
                 <h3 class="text-lg font-bold text-slate-900">Product Performance</h3>
-                <p class="mt-1 text-sm text-slate-500">Catalog and performance.</p>
             </div>
             <a href="{% url 'product_create' %}" class="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">New Product</a>
         </div>
-        <form id="product-filter-form" method="get" class="mt-4 grid gap-3 xl:grid-cols-[1.7fr_1fr_1fr]">
+        <form id="product-filter-form" method="get" class="mt-4 grid gap-3 xl:grid-cols-[1.4fr_1fr_1fr_1fr]">
             <input id="product-filter-query" type="text" name="q" value="{{ filters.q }}" placeholder="Search product name, SKU, or description" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+            <select id="product-filter-category" name="category" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
+                <option value="">All categories</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if filters.category == category.id|stringformat:'s' %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
             <select id="product-filter-stock" name="stock" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">
                 <option value="">All stock states</option>
                 <option value="in" {% if filters.stock == 'in' %}selected{% endif %}>In stock</option>
@@ -31,6 +36,7 @@
             <thead class="bg-slate-50 text-slate-500">
             <tr>
                 <th class="px-6 py-4 text-left font-semibold">Product</th>
+                <th class="px-6 py-4 text-left font-semibold">Category</th>
                 <th class="px-6 py-4 text-left font-semibold">SKU</th>
                 <th class="px-6 py-4 text-right font-semibold">Price</th>
                 <th class="px-6 py-4 text-right font-semibold">Stock</th>
@@ -46,6 +52,7 @@
                     <td class="px-6 py-4 font-medium text-slate-900">
                         <a href="{% url 'product_detail' summary.product.id %}" class="hover:text-brand-700">{{ summary.product.name }}</a>
                     </td>
+                    <td class="px-6 py-4 text-slate-600">{{ summary.product.category.name|default:"Uncategorized" }}</td>
                     <td class="px-6 py-4 text-slate-600">{{ summary.product.sku }}</td>
                     <td class="px-6 py-4 text-right text-slate-700">&#8369;{{ summary.product.price }}</td>
                     <td class="px-6 py-4 text-right text-slate-700">{{ summary.inventory_stock }}</td>
@@ -58,7 +65,7 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="8">No products defined.</td>
+                    <td class="px-6 py-8 text-center text-sm text-slate-500" colspan="9">No products defined.</td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -72,9 +79,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('product-filter-form');
     const queryInput = document.getElementById('product-filter-query');
+    const categorySelect = document.getElementById('product-filter-category');
     const stockSelect = document.getElementById('product-filter-stock');
     const salesSelect = document.getElementById('product-filter-sales');
-    if (!form || !queryInput || !stockSelect || !salesSelect) {
+    if (!form || !queryInput || !categorySelect || !stockSelect || !salesSelect) {
         return;
     }
 
@@ -88,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitTimer = window.setTimeout(submitFilters, 350);
     });
 
-    [stockSelect, salesSelect].forEach(function(field) {
+    [categorySelect, stockSelect, salesSelect].forEach(function(field) {
         field.addEventListener('change', submitFilters);
     });
 });

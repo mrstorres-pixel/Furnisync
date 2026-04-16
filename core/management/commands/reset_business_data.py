@@ -19,6 +19,7 @@ from core.models import (
     Payment,
     PaymentReversal,
     Product,
+    ProductCategory,
     Receipt,
 )
 
@@ -49,6 +50,7 @@ class Command(BaseCommand):
             "inventory_rows": Inventory.objects.count(),
             "customers": Customer.objects.count(),
             "products": Product.objects.count(),
+            "product_categories": ProductCategory.objects.count(),
             "audit_logs": AuditLog.objects.count(),
         }
 
@@ -64,6 +66,7 @@ class Command(BaseCommand):
             Inventory.objects.all().delete()
             Customer.objects.all().delete()
             Product.objects.all().delete()
+            ProductCategory.objects.all().delete()
             AuditLog.objects.all().delete()
 
         media_root = Path(settings.MEDIA_ROOT)

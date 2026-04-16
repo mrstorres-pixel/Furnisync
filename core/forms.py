@@ -22,6 +22,7 @@ from .models import (
     OrderStatus,
     Payment,
     Product,
+    ProductCategory,
     UserProfile,
     UserRole,
 )
@@ -501,10 +502,11 @@ class ProductForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         apply_tailwind_classes(self)
+        self.fields["category"].queryset = ProductCategory.objects.order_by("name")
 
     class Meta:
         model = Product
-        fields = ["name", "sku", "description", "price"]
+        fields = ["category", "name", "sku", "description", "price"]
 
 
 class OrderManagementForm(forms.ModelForm):

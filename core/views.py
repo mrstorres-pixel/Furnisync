@@ -41,6 +41,7 @@ from .models import (
     OrderStatus,
     Payment,
     Product,
+    ProductCategory,
     Receipt,
     ReconciliationStatus,
     UserProfile,
@@ -875,11 +876,19 @@ def order_list(request: HttpRequest) -> HttpResponse:
 @role_required(UserRole.MANAGER, UserRole.OWNER)
 def product_list(request: HttpRequest) -> HttpResponse:
     q = request.GET.get("q", "").strip()
+    category_filter = request.GET.get("category", "").strip()
     stock_filter = request.GET.get("stock", "").strip()
     sales_filter = request.GET.get("sales", "").strip()
-    products = Product.objects.all().order_by("name")
+    products = Product.objects.select_related("category").all().order_by("name")
     if q:
-        products = products.filter(Q(name__icontains=q) | Q(sku__icontains=q) | Q(description__icontains=q))
+        products = products.filter(
+            Q(name__icontains=q)
+            | Q(sku__icontains=q)
+            | Q(description__icontains=q)
+            | Q(category__name__icontains=q)
+        )
+    if category_filter:
+        products = products.filter(category_id=category_filter)
     products = products.prefetch_related(
         Prefetch("inventories", queryset=Inventory.objects.order_by("id"), to_attr="inventories_cache"),
         Prefetch(
@@ -906,7 +915,8 @@ def product_list(request: HttpRequest) -> HttpResponse:
         "core/product_list.html",
         {
             "product_summaries": product_summaries,
-            "filters": {"q": q, "stock": stock_filter, "sales": sales_filter},
+            "filters": {"q": q, "category": category_filter, "stock": stock_filter, "sales": sales_filter},
+            "categories": ProductCategory.objects.order_by("name"),
         },
     )
 
@@ -923,7 +933,12 @@ def product_edit(request: HttpRequest, product_id: int | None = None) -> HttpRes
                 action="Save Product",
                 instance=obj,
                 old_values=None,
-                new_values={"name": obj.name, "sku": obj.sku},
+                new_values={
+                    "category": obj.category.name if obj.category else "",
+                    "name": obj.name,
+                    "sku": obj.sku,
+                    "price": str(obj.price),
+                },
             )
             messages.success(request, "Product saved.")
             return redirect("product_list")
@@ -935,7 +950,7 @@ def product_edit(request: HttpRequest, product_id: int | None = None) -> HttpRes
 @role_required(UserRole.MANAGER, UserRole.OWNER)
 def product_detail(request: HttpRequest, product_id: int) -> HttpResponse:
     product = get_object_or_404(
-        Product.objects.prefetch_related(
+        Product.objects.select_related("category").prefetch_related(
             Prefetch("inventories", queryset=Inventory.objects.order_by("id"), to_attr="inventories_cache"),
             Prefetch(
                 "orderitem_set",
