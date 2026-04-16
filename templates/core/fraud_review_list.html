@@ -107,24 +107,37 @@
                         </td>
                         <td class="px-6 py-4">
                             <span class="rounded-full px-3 py-1 text-xs font-semibold
-                                {% if payment.verification_status == 'matched' %}bg-emerald-100 text-emerald-800
+                                {% if payment.manager_resolution_status != 'unresolved' and payment.verification_status == 'review_required' %}bg-sky-100 text-sky-800
+                                {% elif payment.verification_status == 'matched' %}bg-emerald-100 text-emerald-800
                                 {% elif payment.verification_status == 'review_required' %}bg-rose-100 text-rose-800
                                 {% else %}bg-amber-100 text-amber-800{% endif %}">
-                                {{ payment.get_verification_status_display }}
+                                {% if payment.manager_resolution_status != 'unresolved' and payment.verification_status == 'review_required' %}
+                                    Review Resolved
+                                {% else %}
+                                    {{ payment.get_verification_status_display }}
+                                {% endif %}
                             </span>
                             <div class="mt-2 text-xs text-slate-500">{{ payment.next_action_label }}</div>
-                            {% if payment.customer_reported_amount and payment.customer_reported_amount != payment.amount and payment.suspicious_confirmation %}
+                            {% if payment.requires_manager_resolution and payment.customer_reported_amount and payment.customer_reported_amount != payment.amount and payment.suspicious_confirmation %}
                                 <div class="mt-2 text-xs font-medium text-rose-700">Amount mismatch and suspicious confirmation</div>
-                            {% elif payment.customer_reported_amount and payment.customer_reported_amount != payment.amount %}
+                            {% elif payment.requires_manager_resolution and payment.customer_reported_amount and payment.customer_reported_amount != payment.amount %}
                                 <div class="mt-2 text-xs font-medium text-rose-700">Amount mismatch detected</div>
-                            {% elif payment.suspicious_confirmation %}
+                            {% elif payment.requires_manager_resolution and payment.suspicious_confirmation %}
                                 <div class="mt-2 text-xs font-medium text-rose-700">Review triggered by suspicious confirmation</div>
+                            {% elif payment.manager_resolution_status != 'unresolved' %}
+                                <div class="mt-2 text-xs font-medium text-sky-700">Management decision recorded</div>
                             {% endif %}
                         </td>
                         <td class="px-6 py-4">
                             {% if payment.suspicious_confirmation %}
-                                <div class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
-                                    <p class="font-semibold">Suspicious confirmation</p>
+                                <div class="rounded-xl p-3 text-xs {% if payment.requires_manager_resolution %}border border-rose-200 bg-rose-50 text-rose-800{% else %}border border-sky-200 bg-sky-50 text-sky-800{% endif %}">
+                                    <p class="font-semibold">
+                                        {% if payment.requires_manager_resolution %}
+                                            Suspicious confirmation
+                                        {% else %}
+                                            Reviewed risk flags
+                                        {% endif %}
+                                    </p>
                                     <p class="mt-1">{{ payment.suspicious_reason }}</p>
                                 </div>
                                 {% if payment.manager_resolution_status != 'unresolved' %}
