@@ -1,140 +1,366 @@
-# Furniture System - How to Add Secretary and Customers
+# Furnisync
 
-## Adding Secretary (User with Secretary Role)
+Furnisync is a single-branch furniture store information management system built for an academic project and final defense. It is designed to support day-to-day branch operations with a focus on customers, products being sold, orders, collections, employee accountability, reconciliation, and auditability.
 
-1. **Login as Owner/Admin** (role='owner')
-2. Go to http://127.0.0.1:8000/users/
-3. Click **Edit** on existing user or create new via Django admin if needed
-4. In user form (core/templates/core/user_form.html):
-   - Set **Role** to "Secretary" 
-   - Assign **Branch** (optional)
-5. Save - user now has secretary role with branch scoping
+The system is intentionally scoped to one operating branch. Instead of trying to model a multi-branch enterprise, it focuses on the workflow of one furniture showroom handling customer records, product sales, stock control, collector activity, and management review.
 
-**Secretary permissions** (via role_required decorators in core/views.py):
-- Create customers (`/create_customer`)
-- View orders/inventory for their branch
-- Dashboard at core/dashboard_secretary.html
+## Current Scope
 
-## Adding Customers
+Furnisync currently supports:
 
-1. **Login as Secretary/Manager/Owner**
-2. Dashboard shows **"Create Customer"** link → http://127.0.0.1:8000/create_customer/
-3. Fill form (core/forms.py CustomerForm):
-   - Full name, phone, email, address
-   - **Branch** (required)
-   - Installment plan description
-4. Submit - customer created with audit log
+- Customer record management
+- Product catalog and branch stock tracking
+- Order creation and order workflow control
+- Collector-assigned payment logging
+- Receipt generation per payment
+- Customer payment confirmation flow with receipt upload and digital signature
+- Fraud and review flags for suspicious collection activity
+- Daily cash reconciliation
+- Audit trail for sensitive actions
+- Role-based access for owner, manager, secretary, and collector
 
-**Customers appear in**:
-- Order creation forms
-- Dashboard metrics (total_customers)
-- Order lists filtered by branch/role
+## Business Roles
 
-## Quick Setup Demo Accounts (Django shell)
+The system uses four business roles:
 
-**Run:**
+- `owner`
+  Full oversight of users, audit trail, fraud review, transactions, employees, catalog, orders, and customers.
+
+- `manager`
+  Operational control over orders, stock, employees, transactions, fraud review, reconciliation review, and product-level stock management.
+
+- `secretary`
+  Encodes customers and orders, works with the catalog and stock in a read-oriented way, and supports front-office order handling.
+
+- `collector`
+  Focused only on collection work: assigned collectible orders, payment logging, receipts, and daily cash reporting.
+
+## Main Functional Areas
+
+### 1. Customer Management
+
+The system maintains customer records with:
+
+- full name
+- phone number
+- email
+- address
+- installment plan description
+- branch association
+
+Customer pages summarize order history, purchase totals, and outstanding balances.
+
+### 2. Catalog and Stock
+
+Products and inventory are now treated as one operational area called `Catalog & Stock`.
+
+Each product can have:
+
+- category
+- name
+- SKU
+- description
+- unit price
+- branch stock values
+
+Stock is tracked through:
+
+- `stock`
+- `reserved`
+- `available`
+
+Managers and owners manage stock from the product page itself. The product detail page now acts as the control center for:
+
+- product information
+- branch stock position
+- stock adjustment
+- recent stock movement
+- recent completed sales
+
+### 3. Orders
+
+Orders are attached to customers and carry a workflow status:
+
+- `pending`
+- `reserved`
+- `completed`
+- `cancelled`
+
+Orders include one or more line items, each with:
+
+- product
+- quantity
+- locked selling price
+- subtotal
+
+Current order rules include:
+
+- duplicate products are blocked within the same order
+- unavailable stock prevents improper reservation/completion
+- only assigned collectors should see collectible orders
+- order changes can be routed through change requests for approval
+
+### 4. Payments and Receipts
+
+Collectors log payments against assigned orders. Each payment creates a receipt record and can include uploaded proof from the collector.
+
+The receipt flow supports:
+
+- collector receipt upload
+- generated receipt number
+- payment record tied to an order
+- remaining balance tracking
+
+### 5. Customer Confirmation and Anti-Fraud Controls
+
+To improve accountability for collections, the system includes a customer confirmation flow. After a payment is logged, a customer confirmation link and QR-based confirmation flow can be used.
+
+The confirmation process supports:
+
+- customer name confirmation
+- confirmed amount
+- customer receipt upload
+- digital signature
+
+Fraud-related checks currently include:
+
+- suspicious same-device or same-IP detection
+- customer-vs-collector amount comparison
+- manager review workflow for flagged payments
+
+This allows the system to show when a payment should be:
+
+- matched
+- pending customer confirmation
+- marked for review
+
+### 6. Daily Reconciliation
+
+Collectors can report daily cash totals, and management can compare:
+
+- system total
+- physically counted cash
+- discrepancy
+
+This supports branch-level cash control and helps surface shortages or mismatches.
+
+### 7. Audit Trail
+
+Furnisync logs important business actions for traceability. This includes changes such as:
+
+- customer creation
+- order creation and management changes
+- inventory adjustments
+- reconciliation decisions
+- payment review decisions
+
+The audit trail is intended for management and ownership review rather than day-to-day collector use.
+
+## Workflow Summary
+
+The intended branch workflow is:
+
+1. Secretary creates or updates a customer record.
+2. Secretary creates an order using products from the catalog.
+3. Manager or owner oversees order progression when needed.
+4. A collector is assigned to collectible orders.
+5. Collector logs a payment and uploads a collector receipt.
+6. A receipt is generated for the transaction.
+7. Customer confirmation may be captured through the confirmation link or QR flow.
+8. Suspicious cases are flagged for management review.
+9. Collector submits daily cash reconciliation.
+10. Manager or owner reviews reconciliation, fraud flags, and audit history.
+
+## Tech Stack
+
+Core technologies currently used in the project:
+
+- Python 3.12
+- Django 5
+- PostgreSQL
+- Gunicorn
+- Nginx
+- Pillow
+- AWS EC2 for deployment
+
+Python dependencies in `requirements.txt`:
+
+- `Django>=5.1,<6.0`
+- `psycopg2-binary>=2.9`
+- `gunicorn>=23.0`
+- `Pillow>=10.0`
+
+## Local Development Setup
+
+### 1. Create a virtual environment
+
 ```bash
-cd FURNITURESYSTEM
-python manage.py shell
+python -m venv .venv
 ```
 
-**Copy-paste this code:**
+### 2. Activate it
 
-```python
-from core.models import Branch, UserProfile, UserRole
-from django.contrib.auth.models import User
+On Windows PowerShell:
 
-# Create Main Branch
-branch, _ = Branch.objects.get_or_create(name="Main Branch", defaults={'address': '123 Main St'})
-
-# 1. OWNER (admin)
-owner = User.objects.get_or_create(username='owner', defaults={'email': 'owner@furniture.com'})[0]
-owner.set_password('password123')
-owner.save()
-UserProfile.objects.update_or_create(user=owner, defaults={'role': UserRole.OWNER, 'branch': branch})
-
-# 2. SECRETARY
-sec = User.objects.get_or_create(username='secretary', defaults={'email': 'sec@furniture.com'})[0]
-sec.set_password('password123')
-sec.save()
-UserProfile.objects.update_or_create(user=sec, defaults={'role': UserRole.SECRETARY, 'branch': branch})
-
-# 3. COLLECTOR  
-collector = User.objects.get_or_create(username='collector', defaults={'email': 'col@furniture.com'})[0]
-collector.set_password('password123')
-collector.save()
-UserProfile.objects.update_or_create(user=collector, defaults={'role': UserRole.COLLECTOR, 'branch': branch})
-
-# 4. MANAGER (bonus)
-manager = User.objects.get_or_create(username='manager', defaults={'email': 'mgr@furniture.com'})[0]
-manager.set_password('password123')
-manager.save()
-UserProfile.objects.update_or_create(user=manager, defaults={'role': UserRole.MANAGER, 'branch': branch})
-
-print("✅ Demo accounts created!")
-print("Login as: owner/secretary/collector/manager | Password: password123")
-print("Visit /users/ to manage roles/branches")
+```powershell
+.venv\Scripts\Activate.ps1
 ```
 
-**Test:**
-1. `python manage.py runserver`
-2. Login: `secretary` / `password123` → Secretary dashboard
-3. Login: `collector` / `password123` → Collector features  
-4. Login: `owner` / `password123` → Full admin (/users/)
+On Linux/macOS:
 
-## Test Flow
-1. `python manage.py runserver`
-2. Login: any user with profile.role='owner' 
-3. /users/ → Edit/Add Secretary
-4. /create_customer/ → Add customer
-5. Dashboard shows updated metrics
-
-## Django Admin Interface - Complete Procedure
-
-### 1. Create Superuser Account
 ```bash
-cd FURNITURESYSTEM
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure environment
+
+Create your environment file based on `.env.example` and set the database, allowed hosts, and Django settings needed for your machine.
+
+### 5. Run migrations
+
+```bash
+python manage.py migrate
+```
+
+### 6. Create a superuser if needed
+
+```bash
 python manage.py createsuperuser
 ```
-```
-Username: admin
-Email: admin@furniture.com
-Password: admin123 (or your choice)
-Confirm password: admin123
-```
 
-### 2. Start Server
+### 7. Start the server
+
 ```bash
 python manage.py runserver
 ```
 
-### 3. Login to Admin
-1. Open **http://127.0.0.1:8000/admin/**
-2. Login: `admin` / `admin123`
+## Demo Data Commands
 
-### 4. What You See & Do
-**Sections:**
-- **Users** → Add/edit regular users (these get app roles via Owner /users/)
-- **User profiles** → Assign roles/branches
-- **Branches** → Add branches  
-- **Customers** → Raw customer data
-- **Products** → Add products
-- **Orders/Payments** → All transactions
-- **Audit logs** → Track all changes
+The project includes management commands for demo/reset workflows.
 
-**Example: Add new user via Admin**
-1. Users → **Add user**
-2. Username: `newsec`, password: `pass123`
-3. Save → goes to User profile
-4. **User profiles** → Add: role="Secretary", branch="Main Branch"
+### Reset business data only
 
-### 5. Quick Test
-```
-Login admin → /admin/ → Users → Verify demo accounts
+This removes operational data while keeping accounts and roles available.
+
+```bash
+python manage.py reset_business_data
 ```
 
-**Pro Tip:** Use app's Owner role (/users/) for business users, Admin for raw DB access only.
+### Seed demo data
 
-**Note:** Django Admin ≠ App Owner role (/users/ for role-based management).
+This populates the system with fabricated but realistic demo data for presentation.
 
-See TODO.md for original fix status.
+```bash
+python manage.py seed_demo_data
+```
+
+If you want to reset business data first and then reseed in one step:
+
+```bash
+python manage.py seed_demo_data --fresh
+```
+
+### Repair stock from order history
+
+If stock needs to be recalculated from existing orders:
+
+```bash
+python manage.py repair_inventory_from_orders
+```
+
+## Deployment Notes
+
+The project is currently intended for lightweight AWS EC2 deployment suitable for a final project demo using free-tier-friendly services where possible.
+
+Typical production stack used in this project:
+
+- Django app
+- Gunicorn service
+- Nginx reverse proxy
+- PostgreSQL database
+- Ubuntu EC2 instance
+
+## Full Deployment Command Set
+
+### Local machine: commit and push
+
+Run from Windows PowerShell:
+
+```powershell
+cd "C:\Users\Admin\Desktop\FURNITURESYSTEM (2)\FURNITURESYSTEM\FURNITURESYSTEM"
+git status
+git add .
+git commit -m "Describe your changes here"
+git push origin main
+```
+
+### Connect to the server
+
+```powershell
+ssh -i "C:\Users\Admin\Downloads\furnisync-keypair.pem" ubuntu@18.140.248.97
+```
+
+### Server: pull and deploy
+
+```bash
+cd /home/ubuntu/FURNITURESYSTEM
+git pull origin main
+source .venv/bin/activate
+set -a
+source .env.server
+set +a
+python manage.py migrate
+python manage.py collectstatic --noinput
+python manage.py check
+sudo systemctl restart furnituresystem
+sudo systemctl restart nginx
+sudo systemctl status furnituresystem --no-pager
+sudo systemctl status nginx --no-pager
+```
+
+## Important Presentation Notes
+
+For presentation purposes, the current system is strongest when described as:
+
+- a single-branch furniture operations system
+- focused on customers, products sold, collections, and accountability
+- designed with auditability and fraud detection in mind
+
+It is not positioned as:
+
+- a marketplace
+- a customer self-service portal
+- a multi-branch enterprise ERP
+
+## Current UX Direction
+
+Recent improvements in the current version include:
+
+- cleaner professional UI
+- simplified copy across screens
+- floating left navigation on desktop
+- unified `Catalog & Stock` tab instead of split product/inventory tabs
+- product-centered stock adjustment workflow
+- role-focused dashboards and permissions
+
+## Known Boundaries
+
+This project is intentionally scoped for academic demonstration. It is functional and presentation-ready, but still has natural next-step improvements if it were to become a production business system, such as:
+
+- stronger HTTPS/SSL setup
+- deeper approval chains
+- richer reporting exports
+- more advanced image/document storage strategy
+- stronger external identity verification
+
+## Project Identity
+
+System name: `Furnisync`
+
+Intended use: single-branch furniture store information management and control
