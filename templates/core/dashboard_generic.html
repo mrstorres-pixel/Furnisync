@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load privacy_masks %}
 {% block header %}Branch Dashboard{% endblock %}
 {% block header_subtitle %}Dashboard.{% endblock %}
 {% block content %}
@@ -204,7 +205,7 @@
                 <tbody class="divide-y divide-slate-100">
                 {% for tx in recent_transactions %}
                     <tr class="hover:bg-slate-50">
-                        <td class="px-6 py-4 font-medium text-slate-900">{{ tx.order.customer.full_name }}</td>
+                        <td class="px-6 py-4 font-medium text-slate-900">{{ tx.order.customer.full_name|mask_customer_name }}</td>
                         <td class="px-6 py-4 text-slate-700">{{ tx.collector.username }}</td>
                         <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ tx.amount }}</td>
                     </tr>
@@ -278,7 +279,7 @@
                 <tbody class="divide-y divide-slate-100">
                 {% for summary in customers_with_balance %}
                     <tr class="hover:bg-slate-50">
-                        <td class="px-6 py-4 font-medium text-slate-900">{{ summary.customer.full_name }}</td>
+                        <td class="px-6 py-4 font-medium text-slate-900">{{ summary.customer.full_name|mask_customer_name }}</td>
                         <td class="px-6 py-4 text-right text-slate-700">{{ summary.order_count }}</td>
                         <td class="px-6 py-4 text-right font-semibold text-rose-700">&#8369;{{ summary.outstanding_balance }}</td>
                     </tr>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load privacy_masks %}
 {% block title %}Fraud Review{% endblock %}
 {% block header %}Fraud Review{% endblock %}
 {% block header_subtitle %}Fraud review queue.{% endblock %}
@@ -87,7 +88,7 @@
                             <div class="mt-2 text-xs text-slate-500">Order #{{ payment.order.id }}</div>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="font-medium text-slate-900">{{ payment.order.customer.full_name }}</div>
+                            <div class="font-medium text-slate-900">{{ payment.order.customer.full_name|mask_customer_name }}</div>
                             {% if payment.customer_confirmation_name %}
                                 <div class="mt-2 text-xs text-slate-500">Confirmed by {{ payment.customer_confirmation_name }}</div>
                             {% endif %}

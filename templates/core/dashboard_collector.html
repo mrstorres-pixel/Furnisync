@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load privacy_masks %}
 {% block header %}Collector Dashboard{% endblock %}
 {% block header_subtitle %}Collector dashboard.{% endblock %}
 {% block content %}
@@ -75,7 +76,7 @@
                     {% for order in collectible_orders %}
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-semibold text-slate-900">#{{ order.id }}</td>
-                            <td class="px-6 py-4 text-slate-700">{{ order.customer.full_name }}</td>
+                            <td class="px-6 py-4 text-slate-700">{{ order.customer.full_name|mask_customer_name }}</td>
                             <td class="px-6 py-4">
                                 <span class="rounded-full px-3 py-1 text-xs font-semibold {% if order.status == 'reserved' %}bg-sky-100 text-sky-800{% else %}bg-amber-100 text-amber-800{% endif %}">
                                     {{ order.get_status_display }}
@@ -115,7 +116,7 @@
                 <tbody class="divide-y divide-slate-100">
                     {% for payment in recent_collector_payments %}
                         <tr class="hover:bg-slate-50">
-                            <td class="px-6 py-4 font-medium text-slate-900">{{ payment.order.customer.full_name }}</td>
+                            <td class="px-6 py-4 font-medium text-slate-900">{{ payment.order.customer.full_name|mask_customer_name }}</td>
                             <td class="px-6 py-4 text-slate-600">{{ payment.paid_at|date:"Y-m-d H:i" }}</td>
                             <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ payment.amount }}</td>
                         </tr>

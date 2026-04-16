@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load privacy_masks %}
 {% block header %}Customers{% endblock %}
 {% block header_subtitle %}Customer records.{% endblock %}
 {% block content %}
@@ -64,13 +65,13 @@
                 <tr class="hover:bg-slate-50">
                     <td class="px-6 py-4">
                         <div class="font-medium text-slate-900">
-                            <a href="{% url 'customer_detail' summary.customer.id %}" class="hover:text-brand-700">{{ summary.customer.full_name }}</a>
+                            <a href="{% url 'customer_detail' summary.customer.id %}" class="hover:text-brand-700">{{ summary.customer.full_name|mask_customer_name }}</a>
                         </div>
                         <div class="text-xs text-slate-500">{{ summary.customer.installment_plan }}</div>
                     </td>
                     <td class="px-6 py-4 text-slate-600">
-                        <div>{{ summary.customer.phone|default:"No phone" }}</div>
-                        <div class="text-xs">{{ summary.customer.email|default:"No email" }}</div>
+                        <div>{{ summary.customer.phone|mask_phone|default:"No phone" }}</div>
+                        <div class="text-xs">{{ summary.customer.email|mask_email|default:"No email" }}</div>
                     </td>
                     <td class="px-6 py-4 text-right text-slate-700">{{ summary.order_count }}</td>
                     <td class="px-6 py-4 text-right font-semibold text-slate-900">&#8369;{{ summary.total_purchased }}</td>

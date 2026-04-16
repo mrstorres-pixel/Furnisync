@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load privacy_masks %}
 {% block header %}Employee Detail{% endblock %}
 {% block header_subtitle %}Drill into one employee's role, transaction activity, reconciliation involvement, and audit trail.{% endblock %}
 {% block content %}
@@ -61,7 +62,7 @@
                 {% for payment in payments %}
                     <tr class="hover:bg-slate-50">
                         <td class="px-6 py-4 text-slate-600">{{ payment.paid_at|date:"Y-m-d H:i" }}</td>
-                        <td class="px-6 py-4 font-medium text-slate-900">{{ payment.order.customer.full_name }}</td>
+                        <td class="px-6 py-4 font-medium text-slate-900">{{ payment.order.customer.full_name|mask_customer_name }}</td>
                         <td class="px-6 py-4 text-right font-semibold text-emerald-700">&#8369;{{ payment.amount }}</td>
                     </tr>
                 {% empty %}
