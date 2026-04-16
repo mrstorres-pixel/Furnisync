@@ -47,11 +47,13 @@ def _serialize_value(value):
         return float(value)
     if isinstance(value, (dict, list, tuple)):
         return str(value)
-    if hasattr(value, "url"):
+    if isinstance(value, models.fields.files.FieldFile):
+        if not value:
+            return ""
         try:
             return value.url
         except Exception:
-            return str(value)
+            return value.name or ""
     return value
 
 
