@@ -1,28 +1,24 @@
 {% extends "base.html" %}
 {% load privacy_masks %}
 {% block header %}{% if role == 'collector' %}Orders To Collect{% else %}Orders{% endif %}{% endblock %}
-{% block header_subtitle %}{% if role == 'collector' %}Orders to collect.{% else %}Order register.{% endif %}{% endblock %}
+{% block header_subtitle %}{% endblock %}
 {% block content %}
 <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
     <div class="surface-card p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Visible Orders</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ order_summary.count }}</div>
-        <p class="mt-2 text-sm text-slate-500">Orders currently shown based on the selected filter.</p>
     </div>
     <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">Pending</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-amber-900">{{ order_summary.pending }}</div>
-        <p class="mt-2 text-sm text-amber-800">Orders waiting for the next action such as reservation, completion, or follow-up.</p>
     </div>
     <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Reserved</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-sky-900">{{ order_summary.reserved }}</div>
-        <p class="mt-2 text-sm text-sky-800">Orders already consuming stock and expected to move toward completion.</p>
     </div>
     <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] {% if order_summary.outstanding_total > 0 %}text-rose-700{% else %}text-emerald-700{% endif %}">Outstanding Balance</div>
         <div class="stat-value mt-3 text-3xl font-extrabold {% if order_summary.outstanding_total > 0 %}text-rose-900{% else %}text-emerald-900{% endif %}">&#8369;{{ order_summary.outstanding_total }}</div>
-        <p class="mt-2 text-sm {% if order_summary.outstanding_total > 0 %}text-rose-800{% else %}text-emerald-800{% endif %}">Remaining unpaid amount across the orders currently in view.</p>
     </div>
 </section>
 
@@ -31,7 +27,6 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <h3 class="text-lg font-bold text-slate-900">{% if role == 'collector' %}Collection Queue{% else %}Order Register{% endif %}</h3>
-                <p class="mt-1 text-sm text-slate-500">{% if role == 'collector' %}Active orders only.{% else %}Orders by status.{% endif %}</p>
             </div>
             <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
                 {% if role != 'collector' %}

@@ -1,34 +1,29 @@
 {% extends "base.html" %}
 {% block header %}Daily Reconciliations{% endblock %}
-{% block header_subtitle %}Reconciliations.{% endblock %}
+{% block header_subtitle %}{% endblock %}
 {% block content %}
 <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
     <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Entries</div>
         <div class="mt-3 text-3xl font-extrabold text-slate-900">{{ reconciliation_summary.count }}</div>
-        <p class="mt-2 text-sm text-slate-500">Recorded reconciliation submissions currently stored in the system.</p>
     </div>
     <div class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">Pending Review</div>
         <div class="mt-3 text-3xl font-extrabold text-amber-900">{{ reconciliation_summary.pending }}</div>
-        <p class="mt-2 text-sm text-amber-800">Submissions still waiting for management approval or rejection.</p>
     </div>
     <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Approved</div>
         <div class="mt-3 text-3xl font-extrabold text-emerald-900">{{ reconciliation_summary.approved }}</div>
-        <p class="mt-2 text-sm text-emerald-800">Reconciliations already cleared and accepted into the audit trail.</p>
     </div>
     <div class="rounded-xl border border-rose-200 bg-rose-50 p-5 shadow-sm">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-rose-700">Total Discrepancy</div>
         <div class="mt-3 text-3xl font-extrabold text-rose-900">&#8369;{{ reconciliation_summary.total_discrepancy }}</div>
-        <p class="mt-2 text-sm text-rose-800">Combined discrepancy across the listed reconciliation records.</p>
     </div>
 </section>
 
 <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
     <div class="border-b border-slate-200 px-6 py-5">
         <h3 class="text-lg font-bold text-slate-900">Reconciliation Register</h3>
-        <p class="mt-1 text-sm text-slate-500">Daily cash review.</p>
     </div>
     <div class="overflow-x-auto">
         <table class="min-w-full text-sm">

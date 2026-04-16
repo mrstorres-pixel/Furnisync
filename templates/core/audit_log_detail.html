@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Audit Event{% endblock %}
 {% block header %}Audit Event Detail{% endblock %}
-{% block header_subtitle %}Audit event details.{% endblock %}
+{% block header_subtitle %}{% endblock %}
 {% block content %}
 <section class="mx-auto max-w-6xl space-y-6">
     <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -46,7 +46,6 @@
             <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-200 px-6 py-5">
                     <h3 class="text-lg font-bold text-slate-900">New Values / Event Payload</h3>
-                    <p class="mt-1 text-sm text-slate-500">This shows the structured data captured for the event at the moment it was recorded.</p>
                 </div>
                 <div class="p-6">
                     <pre class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-6 text-slate-700">{% if log.new_values %}{{ log.new_values }}{% else %}No new values recorded.{% endif %}</pre>
@@ -56,7 +55,6 @@
             <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-200 px-6 py-5">
                     <h3 class="text-lg font-bold text-slate-900">Previous Values</h3>
-                    <p class="mt-1 text-sm text-slate-500">If the event changed an existing record, the prior captured values appear here.</p>
                 </div>
                 <div class="p-6">
                     <pre class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-6 text-slate-700">{% if log.old_values %}{{ log.old_values }}{% else %}No previous values recorded.{% endif %}</pre>
@@ -68,7 +66,6 @@
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-6 py-5">
             <h3 class="text-lg font-bold text-slate-900">Related Events For This Record</h3>
-            <p class="mt-1 text-sm text-slate-500">Use this to follow the timeline of the same record across multiple actions.</p>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">

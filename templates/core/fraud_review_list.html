@@ -2,38 +2,32 @@
 {% load privacy_masks %}
 {% block title %}Fraud Review{% endblock %}
 {% block header %}Fraud Review{% endblock %}
-{% block header_subtitle %}Fraud review queue.{% endblock %}
+{% block header_subtitle %}{% endblock %}
 {% block content %}
 <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
     <div class="surface-card p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Visible Payments</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ review_summary.count }}</div>
-        <p class="mt-2 text-sm text-slate-500">Payments currently shown based on the active verification and risk filters.</p>
     </div>
     <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">Pending Customer</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-amber-900">{{ review_summary.pending_customer }}</div>
-        <p class="mt-2 text-sm text-amber-800">Awaiting customer confirmation.</p>
     </div>
     <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-rose-700">Review Required</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-rose-900">{{ review_summary.review_required }}</div>
-        <p class="mt-2 text-sm text-rose-800">Payments that need management review because of amount mismatch, suspicious confirmation signals, or both.</p>
     </div>
     <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-orange-700">Unresolved Reviews</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-orange-900">{{ review_summary.unresolved_reviews }}</div>
-        <p class="mt-2 text-sm text-orange-800">Flagged payments that still need a formal manager or owner decision.</p>
     </div>
     <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Suspicious Flags</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-sky-900">{{ review_summary.suspicious }}</div>
-        <p class="mt-2 text-sm text-sky-800">Payments flagged for same-device or same-IP confirmation risk and similar integrity concerns.</p>
     </div>
     <div class="surface-card-soft p-5 md:col-span-2 xl:col-span-4">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Matched Confirmations</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-emerald-900">{{ review_summary.matched }}</div>
-        <p class="mt-2 text-sm text-emerald-800">Matched payments.</p>
     </div>
 </section>
 
@@ -42,7 +36,6 @@
         <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div>
                 <h3 class="text-lg font-bold text-slate-900">Anti-Fraud Review Queue</h3>
-                <p class="mt-1 text-sm text-slate-500">Flagged payments.</p>
             </div>
             <form id="fraud-filter-form" method="get" class="filter-shell grid gap-3 md:grid-cols-2">
                 <select id="fraud-filter-status" name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-200/40">

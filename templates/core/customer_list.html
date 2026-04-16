@@ -1,28 +1,24 @@
 {% extends "base.html" %}
 {% load privacy_masks %}
 {% block header %}Customers{% endblock %}
-{% block header_subtitle %}Customer records.{% endblock %}
+{% block header_subtitle %}{% endblock %}
 {% block content %}
 <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
     <div class="surface-card p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Visible Customers</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ customer_summary.count }}</div>
-        <p class="mt-2 text-sm text-slate-500">Customer records currently shown based on the selected search and balance filter.</p>
     </div>
     <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">With Balance</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-amber-900">{{ customer_summary.with_balance }}</div>
-        <p class="mt-2 text-sm text-amber-800">Accounts that still require collection, follow-up, or payment confirmation.</p>
     </div>
     <div class="surface-card p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Total Purchased</div>
         <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">&#8369;{{ customer_summary.total_purchased }}</div>
-        <p class="mt-2 text-sm text-slate-500">Combined purchase value across the customer records currently in view.</p>
     </div>
     <div class="surface-card-soft p-5">
         <div class="text-xs font-semibold uppercase tracking-[0.24em] {% if customer_summary.outstanding_total > 0 %}text-rose-700{% else %}text-emerald-700{% endif %}">Outstanding Total</div>
         <div class="stat-value mt-3 text-3xl font-extrabold {% if customer_summary.outstanding_total > 0 %}text-rose-900{% else %}text-emerald-900{% endif %}">&#8369;{{ customer_summary.outstanding_total }}</div>
-        <p class="mt-2 text-sm {% if customer_summary.outstanding_total > 0 %}text-rose-800{% else %}text-emerald-800{% endif %}">Remaining unpaid balance across the customers currently listed.</p>
     </div>
 </section>
 
@@ -31,7 +27,6 @@
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <h3 class="text-lg font-bold text-slate-900">Customer Records</h3>
-                <p class="mt-1 text-sm text-slate-500">Customers and balances.</p>
             </div>
             <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
                 <a href="{% url 'create_customer' %}" class="rounded-xl border border-slate-900 bg-slate-900 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-brand-800">

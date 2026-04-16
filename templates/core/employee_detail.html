@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load privacy_masks %}
 {% block header %}Employee Detail{% endblock %}
-{% block header_subtitle %}Drill into one employee's role, transaction activity, reconciliation involvement, and audit trail.{% endblock %}
+{% block header_subtitle %}{% endblock %}
 {% block content %}
 <section class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
     <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -47,7 +47,6 @@
     <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200/80 px-6 py-5">
             <h3 class="text-lg font-bold text-slate-900">Logged Payments</h3>
-            <p class="mt-1 text-sm text-slate-500">Most recent customer collections handled by this employee.</p>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
@@ -76,7 +75,6 @@
     <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200/80 px-6 py-5">
             <h3 class="text-lg font-bold text-slate-900">Audit Trail</h3>
-            <p class="mt-1 text-sm text-slate-500">Recent system actions tied to this employee account.</p>
         </div>
         <div class="divide-y divide-slate-100">
             {% for log in audit_logs %}

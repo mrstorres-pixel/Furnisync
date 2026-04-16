@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 {% block header %}New Order{% endblock %}
-{% block header_subtitle %}New order.{% endblock %}
+{% block header_subtitle %}{% endblock %}
 {% block content %}
 <section class="mx-auto max-w-7xl space-y-6">
     <div class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-8 py-6">
                 <h3 class="text-xl font-bold text-slate-900">Order Builder</h3>
-                <p class="mt-1 text-sm text-slate-500">Order entry.</p>
             </div>
             <form method="post" class="space-y-8 px-8 py-8">
                 {% csrf_token %}
@@ -42,12 +41,10 @@
                         <div>
                             <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Line Items</p>
                             <h4 class="mt-2 text-lg font-bold text-slate-900">Products Being Sold</h4>
-                            <p class="mt-1 text-sm text-slate-500">Items.</p>
                         </div>
                         <div class="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-right shadow-sm">
                             <p class="text-[11px] uppercase tracking-[0.2em] text-slate-500">Running Total</p>
                             <p id="order-grand-total" class="mt-1 text-xl font-bold text-slate-900">&#8369;0.00</p>
-                            <p class="mt-1 text-xs text-slate-500">Auto-calculated from all visible line items.</p>
                         </div>
                     </div>
 
@@ -67,7 +64,7 @@
                                             <p class="line-item-title text-sm font-semibold text-slate-900">Line Item {{ forloop.counter }}</p>
                                             <span class="rounded-full bg-brand-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">Product Sale</span>
                                         </div>
-                                        <p class="line-item-product mt-2 text-sm text-slate-500">Choose a product to begin this item.</p>
+                                        <p class="line-item-product mt-2 text-sm text-slate-500"></p>
                                     </div>
                                     <div class="flex items-center gap-3">
                                         <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-right">
@@ -87,9 +84,6 @@
                                         <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" data-field-name="{{ field.name }}">
                                             <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{{ field.label }}</label>
                                             {{ field }}
-                                            {% if field.help_text %}
-                                                <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
-                                            {% endif %}
                                             {% for error in field.errors %}
                                                 <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
                                             {% endfor %}
@@ -100,7 +94,7 @@
                                 <div class="mt-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <p class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Encoding Check</p>
-                                        <p class="line-item-status mt-1 text-sm text-slate-600">Select a product and quantity to complete this item.</p>
+                                        <p class="line-item-status mt-1 text-sm text-slate-600"></p>
                                     </div>
                                     <div class="text-sm text-slate-600">
                                         Quantity x Price =
@@ -114,7 +108,6 @@
                         {% endfor %}
                     </div>
                     <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div class="text-sm text-slate-500">Add items as needed.</div>
                         <button id="add-line-item" type="button" class="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50">
                             Add Another Item
                         </button>
@@ -127,7 +120,7 @@
                                         <p class="line-item-title text-sm font-semibold text-slate-900">Line Item</p>
                                         <span class="rounded-full bg-brand-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-700">Product Sale</span>
                                     </div>
-                                    <p class="line-item-product mt-2 text-sm text-slate-500">Choose a product to begin this item.</p>
+                                    <p class="line-item-product mt-2 text-sm text-slate-500"></p>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-right">
@@ -145,9 +138,6 @@
                                     <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4" data-field-name="{{ field.name }}">
                                         <label class="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{{ field.label }}</label>
                                         {{ field }}
-                                        {% if field.help_text %}
-                                            <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
-                                        {% endif %}
                                     </div>
                                     {% endif %}
                                 {% endfor %}

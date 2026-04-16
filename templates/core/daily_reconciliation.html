@@ -21,9 +21,6 @@
                 <div>
                     <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
                     {{ field }}
-                    {% if field.help_text %}
-                        <p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>
-                    {% endif %}
                     {% for error in field.errors %}
                         <p class="mt-2 text-xs text-rose-600">{{ error }}</p>
                     {% endfor %}
