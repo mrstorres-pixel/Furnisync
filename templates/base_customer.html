@@ -48,16 +48,13 @@
                 </div>
                 <div class="flex flex-wrap items-center gap-3 text-sm">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'customer_dashboard' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Home</a>
                         <a href="{% url 'customer_product_list' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Browse Items</a>
-                        <a href="{% url 'customer_wishlist' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Wishlist</a>
                         <a href="{% url 'customer_requests' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Requests</a>
-                        <a href="{% url 'customer_orders' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">My Orders</a>
-                        <a href="{% url 'customer_account' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">My Account</a>
+                        <a href="{% url 'customer_account' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Account</a>
                         <a href="{% url 'logout' %}" class="rounded-xl border border-rose-200 bg-white px-4 py-3 font-semibold text-rose-700 transition hover:bg-rose-50">Logout</a>
                     {% else %}
                         <a href="{% url 'customer_product_list' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Browse Items</a>
-                        <a href="{% url 'login' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Login</a>
+                        <a href="{% url 'login' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Sign In</a>
                         <a href="{% url 'customer_signup' %}" class="rounded-xl bg-brand-700 px-4 py-3 font-semibold text-white transition hover:bg-brand-800">Create Account</a>
                     {% endif %}
                 </div>
