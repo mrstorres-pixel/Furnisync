@@ -10,6 +10,7 @@ from django.db import models
 from django.utils import timezone
 
 from openpyxl import Workbook
+from openpyxl import load_workbook
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.styles import Font
 
@@ -154,7 +155,7 @@ class Command(BaseCommand):
         ]
 
         summary_rows: list[list[object]] = [
-            ["Exported At", timezone.now()],
+            ["Exported At", _serialize_value(timezone.now())],
             ["Database", "default"],
             ["Workbook", output_path.name],
         ]
@@ -181,7 +182,7 @@ class Command(BaseCommand):
         summary_sheet = workbook.create_sheet(title="Summary", index=0)
         summary_sheet.append(["Item", "Value"])
         for row in summary_rows:
-            summary_sheet.append(row)
+            summary_sheet.append([_serialize_value(value) for value in row])
         for cell in summary_sheet[1]:
             cell.font = Font(bold=True)
         summary_sheet.freeze_panes = "A2"
@@ -189,4 +190,5 @@ class Command(BaseCommand):
         summary_sheet.column_dimensions["B"].width = 24
 
         workbook.save(output_path)
+        load_workbook(output_path, read_only=True).close()
         self.stdout.write(self.style.SUCCESS(f"Excel export created: {output_path}"))
