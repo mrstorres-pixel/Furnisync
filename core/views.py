@@ -391,6 +391,44 @@ def customer_signup(request: HttpRequest) -> HttpResponse:
     return render(request, "registration/customer_signup.html", {"form": form, "branch": branch, "next": next_url})
 
 
+def landing_page(request: HttpRequest) -> HttpResponse:
+    if request.user.is_authenticated:
+        if _is_customer_user(request.user):
+            return redirect("customer_dashboard")
+        return redirect("dashboard")
+
+    branch = Branch.objects.order_by("id").first()
+    featured_products = list(
+        Product.objects.select_related("category").prefetch_related(
+            Prefetch(
+                "inventories",
+                queryset=Inventory.objects.filter(branch=branch).order_by("id") if branch is not None else Inventory.objects.none(),
+                to_attr="inventories_cache",
+            ),
+        ).order_by("name")[:6]
+    )
+    featured_cards: list[dict[str, object]] = []
+    for product in featured_products:
+        inventory = product.inventories_cache[0] if getattr(product, "inventories_cache", None) else None
+        featured_cards.append(
+            {
+                "product": product,
+                "available": inventory.available if inventory else 0,
+            }
+        )
+
+    return render(
+        request,
+        "core/landing_page.html",
+        {
+            "branch": branch,
+            "featured_cards": featured_cards,
+            "category_count": ProductCategory.objects.count(),
+            "product_count": Product.objects.count(),
+        },
+    )
+
+
 @customer_required
 def customer_dashboard(request: HttpRequest) -> HttpResponse:
     customer = _get_customer_account(request.user)
@@ -520,6 +558,7 @@ def customer_product_detail(request: HttpRequest, product_id: int) -> HttpRespon
         "core/customer_product_detail.html",
         {
             "customer": customer,
+            "branch": branch,
             "product": product,
             "inventory": inventory,
             "wishlist_item": wishlist_item,
