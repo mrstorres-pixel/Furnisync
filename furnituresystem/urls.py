@@ -2,10 +2,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from django.contrib.auth import views as auth_views
 from django.contrib.auth import logout as auth_logout
 from django.shortcuts import redirect
 from django.http import HttpRequest
+from core import views as core_views
 
 def logout_view(request: HttpRequest):
     """Custom logout view that handles both GET and POST"""
@@ -14,7 +14,8 @@ def logout_view(request: HttpRequest):
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("accounts/login/", auth_views.LoginView.as_view(template_name="registration/login.html"), name="login"),
+    path("accounts/login/", core_views.login_view, name="login"),
+    path("accounts/customer-signup/", core_views.customer_signup, name="customer_signup"),
     path("accounts/logout/", logout_view, name="logout"),
     path("", include("core.urls")),
 ]

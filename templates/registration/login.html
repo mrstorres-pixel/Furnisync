@@ -8,25 +8,13 @@
     <div class="px-8 py-8">
         <div class="mb-6">
             <h2 class="text-xl font-bold text-slate-950">Sign in</h2>
+            <p class="mt-2 text-sm text-slate-500">Staff and customer accounts use the same sign-in page. Customers can create an account below.</p>
         </div>
-        <style>
-            #id_username, #id_password {
-                width: 100%;
-                border-radius: 0.85rem;
-                border: 1px solid rgb(203 213 225);
-                background: white;
-                padding: 0.85rem 1rem;
-                font-size: 0.95rem;
-                color: rgb(15 23 42);
-            }
-            #id_username:focus, #id_password:focus {
-                outline: none;
-                border-color: rgb(69 101 132);
-                box-shadow: 0 0 0 4px rgba(93, 127, 163, 0.14);
-            }
-        </style>
         <form method="post" class="space-y-5">
             {% csrf_token %}
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
             {% if form.non_field_errors %}
                 <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                     {{ form.non_field_errors }}
@@ -41,9 +29,14 @@
                 {{ form.password }}
             </div>
             <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">
-                Enter Workspace
+                Sign In
             </button>
         </form>
+        <div class="mt-6 rounded-xl border border-brand-200 bg-brand-50 px-4 py-4 text-sm text-brand-800">
+            <p class="font-semibold">New customer?</p>
+            <p class="mt-1">Create an account to browse products and save the items you want to buy.</p>
+            <a href="{% url 'customer_signup' %}" class="mt-3 inline-flex rounded-lg bg-brand-700 px-4 py-2 font-semibold text-white transition hover:bg-brand-800">Create Customer Account</a>
+        </div>
     </div>
 </div>
 {% endblock %}

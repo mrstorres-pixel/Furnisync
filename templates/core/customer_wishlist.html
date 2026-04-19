@@ -1,0 +1,43 @@
+{% extends "base_customer.html" %}
+{% block title %}My Wishlist - Furnisync{% endblock %}
+{% block header %}My Wishlist{% endblock %}
+{% block header_subtitle %}The furniture items you want to buy or revisit later.{% endblock %}
+{% block content %}
+<section class="rounded-3xl border border-stone-200 bg-white shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-stone-200">
+            <thead class="bg-stone-50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Product</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Category</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Wanted Qty</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Price</th>
+                    <th class="px-6 py-4"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100">
+                {% for item in items %}
+                    <tr>
+                        <td class="px-6 py-4">
+                            <a href="{% url 'customer_product_detail' item.product.id %}" class="font-semibold text-slate-900 hover:text-brand-700">{{ item.product.name }}</a>
+                            <div class="mt-1 text-sm text-slate-500">SKU {{ item.product.sku }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-600">{{ item.product.category.name|default:"Uncategorized" }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-600">{{ item.quantity }}</td>
+                        <td class="px-6 py-4 text-sm font-semibold text-slate-900">&#8369;{{ item.product.price }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <form method="post" action="{% url 'customer_wishlist_remove' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-10 text-center text-sm text-slate-500">No wishlist items yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>

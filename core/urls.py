@@ -4,6 +4,13 @@ from . import views
 
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
+    path("customer/", views.customer_dashboard, name="customer_dashboard"),
+    path("customer/shop/", views.customer_product_list, name="customer_product_list"),
+    path("customer/shop/<int:product_id>/", views.customer_product_detail, name="customer_product_detail"),
+    path("customer/wishlist/", views.customer_wishlist, name="customer_wishlist"),
+    path("customer/wishlist/<int:item_id>/remove/", views.customer_wishlist_remove, name="customer_wishlist_remove"),
+    path("customer/account/", views.customer_account, name="customer_account"),
+    path("customer/orders/", views.customer_orders, name="customer_orders"),
     # Customers & orders
     path("customers/new/", views.create_customer, name="create_customer"),
     path("customers/", views.customer_list, name="customer_list"),

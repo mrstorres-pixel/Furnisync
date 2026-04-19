@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Any
 
 from django import forms
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import UploadedFile
 from django.forms import BaseInlineFormSet
@@ -25,6 +26,7 @@ from .models import (
     ProductCategory,
     UserProfile,
     UserRole,
+    WishlistItem,
 )
 
 User = get_user_model()
@@ -101,6 +103,69 @@ class CustomerForm(forms.ModelForm):
         if commit:
             customer.save()
         return customer
+
+
+class StaffLoginForm(AuthenticationForm):
+    username = forms.CharField(label="Username")
+    password = forms.CharField(label="Password", widget=forms.PasswordInput(render_value=False))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        apply_tailwind_classes(self)
+
+
+class CustomerSignupForm(UserCreationForm):
+    full_name = forms.CharField(max_length=255)
+    email = forms.EmailField()
+    phone = forms.CharField(max_length=50, required=False)
+    address = forms.CharField(widget=forms.Textarea(attrs={"rows": 3}), required=False)
+    installment_plan = forms.CharField(max_length=255, required=False)
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ("username", "full_name", "email", "phone", "address", "installment_plan", "password1", "password2")
+
+    def __init__(self, *args, branch=None, **kwargs):
+        self.branch = branch
+        super().__init__(*args, **kwargs)
+        apply_tailwind_classes(self)
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("A user with that email already exists.")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        full_name = self.cleaned_data["full_name"].strip()
+        name_parts = full_name.split(None, 1)
+        user.first_name = name_parts[0] if name_parts else ""
+        user.last_name = name_parts[1] if len(name_parts) > 1 else ""
+        user.email = self.cleaned_data["email"]
+        if commit:
+            user.save()
+            Customer.objects.create(
+                user=user,
+                full_name=full_name,
+                phone=self.cleaned_data["phone"],
+                email=self.cleaned_data["email"],
+                address=self.cleaned_data["address"],
+                installment_plan=self.cleaned_data["installment_plan"] or "Customer-selected items",
+                branch=self.branch,
+            )
+        return user
+
+
+class WishlistItemForm(forms.ModelForm):
+    class Meta:
+        model = WishlistItem
+        fields = ["quantity"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        apply_tailwind_classes(self)
+        self.fields["quantity"].widget.attrs["min"] = "1"
 
 
 class OrderItemForm(forms.ModelForm):

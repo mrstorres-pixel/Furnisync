@@ -38,6 +38,13 @@ class UserProfile(models.Model):
 
 
 class Customer(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="customer_profile",
+    )
     full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=50, blank=True)
     email = models.EmailField(blank=True)
@@ -49,6 +56,10 @@ class Customer(models.Model):
 
     def __str__(self) -> str:
         return f"{self.full_name} ({self.branch})"
+
+    @property
+    def has_account(self) -> bool:
+        return self.user_id is not None
 
 
 class ProductCategory(models.Model):
@@ -79,6 +90,20 @@ class Product(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.sku})"
+
+
+class WishlistItem(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="wishlist_items")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="wishlisted_by")
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = ("customer", "product")
+
+    def __str__(self) -> str:
+        return f"{self.customer.full_name} wants {self.product.name}"
 
 
 class Inventory(models.Model):

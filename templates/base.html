@@ -118,7 +118,7 @@
                 <a href="{% url 'dashboard' %}" class="block rounded-xl border border-slate-800 bg-slate-900 px-4 py-3 font-medium text-white transition hover:border-slate-700 hover:bg-slate-800">Dashboard</a>
             </div>
 
-            {% if user.is_authenticated %}
+            {% if user.is_authenticated and user.profile %}
                 {% if user.profile.role == 'collector' %}
                     <div class="space-y-1.5">
                         <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Collections</p>
@@ -169,7 +169,7 @@
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Current Session</p>
                 {% if user.is_authenticated %}
                     <p class="mt-2 text-base font-semibold text-white">{{ user.username }}</p>
-                    <p class="mt-1 text-sm text-slate-400">{% if user.profile.role %}{{ user.profile.get_role_display }}{% endif %}</p>
+                    <p class="mt-1 text-sm text-slate-400">{% if user.profile and user.profile.role %}{{ user.profile.get_role_display }}{% endif %}</p>
                 {% else %}
                     <p class="mt-2 text-sm text-slate-400">Please sign in to continue.</p>
                 {% endif %}

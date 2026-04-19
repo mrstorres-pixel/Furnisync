@@ -6,17 +6,20 @@ from functools import wraps
 from decimal import Decimal
 
 from django.contrib import messages
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Count, Q, Sum, Prefetch
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from .forms import (
     CustomerPaymentConfirmationForm,
     CustomerForm,
+    CustomerSignupForm,
     DailyReconciliationForm,
     InventoryAdjustmentForm,
     OrderChangeRequestForm,
@@ -26,7 +29,9 @@ from .forms import (
     PaymentForm,
     PaymentReviewResolutionForm,
     ProductForm,
+    StaffLoginForm,
     UserProfileForm,
+    WishlistItemForm,
 )
 from .models import (
     AuditLog,
@@ -47,6 +52,7 @@ from .models import (
     ReconciliationStatus,
     UserProfile,
     UserRole,
+    WishlistItem,
     create_audit_log,
 )
 
@@ -64,7 +70,18 @@ def _user_has_role(user: User, *roles: str) -> bool: # type: ignore
     return hasattr(user, "profile") and user.profile.role in roles
 
 
+def _get_customer_account(user: User):
+    return getattr(user, "customer_profile", None)
+
+
+def _is_customer_user(user: User) -> bool:
+    return _get_customer_account(user) is not None
+
+
 def _get_active_branch(user: User):
+    customer = _get_customer_account(user)
+    if customer and customer.branch_id:
+        return customer.branch
     profile = getattr(user, "profile", None)
     if getattr(profile, "branch", None):
         return profile.branch
@@ -325,11 +342,240 @@ def role_required(*roles: str):
     return decorator
 
 
+def customer_required(view_func):
+    @wraps(view_func)
+    @login_required
+    def _wrapped(request: HttpRequest, *args, **kwargs):
+        if not _is_customer_user(request.user):
+            messages.error(request, "Customer access is required for that page.")
+            return redirect("dashboard")
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
+
+
+def login_view(request: HttpRequest) -> HttpResponse:
+    if request.user.is_authenticated:
+        if _is_customer_user(request.user):
+            return redirect("customer_dashboard")
+        return redirect("dashboard")
+
+    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    form = StaffLoginForm(request, data=request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        auth_login(request, form.get_user())
+        if _is_customer_user(form.get_user()):
+            return redirect(next_url or "customer_dashboard")
+        return redirect("dashboard")
+    return render(request, "registration/login.html", {"form": form, "next": next_url})
+
+
+def customer_signup(request: HttpRequest) -> HttpResponse:
+    if request.user.is_authenticated:
+        if _is_customer_user(request.user):
+            return redirect("customer_dashboard")
+        return redirect("dashboard")
+
+    next_url = request.POST.get("next") or request.GET.get("next") or ""
+    branch = Branch.objects.order_by("id").first()
+    if branch is None:
+        messages.error(request, "Create a branch first before opening customer registration.")
+        return redirect("login")
+
+    form = CustomerSignupForm(request.POST or None, branch=branch)
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        auth_login(request, user)
+        messages.success(request, "Customer account created. You can now browse and save furniture items.")
+        return redirect(next_url or "customer_dashboard")
+    return render(request, "registration/customer_signup.html", {"form": form, "branch": branch, "next": next_url})
+
+
+@customer_required
+def customer_dashboard(request: HttpRequest) -> HttpResponse:
+    customer = _get_customer_account(request.user)
+    assert customer is not None
+    orders = list(
+        customer.orders.prefetch_related("items__product", "payments").order_by("-created_at")
+    )
+    wishlist_items = list(
+        customer.wishlist_items.select_related("product", "product__category").order_by("-created_at")[:6]
+    )
+    payments = list(
+        Payment.objects.filter(order__customer=customer)
+        .select_related("payment_receipt", "collector", "order")
+        .order_by("-paid_at")[:5]
+    )
+    outstanding_total = sum((order.remaining_balance for order in orders), Decimal("0.00"))
+    return render(
+        request,
+        "core/customer_dashboard.html",
+        {
+            "customer": customer,
+            "orders": orders[:5],
+            "wishlist_items": wishlist_items,
+            "recent_payments": payments,
+            "dashboard_summary": {
+                "order_count": len(orders),
+                "wishlist_count": customer.wishlist_items.count(),
+                "outstanding_total": outstanding_total,
+                "paid_orders": sum((1 for order in orders if order.remaining_balance <= Decimal("0.00")), 0),
+            },
+        },
+    )
+
+
+def customer_product_list(request: HttpRequest) -> HttpResponse:
+    customer = _get_customer_account(request.user) if request.user.is_authenticated else None
+    q = request.GET.get("q", "").strip()
+    category_filter = request.GET.get("category", "").strip()
+    stock_filter = request.GET.get("stock", "").strip()
+    branch = customer.branch if customer is not None else Branch.objects.order_by("id").first()
+    if branch is None:
+        messages.error(request, "No branch is configured yet for product browsing.")
+        return redirect("login")
+
+    products = Product.objects.select_related("category").order_by("name")
+    if q:
+        products = products.filter(
+            Q(name__icontains=q)
+            | Q(sku__icontains=q)
+            | Q(description__icontains=q)
+            | Q(category__name__icontains=q)
+        )
+    if category_filter:
+        products = products.filter(category_id=category_filter)
+
+    products = products.prefetch_related(
+        Prefetch(
+            "inventories",
+            queryset=Inventory.objects.filter(branch=branch).order_by("id"),
+            to_attr="inventories_cache",
+        ),
+    )
+    wishlist_product_ids = set(customer.wishlist_items.values_list("product_id", flat=True)) if customer is not None else set()
+
+    product_cards: list[dict[str, object]] = []
+    for product in products:
+        inventory = product.inventories_cache[0] if getattr(product, "inventories_cache", None) else None
+        available = inventory.available if inventory else 0
+        if stock_filter == "in" and available <= 0:
+            continue
+        if stock_filter == "out" and available > 0:
+            continue
+        product_cards.append(
+            {
+                "product": product,
+                "inventory": inventory,
+                "available": available,
+                "is_saved": product.id in wishlist_product_ids,
+            }
+        )
+
+    return render(
+        request,
+        "core/customer_product_list.html",
+        {
+            "customer": customer,
+            "is_public_browse": customer is None,
+            "product_cards": product_cards,
+            "categories": ProductCategory.objects.order_by("name"),
+            "filters": {"q": q, "category": category_filter, "stock": stock_filter},
+        },
+    )
+
+
+def customer_product_detail(request: HttpRequest, product_id: int) -> HttpResponse:
+    customer = _get_customer_account(request.user) if request.user.is_authenticated else None
+    branch = customer.branch if customer is not None else Branch.objects.order_by("id").first()
+    if branch is None:
+        messages.error(request, "No branch is configured yet for product browsing.")
+        return redirect("login")
+    product = get_object_or_404(
+        Product.objects.select_related("category").prefetch_related(
+            Prefetch(
+                "inventories",
+                queryset=Inventory.objects.filter(branch=branch).order_by("id"),
+                to_attr="inventories_cache",
+            ),
+        ),
+        pk=product_id,
+    )
+    inventory = product.inventories_cache[0] if getattr(product, "inventories_cache", None) else None
+    wishlist_item = customer.wishlist_items.filter(product=product).first() if customer is not None else None
+    form = WishlistItemForm(request.POST or None, instance=wishlist_item)
+    if request.method == "POST" and customer is None:
+        messages.info(request, "Create a customer account first so you can save items and continue with your order request.")
+        return redirect(f"{reverse('customer_signup')}?next={reverse('customer_product_detail', args=[product.id])}")
+    if request.method == "POST" and form.is_valid():
+        item = form.save(commit=False)
+        item.customer = customer
+        item.product = product
+        item.save()
+        messages.success(request, f"{product.name} was added to your saved items.")
+        return redirect("customer_product_detail", product_id=product.id)
+
+    return render(
+        request,
+        "core/customer_product_detail.html",
+        {
+            "customer": customer,
+            "product": product,
+            "inventory": inventory,
+            "wishlist_item": wishlist_item,
+            "wishlist_form": form,
+            "is_public_browse": customer is None,
+        },
+    )
+
+
+@customer_required
+def customer_wishlist(request: HttpRequest) -> HttpResponse:
+    customer = _get_customer_account(request.user)
+    assert customer is not None
+    items = list(
+        customer.wishlist_items.select_related("product", "product__category").order_by("-created_at")
+    )
+    return render(request, "core/customer_wishlist.html", {"customer": customer, "items": items})
+
+
+@customer_required
+def customer_wishlist_remove(request: HttpRequest, item_id: int) -> HttpResponse:
+    customer = _get_customer_account(request.user)
+    assert customer is not None
+    item = get_object_or_404(WishlistItem, pk=item_id, customer=customer)
+    if request.method == "POST":
+        product_name = item.product.name
+        item.delete()
+        messages.success(request, f"{product_name} was removed from your wishlist.")
+    return redirect("customer_wishlist")
+
+
+@customer_required
+def customer_account(request: HttpRequest) -> HttpResponse:
+    customer = _get_customer_account(request.user)
+    assert customer is not None
+    return render(request, "core/customer_account.html", {"customer": customer})
+
+
+@customer_required
+def customer_orders(request: HttpRequest) -> HttpResponse:
+    customer = _get_customer_account(request.user)
+    assert customer is not None
+    orders = list(
+        customer.orders.prefetch_related("items__product", "payments").order_by("-created_at")
+    )
+    return render(request, "core/customer_orders.html", {"customer": customer, "orders": orders})
+
+
 @login_required
 def dashboard(request: HttpRequest) -> HttpResponse:
     """
     Simple role-based dashboard.
     """
+    if _is_customer_user(request.user):
+        return redirect("customer_dashboard")
+
     role = getattr(getattr(request.user, "profile", None), "role", None)
     active_branch = _get_active_branch(request.user)
     today = timezone.now().date()

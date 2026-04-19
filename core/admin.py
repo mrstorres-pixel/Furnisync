@@ -15,6 +15,7 @@ from .models import (
     ProductCategory,
     Receipt,
     UserProfile,
+    WishlistItem,
 )
 
 # Unregister Django's default Group model - we use role-based access only
@@ -30,9 +31,9 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ("full_name", "phone", "branch", "installment_plan", "created_at")
+    list_display = ("full_name", "phone", "branch", "user", "installment_plan", "created_at")
     list_filter = ("branch",)
-    search_fields = ("full_name", "phone", "email")
+    search_fields = ("full_name", "phone", "email", "user__username")
 
 
 @admin.register(ProductCategory)
@@ -46,6 +47,13 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ("name", "category", "sku", "price")
     list_filter = ("category",)
     search_fields = ("name", "sku", "category__name")
+
+
+@admin.register(WishlistItem)
+class WishlistItemAdmin(admin.ModelAdmin):
+    list_display = ("customer", "product", "quantity", "created_at")
+    list_filter = ("customer__branch",)
+    search_fields = ("customer__full_name", "product__name", "product__sku")
 
 
 @admin.register(Inventory)
