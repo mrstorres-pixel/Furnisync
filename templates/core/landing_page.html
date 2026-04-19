@@ -1,153 +1,122 @@
 {% extends "base_customer.html" %}
-{% block title %}Furnisync Furniture Catalog{% endblock %}
-{% block header %}Furniture Shopping Starts Here{% endblock %}
-{% block header_subtitle %}Browse furniture as a guest, save the items you want, and create an account only when you are ready to continue with your purchase request.{% endblock %}
+{% block title %}Furnisync Home{% endblock %}
+{% block header %}Furnisync{% endblock %}
+{% block header_subtitle %}{% if branch %}{{ branch.name }}{% else %}Furniture Catalog{% endif %}{% endblock %}
 {% block content %}
-<section class="relative overflow-hidden rounded-[2.25rem] border border-stone-200 bg-white shadow-[0_28px_80px_-48px_rgba(15,23,42,0.45)]">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(95,118,82,0.22),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(39,51,34,0.16),_transparent_30%),linear-gradient(135deg,_#fffdf8,_#f5f5f4)]"></div>
-    <div class="relative grid gap-10 px-8 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:px-12 lg:py-14">
+<section class="overflow-hidden rounded-[2.5rem] border border-stone-200 bg-[linear-gradient(135deg,_#fbfaf7,_#efe8de)] shadow-[0_28px_80px_-48px_rgba(15,23,42,0.38)]">
+    <div class="grid gap-8 px-8 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:px-12 lg:py-14">
         <div class="max-w-3xl">
-            <div class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-brand-700 shadow-sm backdrop-blur">
-                <span class="h-2.5 w-2.5 rounded-full bg-brand-500"></span>
-                {% if branch %}Now serving {{ branch.name }}{% else %}Customer browsing is open{% endif %}
-            </div>
-            <h2 class="mt-6 max-w-3xl text-4xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-6xl">
-                Discover furniture with a softer, simpler path to purchase.
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-700">Crafted Living</p>
+            <h2 class="mt-5 text-4xl font-black tracking-[-0.05em] text-slate-950 sm:text-5xl lg:text-6xl">
+                Furniture chosen for warm, modern homes.
             </h2>
             <p class="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-                Start as a guest, explore the available catalog, shortlist the pieces you like, and only create an account when you are ready to continue with your order request.
+                Explore statement pieces, practical storage, dining essentials, and everyday comfort from one curated catalog.
             </p>
 
             <div class="mt-8 flex flex-wrap gap-3">
-                <a href="{% url 'customer_product_list' %}" class="rounded-2xl bg-brand-700 px-6 py-4 text-sm font-semibold text-white shadow-[0_14px_30px_-18px_rgba(57,74,49,0.8)] transition hover:-translate-y-0.5 hover:bg-brand-800">
-                    Browse Items
+                <a href="{% url 'customer_product_list' %}" class="rounded-2xl bg-brand-700 px-6 py-4 text-sm font-semibold text-white shadow-[0_16px_30px_-18px_rgba(57,74,49,0.7)] transition hover:-translate-y-0.5 hover:bg-brand-800">
+                    Shop Collection
                 </a>
                 <a href="{% url 'customer_signup' %}" class="rounded-2xl border border-stone-300 bg-white px-6 py-4 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-stone-100">
-                    Create Customer Account
-                </a>
-                <a href="{% url 'login' %}" class="rounded-2xl px-6 py-4 text-sm font-semibold text-slate-500 transition hover:bg-white/80 hover:text-slate-700">
-                    Staff Login
+                    Create Account
                 </a>
             </div>
 
             <div class="mt-10 grid gap-4 sm:grid-cols-3">
-                <div class="rounded-[1.6rem] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur">
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-brand-600">Browse Freely</p>
-                    <p class="mt-3 text-sm leading-6 text-slate-600">Visitors can see the product catalog right away without being forced into registration.</p>
+                <div class="rounded-[1.6rem] border border-white/70 bg-white/70 p-5 shadow-sm backdrop-blur">
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Catalog</p>
+                    <div class="mt-3 text-3xl font-black tracking-tight text-slate-950">{{ product_count }}</div>
                 </div>
-                <div class="rounded-[1.6rem] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur">
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-brand-600">Save Later</p>
-                    <p class="mt-3 text-sm leading-6 text-slate-600">Create an account only when you want to save furniture items and continue the buying journey.</p>
+                <div class="rounded-[1.6rem] border border-white/70 bg-white/70 p-5 shadow-sm backdrop-blur">
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Categories</p>
+                    <div class="mt-3 text-3xl font-black tracking-tight text-slate-950">{{ category_count }}</div>
                 </div>
-                <div class="rounded-[1.6rem] border border-white/70 bg-white/75 p-5 shadow-sm backdrop-blur">
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-brand-600">Track Orders</p>
-                    <p class="mt-3 text-sm leading-6 text-slate-600">Once registered, customers can revisit saved items and monitor their account activity.</p>
+                <div class="rounded-[1.6rem] border border-white/70 bg-white/70 p-5 shadow-sm backdrop-blur">
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Service</p>
+                    <div class="mt-3 text-lg font-bold text-slate-950">Customer Accounts</div>
                 </div>
             </div>
         </div>
 
-        <div class="grid gap-4 self-stretch">
-            <div class="rounded-[2rem] border border-brand-200/60 bg-gradient-to-br from-brand-700 via-brand-800 to-slate-950 p-7 text-white shadow-[0_26px_50px_-30px_rgba(15,23,42,0.7)]">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-100/90">Customer Journey</p>
-                <div class="mt-6 space-y-4">
-                    <div class="rounded-2xl bg-white/10 px-4 py-4 backdrop-blur">
-                        <p class="text-sm font-semibold">1. Explore the catalog</p>
-                        <p class="mt-1 text-sm text-brand-50/80">Compare products, prices, and current availability.</p>
+        <div class="grid gap-4">
+            <div class="rounded-[2rem] border border-stone-200/60 bg-white/80 p-6 shadow-sm backdrop-blur">
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-600">Featured Categories</p>
+                <div class="mt-5 grid grid-cols-2 gap-3">
+                    <div class="rounded-[1.5rem] bg-stone-100 px-4 py-5">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Living</p>
+                        <p class="mt-2 text-lg font-bold text-slate-950">Accent Pieces</p>
                     </div>
-                    <div class="rounded-2xl bg-white/10 px-4 py-4 backdrop-blur">
-                        <p class="text-sm font-semibold">2. Create an account when ready</p>
-                        <p class="mt-1 text-sm text-brand-50/80">Registration happens at the moment of intent, not before discovery.</p>
+                    <div class="rounded-[1.5rem] bg-white px-4 py-5 shadow-sm">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Dining</p>
+                        <p class="mt-2 text-lg font-bold text-slate-950">Tables & Sets</p>
                     </div>
-                    <div class="rounded-2xl bg-white/10 px-4 py-4 backdrop-blur">
-                        <p class="text-sm font-semibold">3. Continue through the store workflow</p>
-                        <p class="mt-1 text-sm text-brand-50/80">The system keeps the existing internal order process while giving customers a friendlier starting point.</p>
+                    <div class="rounded-[1.5rem] bg-white px-4 py-5 shadow-sm">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Bedroom</p>
+                        <p class="mt-2 text-lg font-bold text-slate-950">Frames & Storage</p>
+                    </div>
+                    <div class="rounded-[1.5rem] bg-stone-100 px-4 py-5">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Outdoor</p>
+                        <p class="mt-2 text-lg font-bold text-slate-950">Open-Air Comfort</p>
                     </div>
                 </div>
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-3">
-                <div class="rounded-[1.6rem] border border-stone-200 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Product Lines</p>
-                    <div class="mt-3 text-4xl font-black tracking-tight text-slate-950">{{ product_count }}</div>
-                </div>
-                <div class="rounded-[1.6rem] border border-stone-200 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Categories</p>
-                    <div class="mt-3 text-4xl font-black tracking-tight text-slate-950">{{ category_count }}</div>
-                </div>
-                <div class="rounded-[1.6rem] border border-stone-200 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Mode</p>
-                    <div class="mt-3 text-lg font-bold text-slate-950">Guest-First</div>
-                    <p class="mt-2 text-sm text-slate-500">Account only when needed</p>
+            <div class="rounded-[2rem] border border-brand-200/60 bg-gradient-to-br from-brand-700 via-brand-800 to-slate-950 p-7 text-white shadow-[0_26px_50px_-30px_rgba(15,23,42,0.7)]">
+                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-100/90">Store Access</p>
+                <div class="mt-5 flex flex-wrap gap-3">
+                    <a href="{% url 'customer_product_list' %}" class="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-stone-100">
+                        Browse Items
+                    </a>
+                    <a href="{% url 'login' %}" class="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">
+                        Staff Login
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="mt-8 grid gap-6 lg:grid-cols-[0.78fr_1.22fr]">
-    <div class="rounded-[2rem] border border-stone-200 bg-white p-8 shadow-sm">
-        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-600">Why this feels better</p>
-        <h3 class="mt-4 text-3xl font-black tracking-[-0.03em] text-slate-950">A homepage that welcomes people before it sells to them.</h3>
-        <p class="mt-5 text-sm leading-7 text-slate-600">
-            Instead of dropping visitors straight into a product table, the landing page now introduces the customer experience, frames the account-creation step, and makes the store flow easier to understand during demos.
-        </p>
-        <div class="mt-8 space-y-4">
-            <div class="rounded-2xl border border-stone-200 bg-stone-50 px-5 py-4">
-                <p class="font-semibold text-slate-900">Public browsing stays simple</p>
-                <p class="mt-1 text-sm text-slate-600">The catalog remains accessible through a clear browsing path for guests.</p>
-            </div>
-            <div class="rounded-2xl border border-stone-200 bg-stone-50 px-5 py-4">
-                <p class="font-semibold text-slate-900">Staff access stays separate</p>
-                <p class="mt-1 text-sm text-slate-600">The staff portal remains tucked behind the dedicated login entry point.</p>
-            </div>
-            <div class="rounded-2xl border border-stone-200 bg-stone-50 px-5 py-4">
-                <p class="font-semibold text-slate-900">The demo story becomes clearer</p>
-                <p class="mt-1 text-sm text-slate-600">You can now explain browse, signup, and order follow-up as a deliberate customer journey.</p>
-            </div>
+<section class="mt-8 rounded-[2rem] border border-stone-200 bg-white p-8 shadow-sm">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-600">Featured Items</p>
+            <h3 class="mt-3 text-3xl font-black tracking-[-0.03em] text-slate-950">New arrivals and bestsellers</h3>
         </div>
+        <a href="{% url 'customer_product_list' %}" class="rounded-2xl border border-stone-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-stone-100">
+            View Full Catalog
+        </a>
     </div>
 
-    <div class="rounded-[2rem] border border-stone-200 bg-white p-8 shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-600">Featured Items</p>
-                <h3 class="mt-3 text-3xl font-black tracking-[-0.03em] text-slate-950">Start browsing without signing in</h3>
-            </div>
-            <a href="{% url 'customer_product_list' %}" class="rounded-2xl border border-stone-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-stone-100">
-                View Full Catalog
-            </a>
-        </div>
-
-        <div class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {% for card in featured_cards %}
-                <article class="group flex h-full flex-col rounded-[1.75rem] border border-stone-200 bg-[linear-gradient(180deg,_#ffffff,_#f8fafc)] p-6 transition hover:-translate-y-1 hover:shadow-[0_24px_44px_-30px_rgba(15,23,42,0.5)]">
-                    <div class="flex items-start justify-between gap-4">
-                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-brand-600">{{ card.product.category.name|default:"Uncategorized" }}</p>
-                        <span class="rounded-full px-3 py-1 text-xs font-semibold {% if card.available > 0 %}bg-emerald-100 text-emerald-700{% else %}bg-amber-100 text-amber-700{% endif %}">
-                            {% if card.available > 0 %}Available{% else %}Ask Store{% endif %}
-                        </span>
-                    </div>
-                    <h4 class="mt-4 text-xl font-bold text-slate-950">{{ card.product.name }}</h4>
-                    <p class="mt-2 text-sm text-slate-500">SKU {{ card.product.sku }}</p>
-                    <p class="mt-4 min-h-[84px] text-sm leading-6 text-slate-600">{{ card.product.description|default:"Browse this furniture item to view more details and save it for later." }}</p>
-                    <div class="mt-auto pt-6">
-                        <div>
-                            <p class="text-2xl font-black text-slate-950">&#8369;{{ card.product.price }}</p>
-                            <p class="mt-1 text-sm {% if card.available > 0 %}text-emerald-700{% else %}text-amber-700{% endif %}">
-                                {% if card.available > 0 %}{{ card.available }} available now{% else %}Currently unavailable{% endif %}
-                            </p>
-                        </div>
-                        <a href="{% url 'customer_product_detail' card.product.id %}" class="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-stone-100 px-4 py-3 text-sm font-semibold text-slate-700 transition group-hover:bg-brand-700 group-hover:text-white">
-                            View Item
-                        </a>
-                    </div>
-                </article>
-            {% empty %}
-                <div class="rounded-[1.75rem] border border-dashed border-stone-300 bg-stone-50 px-6 py-12 text-sm text-slate-500 md:col-span-2 xl:col-span-3">
-                    No featured products are available yet.
+    <div class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {% for card in featured_cards %}
+            <article class="group flex h-full flex-col rounded-[1.75rem] border border-stone-200 bg-[linear-gradient(180deg,_#ffffff,_#f8fafc)] p-6 transition hover:-translate-y-1 hover:shadow-[0_24px_44px_-30px_rgba(15,23,42,0.5)]">
+                <div class="flex items-start justify-between gap-4">
+                    <p class="text-xs font-semibold uppercase tracking-[0.22em] text-brand-600">{{ card.product.category.name|default:"Uncategorized" }}</p>
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold {% if card.available > 0 %}bg-emerald-100 text-emerald-700{% else %}bg-amber-100 text-amber-700{% endif %}">
+                        {% if card.available > 0 %}In Stock{% else %}Ask Store{% endif %}
+                    </span>
                 </div>
-            {% endfor %}
-        </div>
+                <h4 class="mt-4 text-xl font-bold text-slate-950">{{ card.product.name }}</h4>
+                <p class="mt-2 text-sm text-slate-500">SKU {{ card.product.sku }}</p>
+                <p class="mt-4 min-h-[84px] text-sm leading-6 text-slate-600">{{ card.product.description|default:"Browse this furniture item to view more details." }}</p>
+                <div class="mt-auto pt-6">
+                    <div>
+                        <p class="text-2xl font-black text-slate-950">&#8369;{{ card.product.price }}</p>
+                        <p class="mt-1 text-sm {% if card.available > 0 %}text-emerald-700{% else %}text-amber-700{% endif %}">
+                            {% if card.available > 0 %}{{ card.available }} available now{% else %}Currently unavailable{% endif %}
+                        </p>
+                    </div>
+                    <a href="{% url 'customer_product_detail' card.product.id %}" class="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-stone-100 px-4 py-3 text-sm font-semibold text-slate-700 transition group-hover:bg-brand-700 group-hover:text-white">
+                        View Item
+                    </a>
+                </div>
+            </article>
+        {% empty %}
+            <div class="rounded-[1.75rem] border border-dashed border-stone-300 bg-stone-50 px-6 py-12 text-sm text-slate-500 md:col-span-2 xl:col-span-3">
+                No featured products are available yet.
+            </div>
+        {% endfor %}
     </div>
 </section>
 {% endblock %}
