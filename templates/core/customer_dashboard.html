@@ -3,6 +3,16 @@
 {% block header %}Welcome, {{ customer.full_name }}{% endblock %}
 {% block header_subtitle %}Browse available furniture, save the pieces you want to buy, and keep track of your account activity in one place.{% endblock %}
 {% block content %}
+<section class="mb-6 rounded-3xl border border-stone-200 bg-white p-4 shadow-sm">
+    <div class="flex flex-wrap gap-3">
+        <a href="{% url 'customer_product_list' %}" class="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800">Browse Items</a>
+        <a href="{% url 'customer_orders' %}" class="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800">My Orders</a>
+        <a href="{% url 'customer_wishlist' %}" class="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800">Wishlist</a>
+        <a href="{% url 'customer_requests' %}" class="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800">Requests</a>
+        <a href="{% url 'customer_account' %}" class="rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800">Account Settings</a>
+    </div>
+</section>
+
 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
     <div class="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
         <p class="text-sm text-slate-500">Orders</p>

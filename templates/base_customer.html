@@ -48,6 +48,7 @@
                 </div>
                 <div class="flex flex-wrap items-center gap-3 text-sm">
                     {% if user.is_authenticated %}
+                        <a href="{% url 'customer_dashboard' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Dashboard</a>
                         <a href="{% url 'customer_product_list' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Browse Items</a>
                         <a href="{% url 'customer_requests' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Requests</a>
                         <a href="{% url 'customer_account' %}" class="rounded-xl px-4 py-3 font-medium text-slate-700 transition hover:bg-stone-100">Account</a>
