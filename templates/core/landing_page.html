@@ -120,7 +120,7 @@
 
         <div class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {% for card in featured_cards %}
-                <article class="group rounded-[1.75rem] border border-stone-200 bg-[linear-gradient(180deg,_#ffffff,_#f8fafc)] p-6 transition hover:-translate-y-1 hover:shadow-[0_24px_44px_-30px_rgba(15,23,42,0.5)]">
+                <article class="group flex h-full flex-col rounded-[1.75rem] border border-stone-200 bg-[linear-gradient(180deg,_#ffffff,_#f8fafc)] p-6 transition hover:-translate-y-1 hover:shadow-[0_24px_44px_-30px_rgba(15,23,42,0.5)]">
                     <div class="flex items-start justify-between gap-4">
                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-brand-600">{{ card.product.category.name|default:"Uncategorized" }}</p>
                         <span class="rounded-full px-3 py-1 text-xs font-semibold {% if card.available > 0 %}bg-emerald-100 text-emerald-700{% else %}bg-amber-100 text-amber-700{% endif %}">
@@ -130,14 +130,14 @@
                     <h4 class="mt-4 text-xl font-bold text-slate-950">{{ card.product.name }}</h4>
                     <p class="mt-2 text-sm text-slate-500">SKU {{ card.product.sku }}</p>
                     <p class="mt-4 min-h-[84px] text-sm leading-6 text-slate-600">{{ card.product.description|default:"Browse this furniture item to view more details and save it for later." }}</p>
-                    <div class="mt-6 flex items-end justify-between gap-4">
+                    <div class="mt-auto pt-6">
                         <div>
                             <p class="text-2xl font-black text-slate-950">&#8369;{{ card.product.price }}</p>
                             <p class="mt-1 text-sm {% if card.available > 0 %}text-emerald-700{% else %}text-amber-700{% endif %}">
                                 {% if card.available > 0 %}{{ card.available }} available now{% else %}Currently unavailable{% endif %}
                             </p>
                         </div>
-                        <a href="{% url 'customer_product_detail' card.product.id %}" class="rounded-2xl bg-stone-100 px-4 py-3 text-sm font-semibold text-slate-700 transition group-hover:bg-brand-700 group-hover:text-white">
+                        <a href="{% url 'customer_product_detail' card.product.id %}" class="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-stone-100 px-4 py-3 text-sm font-semibold text-slate-700 transition group-hover:bg-brand-700 group-hover:text-white">
                             View Item
                         </a>
                     </div>
