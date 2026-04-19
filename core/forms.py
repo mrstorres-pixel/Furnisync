@@ -119,7 +119,6 @@ class CustomerSignupForm(UserCreationForm):
     email = forms.EmailField()
     phone = forms.CharField(max_length=50, required=False)
     address = forms.CharField(widget=forms.Textarea(attrs={"rows": 3}), required=False)
-    installment_plan = forms.CharField(max_length=255, required=False)
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -151,7 +150,7 @@ class CustomerSignupForm(UserCreationForm):
                 phone=self.cleaned_data["phone"],
                 email=self.cleaned_data["email"],
                 address=self.cleaned_data["address"],
-                installment_plan=self.cleaned_data["installment_plan"] or "Customer-selected items",
+                installment_plan="To be assigned during order processing",
                 branch=self.branch,
             )
         return user
