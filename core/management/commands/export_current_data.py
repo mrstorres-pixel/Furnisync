@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, datetime, time
 from decimal import Decimal
 from pathlib import Path
 
@@ -9,12 +10,14 @@ from django.db import models
 from django.utils import timezone
 
 from openpyxl import Workbook
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.styles import Font
 
 from core.models import (
     AuditLog,
     Branch,
     Customer,
+    CustomerPurchaseRequest,
     DailyReconciliation,
     Inventory,
     InventoryAdjustment,
@@ -27,6 +30,7 @@ from core.models import (
     ProductCategory,
     Receipt,
     UserProfile,
+    WishlistItem,
 )
 
 User = get_user_model()
@@ -38,22 +42,38 @@ def _sheet_title(title: str) -> str:
     return clean[:31] or "Sheet"
 
 
+def _clean_text(value: str) -> str:
+    return ILLEGAL_CHARACTERS_RE.sub("", value)
+
+
 def _serialize_value(value):
     if value is None:
         return ""
     if isinstance(value, models.Model):
-        return str(value)
+        return _clean_text(str(value))
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return value
     if isinstance(value, Decimal):
         return float(value)
+    if isinstance(value, datetime):
+        if timezone.is_aware(value):
+            value = timezone.localtime(value).replace(tzinfo=None)
+        return value.isoformat(sep=" ")
+    if isinstance(value, (date, time)):
+        return value.isoformat()
     if isinstance(value, (dict, list, tuple)):
-        return str(value)
+        return _clean_text(str(value))
     if isinstance(value, models.fields.files.FieldFile):
         if not value:
             return ""
         try:
-            return value.url
+            return _clean_text(value.url)
         except Exception:
-            return value.name or ""
+            return _clean_text(value.name or "")
+    if isinstance(value, str):
+        return _clean_text(value)
     return value
 
 
@@ -100,6 +120,18 @@ class Command(BaseCommand):
             ("User Profiles", UserProfile.objects.select_related("user", "branch").all().order_by("id"), None),
             ("Branches", Branch.objects.all().order_by("id"), None),
             ("Customers", Customer.objects.select_related("branch").all().order_by("id"), None),
+            ("Wishlist Items", WishlistItem.objects.select_related("customer", "product").all().order_by("id"), None),
+            (
+                "Customer Purchase Requests",
+                CustomerPurchaseRequest.objects.select_related(
+                    "customer",
+                    "branch",
+                    "product",
+                    "converted_order",
+                    "reviewed_by",
+                ).all().order_by("id"),
+                None,
+            ),
             ("Product Categories", ProductCategory.objects.all().order_by("id"), None),
             ("Products", Product.objects.select_related("category").all().order_by("id"), None),
             ("Inventory", Inventory.objects.select_related("product", "branch").all().order_by("id"), None),
@@ -140,6 +172,7 @@ class Command(BaseCommand):
             summary_rows.append([sheet_name, count])
 
         summary_sheet = workbook.create_sheet(title="Summary", index=0)
+        summary_sheet.append(["Item", "Value"])
         for row in summary_rows:
             summary_sheet.append(row)
         for cell in summary_sheet[1]:
