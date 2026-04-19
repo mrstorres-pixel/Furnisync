@@ -61,6 +61,9 @@ from .models import (
 )
 
 User = get_user_model()
+PREFERRED_PUBLIC_BRANCH_NAMES = [
+    "Bacolod Main Showroom",
+]
 
 
 def _get_client_ip(request: HttpRequest) -> str | None:
@@ -93,6 +96,11 @@ def _get_active_branch(user: User):
 
 
 def _get_public_branch():
+    for branch_name in PREFERRED_PUBLIC_BRANCH_NAMES:
+        branch = Branch.objects.filter(name=branch_name).order_by("id").first()
+        if branch is not None:
+            return branch
+
     branch = (
         Branch.objects.annotate(
             inventory_lines=Count("inventories", distinct=True),
