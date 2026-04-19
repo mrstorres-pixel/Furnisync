@@ -64,14 +64,10 @@
 
             <div class="rounded-[2rem] border border-brand-200/60 bg-gradient-to-br from-brand-700 via-brand-800 to-slate-950 p-7 text-white shadow-[0_26px_50px_-30px_rgba(15,23,42,0.7)]">
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-brand-100/90">Store Access</p>
-                <div class="mt-5 flex flex-wrap gap-3">
-                    <a href="{% url 'customer_product_list' %}" class="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-stone-100">
-                        Browse Items
-                    </a>
-                    <a href="{% url 'login' %}" class="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">
-                        Staff Login
-                    </a>
-                </div>
+                <h3 class="mt-4 text-2xl font-black tracking-tight text-white">Browse the collection and continue when you are ready.</h3>
+                <a href="{% url 'customer_product_list' %}" class="mt-5 inline-flex rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-stone-100">
+                    Browse Items
+                </a>
             </div>
         </div>
     </div>
