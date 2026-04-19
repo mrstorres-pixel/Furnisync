@@ -34,6 +34,7 @@ from core.models import (
 )
 
 User = get_user_model()
+MAX_EXCEL_TEXT_LENGTH = 32767
 
 
 def _sheet_title(title: str) -> str:
@@ -43,7 +44,13 @@ def _sheet_title(title: str) -> str:
 
 
 def _clean_text(value: str) -> str:
-    return ILLEGAL_CHARACTERS_RE.sub("", value)
+    normalized = value.encode("utf-8", "ignore").decode("utf-8", "ignore")
+    normalized = normalized.replace("\x00", "")
+    normalized = normalized.replace("\ufffe", "").replace("\uffff", "")
+    normalized = ILLEGAL_CHARACTERS_RE.sub("", normalized)
+    if len(normalized) > MAX_EXCEL_TEXT_LENGTH:
+        normalized = normalized[: MAX_EXCEL_TEXT_LENGTH - 3] + "..."
+    return normalized
 
 
 def _serialize_value(value):
