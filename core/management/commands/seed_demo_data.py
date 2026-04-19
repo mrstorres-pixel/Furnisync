@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from decimal import Decimal, ROUND_HALF_UP
+import random
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
@@ -393,11 +394,12 @@ class Command(BaseCommand):
             "0948", "0949", "0950", "0951", "0955", "0956", "0961", "0963", "0965", "0966",
             "0967", "0975", "0977", "0979", "0981", "0985", "0989", "0994", "0995",
         ]
+        phone_suffixes = random.Random(20260419).sample(range(1000000, 10000000), 50)
 
         customers: list[Customer] = []
         for idx in range(50):
             full_name = f"{first_names[idx]} {last_names[idx]}"
-            phone = f"{phone_prefixes[idx % len(phone_prefixes)]}{1000000 + (idx * 173):07d}"[:11]
+            phone = f"{phone_prefixes[idx % len(phone_prefixes)]}{phone_suffixes[idx]:07d}"
             email = (
                 f"{first_names[idx].lower().replace(' ', '')}.{last_names[idx].lower().replace(' ', '')}@gmail.com"
                 if idx % 4 != 0
