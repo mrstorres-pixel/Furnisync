@@ -88,6 +88,18 @@ def _get_active_branch(user: User):
     return Branch.objects.order_by("id").first()
 
 
+def _get_public_branch():
+    branch = (
+        Branch.objects.annotate(
+            inventory_lines=Count("inventories", distinct=True),
+            customer_count=Count("customers", distinct=True),
+        )
+        .order_by("-inventory_lines", "-customer_count", "id")
+        .first()
+    )
+    return branch
+
+
 def _get_collectible_orders_for_user(user: User):
     active_branch = _get_active_branch(user)
     qs = (
@@ -377,7 +389,7 @@ def customer_signup(request: HttpRequest) -> HttpResponse:
         return redirect("dashboard")
 
     next_url = request.POST.get("next") or request.GET.get("next") or ""
-    branch = Branch.objects.order_by("id").first()
+    branch = _get_public_branch()
     if branch is None:
         messages.error(request, "Create a branch first before opening customer registration.")
         return redirect("login")
@@ -397,7 +409,7 @@ def landing_page(request: HttpRequest) -> HttpResponse:
             return redirect("customer_dashboard")
         return redirect("dashboard")
 
-    branch = Branch.objects.order_by("id").first()
+    branch = _get_public_branch()
     featured_products = list(
         Product.objects.select_related("category").prefetch_related(
             Prefetch(
@@ -468,7 +480,7 @@ def customer_product_list(request: HttpRequest) -> HttpResponse:
     q = request.GET.get("q", "").strip()
     category_filter = request.GET.get("category", "").strip()
     stock_filter = request.GET.get("stock", "").strip()
-    branch = customer.branch if customer is not None else Branch.objects.order_by("id").first()
+    branch = customer.branch if customer is not None else _get_public_branch()
     if branch is None:
         messages.error(request, "No branch is configured yet for product browsing.")
         return redirect("login")
@@ -525,7 +537,7 @@ def customer_product_list(request: HttpRequest) -> HttpResponse:
 
 def customer_product_detail(request: HttpRequest, product_id: int) -> HttpResponse:
     customer = _get_customer_account(request.user) if request.user.is_authenticated else None
-    branch = customer.branch if customer is not None else Branch.objects.order_by("id").first()
+    branch = customer.branch if customer is not None else _get_public_branch()
     if branch is None:
         messages.error(request, "No branch is configured yet for product browsing.")
         return redirect("login")
