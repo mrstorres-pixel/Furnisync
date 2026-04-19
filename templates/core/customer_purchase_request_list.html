@@ -43,6 +43,7 @@
                     <th class="px-6">Quantity</th>
                     <th class="px-6">Status</th>
                     <th class="px-6">Created</th>
+                    <th class="px-6">Order</th>
                     <th class="px-6 text-right">Action</th>
                 </tr>
             </thead>
@@ -57,13 +58,20 @@
                         <td class="px-6 text-slate-700">{{ item.quantity }}</td>
                         <td class="px-6 text-slate-700">{{ item.get_status_display }}</td>
                         <td class="px-6 text-slate-500">{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                        <td class="px-6 text-slate-700">
+                            {% if item.converted_order %}
+                                <a href="{% url 'order_detail' item.converted_order.id %}" class="font-medium text-brand-700 hover:text-brand-800">Order #{{ item.converted_order.id }}</a>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
                         <td class="px-6 text-right">
                             <a href="{% url 'customer_purchase_request_detail' item.id %}" class="text-sm font-medium text-brand-700 hover:text-brand-800">Review</a>
                         </td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="6" class="px-6 py-10 text-center text-sm text-slate-500">No customer purchase requests yet.</td>
+                        <td colspan="7" class="px-6 py-10 text-center text-sm text-slate-500">No customer purchase requests yet.</td>
                     </tr>
                 {% endfor %}
             </tbody>

@@ -686,6 +686,58 @@ def customer_purchase_request_detail(request: HttpRequest, request_id: int) -> H
         request_qs = request_qs.filter(branch=active_branch)
     purchase_request = get_object_or_404(request_qs, pk=request_id)
 
+    if request.method == "POST" and request.POST.get("action") == "convert":
+        if purchase_request.converted_order_id:
+            messages.error(request, "This request has already been converted into an order.")
+            return redirect("customer_purchase_request_detail", request_id=purchase_request.id)
+
+        with transaction.atomic():
+            order = Order.objects.create(
+                customer=purchase_request.customer,
+                branch=purchase_request.branch,
+                status=OrderStatus.PENDING,
+                created_by=request.user,
+                last_modified_by=request.user,
+            )
+            OrderItem.objects.create(
+                order=order,
+                product=purchase_request.product,
+                quantity=purchase_request.quantity,
+                price=purchase_request.product.price,
+                subtotal=purchase_request.product.price * purchase_request.quantity,
+            )
+            purchase_request.status = CustomerPurchaseRequestStatus.CONVERTED
+            purchase_request.reviewed_by = request.user
+            purchase_request.reviewed_at = timezone.now()
+            purchase_request.converted_order = order
+            purchase_request.converted_at = timezone.now()
+            purchase_request.save(
+                update_fields=[
+                    "status",
+                    "reviewed_by",
+                    "reviewed_at",
+                    "converted_order",
+                    "converted_at",
+                ]
+            )
+            create_audit_log(
+                user=request.user,
+                action="Convert Customer Purchase Request",
+                instance=order,
+                old_values=None,
+                new_values={
+                    "purchase_request_id": purchase_request.id,
+                    "customer_id": order.customer_id,
+                    "product": purchase_request.product.name,
+                    "quantity": purchase_request.quantity,
+                    "status": order.status,
+                    "total_amount": str(order.total_amount),
+                },
+            )
+
+        messages.success(request, f"Purchase request converted into Order #{order.id}.")
+        return redirect("order_detail", order_id=order.id)
+
     if request.method == "POST":
         form = CustomerPurchaseRequestReviewForm(request.POST, instance=purchase_request)
         if form.is_valid():

@@ -29,6 +29,11 @@
                     <p class="mt-2 text-sm font-semibold text-slate-950">{% if item.reviewed_by %}{{ item.reviewed_by.username }}{% else %}Waiting for store review{% endif %}</p>
                 </div>
             </div>
+            {% if item.converted_order %}
+                <div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                    Converted to Order #{{ item.converted_order.id }}
+                </div>
+            {% endif %}
             {% if item.note %}
                 <div class="mt-4 rounded-2xl border border-stone-200 bg-white p-4 text-sm text-slate-600">
                     {{ item.note }}

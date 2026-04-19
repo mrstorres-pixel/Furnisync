@@ -124,6 +124,14 @@ class CustomerPurchaseRequest(models.Model):
         choices=CustomerPurchaseRequestStatus.choices,
         default=CustomerPurchaseRequestStatus.PENDING,
     )
+    converted_order = models.ForeignKey(
+        "Order",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="customer_purchase_requests",
+    )
+    converted_at = models.DateTimeField(null=True, blank=True)
     reviewed_by = models.ForeignKey(
         User,
         on_delete=models.PROTECT,

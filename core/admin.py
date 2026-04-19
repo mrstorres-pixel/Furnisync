@@ -154,7 +154,7 @@ class OrderChangeRequestAdmin(admin.ModelAdmin):
 
 @admin.register(CustomerPurchaseRequest)
 class CustomerPurchaseRequestAdmin(admin.ModelAdmin):
-    list_display = ("customer", "product", "branch", "quantity", "status", "reviewed_by", "created_at")
+    list_display = ("customer", "product", "branch", "quantity", "status", "converted_order", "reviewed_by", "created_at")
     list_filter = ("branch", "status", "created_at")
     search_fields = ("customer__full_name", "product__name", "product__sku")
 
