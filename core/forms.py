@@ -123,7 +123,7 @@ class CustomerSignupForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ("username", "full_name", "email", "phone", "address", "installment_plan", "password1", "password2")
+        fields = ("username", "email", "password1", "password2")
 
     def __init__(self, *args, branch=None, **kwargs):
         self.branch = branch
@@ -722,5 +722,6 @@ class UserProfileForm(forms.ModelForm):
             user.save()
             profile.save()
         return profile
+
 
 
