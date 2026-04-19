@@ -133,6 +133,7 @@
                         <a href="{% url 'customer_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Customer Records</a>
                         <a href="{% url 'create_order' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Create Order</a>
                         <a href="{% url 'order_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Order Register</a>
+                        <a href="{% url 'customer_purchase_request_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Customer Requests</a>
                         <a href="{% url 'product_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Catalog &amp; Stock</a>
                     </div>
                 {% elif user.profile.role == 'manager' %}
@@ -140,6 +141,7 @@
                         <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Operations Control</p>
                         <a href="{% url 'transaction_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Transactions</a>
                         <a href="{% url 'order_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Order Register</a>
+                        <a href="{% url 'customer_purchase_request_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Customer Requests</a>
                         <a href="{% url 'product_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Catalog &amp; Stock</a>
                         <a href="{% url 'customer_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Customers</a>
                         <a href="{% url 'employee_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Employees</a>
@@ -152,6 +154,7 @@
                         <p class="px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Business Oversight</p>
                         <a href="{% url 'transaction_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Transactions</a>
                         <a href="{% url 'order_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Orders</a>
+                        <a href="{% url 'customer_purchase_request_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Customer Requests</a>
                         <a href="{% url 'product_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Catalog &amp; Stock</a>
                         <a href="{% url 'customer_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Customers</a>
                         <a href="{% url 'employee_list' %}" class="block rounded-xl px-4 py-3 text-slate-300 transition hover:bg-slate-900 hover:text-white">Employees</a>

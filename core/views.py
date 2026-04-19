@@ -19,6 +19,8 @@ from django.utils import timezone
 from .forms import (
     CustomerPaymentConfirmationForm,
     CustomerForm,
+    CustomerPurchaseRequestForm,
+    CustomerPurchaseRequestReviewForm,
     CustomerSignupForm,
     DailyReconciliationForm,
     InventoryAdjustmentForm,
@@ -37,6 +39,8 @@ from .models import (
     AuditLog,
     Branch,
     Customer,
+    CustomerPurchaseRequest,
+    CustomerPurchaseRequestStatus,
     DailyReconciliation,
     Inventory,
     InventoryAdjustment,
@@ -451,6 +455,9 @@ def customer_dashboard(request: HttpRequest) -> HttpResponse:
     wishlist_items = list(
         customer.wishlist_items.select_related("product", "product__category").order_by("-created_at")[:6]
     )
+    purchase_requests = list(
+        customer.purchase_requests.select_related("product", "branch").order_by("-created_at")[:5]
+    )
     payments = list(
         Payment.objects.filter(order__customer=customer)
         .select_related("payment_receipt", "collector", "order")
@@ -464,10 +471,12 @@ def customer_dashboard(request: HttpRequest) -> HttpResponse:
             "customer": customer,
             "orders": orders[:5],
             "wishlist_items": wishlist_items,
+            "purchase_requests": purchase_requests,
             "recent_payments": payments,
             "dashboard_summary": {
                 "order_count": len(orders),
                 "wishlist_count": customer.wishlist_items.count(),
+                "request_count": customer.purchase_requests.count(),
                 "outstanding_total": outstanding_total,
                 "paid_orders": sum((1 for order in orders if order.remaining_balance <= Decimal("0.00")), 0),
             },
@@ -554,16 +563,28 @@ def customer_product_detail(request: HttpRequest, product_id: int) -> HttpRespon
     inventory = product.inventories_cache[0] if getattr(product, "inventories_cache", None) else None
     wishlist_item = customer.wishlist_items.filter(product=product).first() if customer is not None else None
     form = WishlistItemForm(request.POST or None, instance=wishlist_item)
+    request_form = CustomerPurchaseRequestForm(request.POST or None, prefix="request")
     if request.method == "POST" and customer is None:
         messages.info(request, "Create a customer account first so you can save items and continue with your order request.")
         return redirect(f"{reverse('customer_signup')}?next={reverse('customer_product_detail', args=[product.id])}")
-    if request.method == "POST" and form.is_valid():
+    action = request.POST.get("action")
+    if request.method == "POST" and action == "wishlist" and form.is_valid():
         item = form.save(commit=False)
         item.customer = customer
         item.product = product
         item.save()
         messages.success(request, f"{product.name} was added to your saved items.")
         return redirect("customer_product_detail", product_id=product.id)
+    if request.method == "POST" and action == "purchase_request" and request_form.is_valid():
+        CustomerPurchaseRequest.objects.create(
+            customer=customer,
+            branch=branch,
+            product=product,
+            quantity=request_form.cleaned_data["quantity"],
+            note=request_form.cleaned_data["note"],
+        )
+        messages.success(request, f"Your request for {product.name} was sent to the store for review.")
+        return redirect("customer_requests")
 
     return render(
         request,
@@ -575,6 +596,7 @@ def customer_product_detail(request: HttpRequest, product_id: int) -> HttpRespon
             "inventory": inventory,
             "wishlist_item": wishlist_item,
             "wishlist_form": form,
+            "request_form": request_form,
             "is_public_browse": customer is None,
         },
     )
@@ -617,6 +639,70 @@ def customer_orders(request: HttpRequest) -> HttpResponse:
         customer.orders.prefetch_related("items__product", "payments").order_by("-created_at")
     )
     return render(request, "core/customer_orders.html", {"customer": customer, "orders": orders})
+
+
+@customer_required
+def customer_requests(request: HttpRequest) -> HttpResponse:
+    customer = _get_customer_account(request.user)
+    assert customer is not None
+    requests = list(
+        customer.purchase_requests.select_related("product", "branch", "reviewed_by").order_by("-created_at")
+    )
+    return render(request, "core/customer_requests.html", {"customer": customer, "requests": requests})
+
+
+@role_required(UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
+def customer_purchase_request_list(request: HttpRequest) -> HttpResponse:
+    active_branch = _get_active_branch(request.user)
+    status_filter = request.GET.get("status", "").strip()
+    requests = CustomerPurchaseRequest.objects.select_related("customer", "product", "branch", "reviewed_by").order_by("-created_at")
+    if active_branch is not None:
+        requests = requests.filter(branch=active_branch)
+    if status_filter:
+        requests = requests.filter(status=status_filter)
+    requests = list(requests)
+    return render(
+        request,
+        "core/customer_purchase_request_list.html",
+        {
+            "requests": requests,
+            "filters": {"status": status_filter},
+            "status_choices": CustomerPurchaseRequestStatus.choices,
+            "request_summary": {
+                "count": len(requests),
+                "pending": sum((1 for item in requests if item.status == CustomerPurchaseRequestStatus.PENDING), 0),
+                "reviewed": sum((1 for item in requests if item.status == CustomerPurchaseRequestStatus.REVIEWED), 0),
+                "converted": sum((1 for item in requests if item.status == CustomerPurchaseRequestStatus.CONVERTED), 0),
+            },
+        },
+    )
+
+
+@role_required(UserRole.SECRETARY, UserRole.MANAGER, UserRole.OWNER)
+def customer_purchase_request_detail(request: HttpRequest, request_id: int) -> HttpResponse:
+    active_branch = _get_active_branch(request.user)
+    request_qs = CustomerPurchaseRequest.objects.select_related("customer", "product", "branch", "reviewed_by")
+    if active_branch is not None:
+        request_qs = request_qs.filter(branch=active_branch)
+    purchase_request = get_object_or_404(request_qs, pk=request_id)
+
+    if request.method == "POST":
+        form = CustomerPurchaseRequestReviewForm(request.POST, instance=purchase_request)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.reviewed_by = request.user
+            item.reviewed_at = timezone.now()
+            item.save()
+            messages.success(request, "Purchase request updated.")
+            return redirect("customer_purchase_request_detail", request_id=item.id)
+    else:
+        form = CustomerPurchaseRequestReviewForm(instance=purchase_request)
+
+    return render(
+        request,
+        "core/customer_purchase_request_detail.html",
+        {"purchase_request": purchase_request, "form": form},
+    )
 
 
 @login_required

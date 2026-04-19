@@ -106,6 +106,41 @@ class WishlistItem(models.Model):
         return f"{self.customer.full_name} wants {self.product.name}"
 
 
+class CustomerPurchaseRequestStatus(models.TextChoices):
+    PENDING = "pending", "Pending Review"
+    REVIEWED = "reviewed", "Reviewed"
+    CONVERTED = "converted", "Converted to Order"
+    CANCELLED = "cancelled", "Cancelled"
+
+
+class CustomerPurchaseRequest(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="purchase_requests")
+    branch = models.ForeignKey(Branch, on_delete=models.PROTECT, related_name="purchase_requests")
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="purchase_requests")
+    quantity = models.PositiveIntegerField(default=1)
+    note = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=CustomerPurchaseRequestStatus.choices,
+        default=CustomerPurchaseRequestStatus.PENDING,
+    )
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="reviewed_customer_purchase_requests",
+        null=True,
+        blank=True,
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"Request #{self.pk} - {self.customer.full_name} wants {self.product.name}"
+
+
 class Inventory(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="inventories")
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="inventories")

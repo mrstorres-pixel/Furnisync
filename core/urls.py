@@ -12,6 +12,7 @@ urlpatterns = [
     path("customer/wishlist/<int:item_id>/remove/", views.customer_wishlist_remove, name="customer_wishlist_remove"),
     path("customer/account/", views.customer_account, name="customer_account"),
     path("customer/orders/", views.customer_orders, name="customer_orders"),
+    path("customer/requests/", views.customer_requests, name="customer_requests"),
     # Customers & orders
     path("customers/new/", views.create_customer, name="create_customer"),
     path("customers/", views.customer_list, name="customer_list"),
@@ -51,6 +52,8 @@ urlpatterns = [
     path("employees/", views.employee_list, name="employee_list"),
     path("employees/<int:profile_id>/", views.employee_detail, name="employee_detail"),
     path("transactions/", views.transaction_list, name="transaction_list"),
+    path("customer-purchase-requests/", views.customer_purchase_request_list, name="customer_purchase_request_list"),
+    path("customer-purchase-requests/<int:request_id>/", views.customer_purchase_request_detail, name="customer_purchase_request_detail"),
     path("audit-trail/", views.audit_log_list, name="audit_log_list"),
     path("audit-trail/<int:log_id>/", views.audit_log_detail, name="audit_log_detail"),
     path("fraud-review/", views.fraud_review_list, name="fraud_review_list"),

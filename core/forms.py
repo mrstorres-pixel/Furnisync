@@ -13,6 +13,8 @@ from django.utils import timezone
 
 from .models import (
     Customer,
+    CustomerPurchaseRequest,
+    CustomerPurchaseRequestStatus,
     DailyReconciliation,
     Inventory,
     InventoryAdjustment,
@@ -165,6 +167,47 @@ class WishlistItemForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         apply_tailwind_classes(self)
         self.fields["quantity"].widget.attrs["min"] = "1"
+
+
+class CustomerPurchaseRequestForm(forms.ModelForm):
+    class Meta:
+        model = CustomerPurchaseRequest
+        fields = ["quantity", "note"]
+        widgets = {
+            "note": forms.Textarea(attrs={"rows": 4, "placeholder": "Optional note for the store"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        apply_tailwind_classes(self)
+        self.fields["quantity"].widget.attrs["min"] = "1"
+        self.fields["quantity"].label = "Quantity"
+        self.fields["note"].label = "Request Note"
+
+    def clean_quantity(self):
+        quantity = self.cleaned_data["quantity"]
+        if quantity <= 0:
+            raise forms.ValidationError("Quantity must be at least 1.")
+        return quantity
+
+
+class CustomerPurchaseRequestReviewForm(forms.ModelForm):
+    class Meta:
+        model = CustomerPurchaseRequest
+        fields = ["status", "note"]
+        widgets = {
+            "note": forms.Textarea(attrs={"rows": 4}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        apply_tailwind_classes(self)
+        self.fields["status"].choices = [
+            (CustomerPurchaseRequestStatus.PENDING, CustomerPurchaseRequestStatus.PENDING.label),
+            (CustomerPurchaseRequestStatus.REVIEWED, CustomerPurchaseRequestStatus.REVIEWED.label),
+            (CustomerPurchaseRequestStatus.CONVERTED, CustomerPurchaseRequestStatus.CONVERTED.label),
+            (CustomerPurchaseRequestStatus.CANCELLED, CustomerPurchaseRequestStatus.CANCELLED.label),
+        ]
 
 
 class OrderItemForm(forms.ModelForm):

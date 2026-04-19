@@ -4,6 +4,7 @@ from django.contrib.auth.models import Group
 from .models import (
     AuditLog,
     Customer,
+    CustomerPurchaseRequest,
     DailyReconciliation,
     Inventory,
     InventoryAdjustment,
@@ -149,4 +150,11 @@ class InventoryAdjustmentAdmin(admin.ModelAdmin):
 class OrderChangeRequestAdmin(admin.ModelAdmin):
     list_display = ("order", "requested_by", "requested_status", "requested_assigned_collector", "status", "created_at")
     list_filter = ("status", "requested_status")
+
+
+@admin.register(CustomerPurchaseRequest)
+class CustomerPurchaseRequestAdmin(admin.ModelAdmin):
+    list_display = ("customer", "product", "branch", "quantity", "status", "reviewed_by", "created_at")
+    list_filter = ("branch", "status", "created_at")
+    search_fields = ("customer__full_name", "product__name", "product__sku")
 

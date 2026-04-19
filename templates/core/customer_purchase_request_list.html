@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Customer Purchase Requests - Furnisync{% endblock %}
+{% block header %}Customer Purchase Requests{% endblock %}
+{% block header_subtitle %}Review incoming customer purchase requests before converting them into the internal order workflow.{% endblock %}
+{% block content %}
+<div class="grid gap-4 md:grid-cols-4">
+    <div class="surface-card p-6">
+        <p class="text-sm text-slate-500">Requests</p>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ request_summary.count }}</div>
+    </div>
+    <div class="surface-card p-6">
+        <p class="text-sm text-slate-500">Pending</p>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ request_summary.pending }}</div>
+    </div>
+    <div class="surface-card p-6">
+        <p class="text-sm text-slate-500">Reviewed</p>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ request_summary.reviewed }}</div>
+    </div>
+    <div class="surface-card p-6">
+        <p class="text-sm text-slate-500">Converted</p>
+        <div class="stat-value mt-3 text-3xl font-extrabold text-slate-900">{{ request_summary.converted }}</div>
+    </div>
+</div>
+
+<section class="surface-card mt-6 overflow-hidden">
+    <div class="section-bar px-6 py-5">
+        <form method="get" class="grid gap-3 md:grid-cols-[1fr_auto]">
+            <select name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-200/40">
+                <option value="">All statuses</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-800">Apply</button>
+        </form>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200 table-compact">
+            <thead class="bg-slate-50 text-left text-slate-500">
+                <tr>
+                    <th class="px-6">Customer</th>
+                    <th class="px-6">Product</th>
+                    <th class="px-6">Quantity</th>
+                    <th class="px-6">Status</th>
+                    <th class="px-6">Created</th>
+                    <th class="px-6 text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+                {% for item in requests %}
+                    <tr>
+                        <td class="px-6">
+                            <div class="font-semibold text-slate-900">{{ item.customer.full_name }}</div>
+                            <div class="mt-1 text-sm text-slate-500">{{ item.customer.email|default:item.customer.phone }}</div>
+                        </td>
+                        <td class="px-6 text-slate-700">{{ item.product.name }}</td>
+                        <td class="px-6 text-slate-700">{{ item.quantity }}</td>
+                        <td class="px-6 text-slate-700">{{ item.get_status_display }}</td>
+                        <td class="px-6 text-slate-500">{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                        <td class="px-6 text-right">
+                            <a href="{% url 'customer_purchase_request_detail' item.id %}" class="text-sm font-medium text-brand-700 hover:text-brand-800">Review</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-10 text-center text-sm text-slate-500">No customer purchase requests yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
